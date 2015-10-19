@@ -1,0 +1,91 @@
+Ricky Galliani, Rush Joshi, Tim Menninger, Schaeffer Reed
+CS 143 Network Simulator Project
+Preliminary Design
+
+========== Tools/Software Decisions ==========
+
+- Programming Language: Python
+- GitHub Repo: https://github.com/patrickgalliani/CS143Project
+
+========== Simulator Design ==========
+
+- Discrete Event Simulation
+    - Global queue of events where each item in the queue is a tuple containing
+    the event that has to occur and the time it has to occur: (Event, Time)
+    - Once one event is processed, pick item out of queue that is supposed to 
+    occur next
+    - Simulation is over when queue is empty
+
+========== Global Values ==========
+
+PACKET_SIZE = 1024 bits
+
+========== Classes ==========
+
+--- Host ---
+
+Description: 
+- End points in the network
+- Know nothing about other hosts in the network
+
+Attributes:
+- hostname : name of the host, each hostname is unique (i.e., "H1")
+
+
+--- Router ---
+
+Description: 
+- Route packets through the network
+- Calculate routing tables with decentralized shortest-path algorithms
+- Decides where to send packets based on packed destination
+- No global knowledge of network topology
+
+Attributes: 
+- router_id : each router_id is unique
+- routing_table : a python dictionary where key is the destination hostname and
+			      value is the Link the  
+
+--- Link ---
+
+Description: 
+- Half-duplex (data can travel in both directions, but not at the same time)
+- Have transmission delay, how long a packet will go from one end to the other
+- Have buffer of packets to send on either end
+- Packets dropped when buffer is full
+
+Attributes: 
+- link_id : unique for each Link
+- capacity : how fast a router they can send data (in MB/sec)
+- delay : amount of time it takes to send Packet down link (in ms)
+- buffer : a list of Packet that are waiting to go down the link (on either end)
+           (in KB)
+
+--- Packet ---
+
+Description: 
+- Units of data that are sent through the network
+
+Attributes: 
+- packet_id : unique for each Packet
+- packet_flow : the Flow that the Packet belongs to (gives access to source and 
+			    destination)
+- packet_payload : the actual data being sent or the acknowledgement
+
+
+--- Flow ---
+
+Description: 
+- Represent data being sent from one host to another
+- Do not know about other flows in network
+- Generate packets to send from source to destination in accordance with 
+congestion control algorithm
+
+Attributes: 
+- flow_id : unique to each flow
+- flow_src : IP address of source host
+- flow_dest : IP address of destination host
+- flow_size : amount of data being sent (in MB)
+- flow_start : the time the flow started (in sec)
+- flow_packets : a list of packet_id being sent in the flow
+
+
