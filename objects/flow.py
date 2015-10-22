@@ -39,7 +39,7 @@ class Flow:
 		Computes and returns the number of Packet required to send for this 
 		Flow.
 		'''
-		return conv.MB_to_bits(self.size) // packet.DATA_PACKET_SIZE + 1
+		return conv.MB_to_bits(self.size) // packet.DATA_PACKET_SIZE
 
 	def get_packets(self):
 		'''
