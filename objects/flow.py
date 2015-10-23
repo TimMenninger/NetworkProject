@@ -41,7 +41,7 @@ class Flow:
 		'''
 		return conv.MB_to_bits(self.size) // packet.DATA_PACKET_SIZE
 
-	def get_packets(self):
+	def make_packets(self):
 		'''
 		Updates the 'num_packets' and 'packets' attributes.
 		'''
