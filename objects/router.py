@@ -2,7 +2,7 @@
 
 class Router:
 
-	def __init__(self, the_router_name, the_routing_table, the_links, the_buffer):
+	def __init__(self, the_router_name, the_routing_table, the_links):
 		'''
 		Initialize an instance of Router by intitializing its attributes.
 		'''
@@ -17,9 +17,9 @@ class Router:
 		# List of string names corresponding to the Link that are attached to 
 		# this Router
 		self.links = the_links
-
-
-		self.buffer = the_buffer
+		
+		# Router buffer which will hold Packet before transmitted to link
+		self.buffer = []
 
 	def print_contents(self):
 		'''
@@ -34,4 +34,11 @@ class Router:
 		print("Links: ")
 		for i, link_name in zip(range(len(self.links)), self.links):
 			print("  " + str(i + 1) + ". " + link_name)
+		print("Packets in Buffer:\n")
+		for i, packet in enumerate(packet_buffer):
+			print(i + ":\n")
+			packet.print_contents
+			print("\n")
 		print("-" * 25)
+
+

@@ -1,4 +1,4 @@
-# Conversion class 
+# Conversion helper functions
 
 def MB_to_bits(num_in_MB):
 	'''

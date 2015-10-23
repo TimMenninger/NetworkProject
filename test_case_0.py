@@ -1,8 +1,9 @@
-from objects.flow import *
-from objects.host import *
-from objects.link import *
-from objects.packet import *
-from objects.router import * 
+
+from CS143Project.objects.flow import *
+from CS143Project.objects.host import *
+from CS143Project.objects.link import *
+from CS143Project.objects.packet import *
+from CS143Project.objects.router import *
 
 def main():
 	'''
@@ -10,7 +11,7 @@ def main():
 	# Manually enter the network topology, for now
 	H1 = Host("H1")
 	H2 = Host("H2")
-	L1 = Link("L1", True, True, 10, 10, 64)
+	L1 = Link("L1", 10, 10, 64)
 	F1 = Flow("F1", "H1", "H2", 20, 0)
 	
 	# Make the Packet that splice up the data within the flow

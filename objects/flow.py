@@ -1,7 +1,8 @@
 # Flow Class
 
-import objects.packet as packet
-import objects.conversion as conv
+from CS143Project.objects.packet import *
+from CS143Project.misc.constants import *
+from CS143Project.misc.conversion import *
 
 # A global count of Packet that are sent
 PACKET_COUNT = 0
@@ -39,7 +40,7 @@ class Flow:
 		Computes and returns the number of Packet required to send for this 
 		Flow.
 		'''
-		return conv.MB_to_bits(self.size) // packet.DATA_PACKET_SIZE
+		return MB_to_bits(self.size) // PACKET_DATA_SIZE
 
 	def make_packets(self):
 		'''
@@ -55,9 +56,8 @@ class Flow:
 		packets = []
 		for i in range(self.num_packets):
 			packet_id = str(PACKET_COUNT)
-			p = packet.Packet(packet_id, self, self.src, self.dest, 
-							  packet.Packet_Types.data, 
-							  packet.DATA_PACKET_SIZE)
+			p = Packet(packet_id, self, self.src, self.dest, Packet_Types.data, 
+					   PACKET_DATA_SIZE, 1.0)
 			packets.append(p)
 			PACKET_COUNT += 1
 
