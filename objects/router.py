@@ -2,7 +2,7 @@
 
 class Router:
 
-	def __init__(self, the_router_name, the_routing_table, the_links):
+	def __init__(self, the_router_name, the_routing_table, the_links, the_buffer):
 		'''
 		Initialize an instance of Router by intitializing its attributes.
 		'''
@@ -17,6 +17,9 @@ class Router:
 		# List of string names corresponding to the Link that are attached to 
 		# this Router
 		self.links = the_links
+
+
+		self.buffer = the_buffer
 
 	def print_contents(self):
 		'''

@@ -25,10 +25,10 @@ class Packet:
 		# destination)
 		self.flow = the_flow
 
-		# Name of the Host sending the Packet
+		# Name of the Host/Router sending the Packet
 		self.src = the_src
 
-		# Name of the Host to receive the Packet
+		# Name of the Host/Router to receive the Packet
 		self.dest = the_dest
 
 		# Enum representing the type of Packet being sent (data, ack, routing)
