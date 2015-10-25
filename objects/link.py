@@ -43,18 +43,23 @@ class Link:
 		
 	def enqueue_packet():
 		'''
+		Adds a packet to the packet queue where it will wait to be transmitted
+		along this link.
 		'''
 
 	def dequeue_packet():
 		'''
+		Dequeues a packet from the packet queue to transmit along this link.
 		'''
 
 	def carry_packet():
 		'''
+		Updates the link to reflect that a packet is now in transmission.
 		'''
 
 	def print_contents():
 		'''
+		Prints the status of all atributes of this link.
 		'''
 
 
