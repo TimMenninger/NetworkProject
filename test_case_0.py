@@ -1,9 +1,9 @@
 
-from CS143Project.objects.flow import *
-from CS143Project.objects.host import *
-from CS143Project.objects.link import *
-from CS143Project.objects.packet import *
-from CS143Project.objects.router import *
+from objects.flow import *
+from objects.host import *
+from objects.link import *
+from objects.packet import *
+from objects.router import *
 
 def main():
 	'''

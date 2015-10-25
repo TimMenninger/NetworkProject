@@ -2,24 +2,20 @@
 
 class Router:
 
-	def __init__(self, the_router_name, the_routing_table, the_links):
+	def __init__(self, the_router_name, the_links):
 		'''
 		Initialize an instance of Router by intitializing its attributes.
 		'''
-
 		# Name of the Router, each name is a unique string (i.e., "R1")
 		self.router_name = the_router_name
 		
 		# Python dictionary - contains destination hostnames as keys and Link
 		# names as values
-		self.routing_table = the_routing_table
+		self.routing_table = {}
 
 		# List of string names corresponding to the Link that are attached to 
 		# this Router
 		self.links = the_links
-		
-		# Router buffer which will hold Packet before transmitted to link
-		self.buffer = []
 
 	def print_contents(self):
 		'''

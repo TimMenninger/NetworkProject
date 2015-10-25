@@ -13,7 +13,6 @@ class Flow:
 		'''
 		Initialize an instance of Flow by intitializing its attributes.
 		'''
-
 		# Name of the Flow, each ID is a unique string (i.e. "F1")
 		self.flow_name = the_flow_name
 
@@ -34,6 +33,9 @@ class Flow:
 
 		# List of Packet being sent in the flow
 		self.packets = []
+
+		# Congestion control algorithm -- default algorithm is FAST-TCP
+		self.algorithm = FLOW_FAST_TCP
 
 	def get_num_packets(self):
 		'''

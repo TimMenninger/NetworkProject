@@ -6,7 +6,6 @@ class Host:
 		''' 
 		Initialize an instance of Host by intitializing its attributes.
 		'''
-
 		# Name of the host, each hostname is unique string (i.e., "H1")
 		self.host_name = the_host_name
 		
@@ -24,7 +23,6 @@ class Host:
 		'''
 		Send a packet.
 		'''
-		
 		# Send the packet onto the link.
 		self.link.carryPacket(packet)
 		
@@ -36,7 +34,6 @@ class Host:
 		'''
 		Receive a packet and react to it.
 		'''
-		
 		# If it is an acknowledgement, update to reflect no longer waiting
 		if packet.type == Packet_Types.ack:
 			self.waitingForAck.pop(packet.ID)

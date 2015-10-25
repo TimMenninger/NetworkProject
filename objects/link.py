@@ -4,11 +4,11 @@ from CS143Project.misc.constants import *
 
 class Link:
 
-	def __init__(self, the_link_name, the_capacity, the_delay, the_buffer, endPt1, endPt2):
+	def __init__(self, the_link_name, the_capacity, the_delay, the_buffer, 
+			     endPt1, endPt2):
 		'''
 		Initialize an instance of Link by intitializing its attributes.
 		'''
-
 		# Name of the Link, each name is a unique string (i.e. "L1")
 		self.link_name = the_link_name
 
@@ -30,16 +30,19 @@ class Link:
 		# Amount of time it takes to send Packet down link (in ms)
 		self.delay = the_delay
 		
-		# Define the endpoints so we know how to define flow on this half-duplex link.
-		self.endPoints = [endPt1, endPt2]
-		
+		# Define the endpoints so we know how to define flow on this 
+		# half-duplex link. Could be a Router or Host
+		self.endPoints = (endPt1, endPt2)
+
+		# Router buffer which will hold Packet before transmitted to link
+		# When initialized, the buffers are both empty
+		self.buffer = ([],[]])
 		
 	def carryPacket(self, packet):
 		'''
 		Update to reflect that packet is being sent on link.  This returns an 
 		appropriate error code.
 		'''
-		
 		# Make sure the packet is able to be sent on this link.
 		if packet.src not in self.endPoints:
 			return LINK_ERROR

@@ -14,7 +14,6 @@ class Packet:
 		'''
 		Initialize an instance of Packet by intitializing its attributes.
 		'''
-
 		# ID of the Link, each ID is a unique string (i.e. "L1")
 		self.ID = the_ID
 
