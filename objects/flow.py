@@ -5,7 +5,7 @@ from CS143Project.misc.constants import *
 from CS143Project.misc.conversion import *
 
 # A global count of Packet that are sent
-PACKET_COUNT = 0
+packet_count = 0
 
 class Flow:
 
