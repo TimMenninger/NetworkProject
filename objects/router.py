@@ -19,18 +19,23 @@ class Router:
 
 	def set_routing_table():
 		'''
+		Sets the routing table for this Router.
 		'''
 
 	def send_packet():
 		'''
+		Sends a packet from this Router to a particular destination using a
+		specific link connected to this Router.
 		'''
 
 	def receive_packet():
 		'''
+		Receives a packet from a link and parses it.
 		'''
 
 	def print_contents():
 		'''
+		Prints attribute values for this Router.
 		'''
 
 
