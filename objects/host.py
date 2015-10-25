@@ -10,22 +10,29 @@ class Host:
 		self.host_name = the_host_name
 		
 		# Keep a list of links to this host.
-		self.link = None
+		self.links = None
 		
 	def set_link():
 		'''
+		Alters the links attribute of the Host to reflect the link(s) connecting
+		the host to the network.
 		'''
 
 	def send_packet():
 		'''
+		Sends a packet from this host to a particular destination.  Then, it adds
+		the appropriate event to the Simulator event queue.
 		'''
 
 	def receive_packet():
 		'''
+		Receives a packet from a link and parses it.  Then, it adds the appropriate
+		event to the Simulator event queue.
 		'''
 
 	def print_contents():
 		'''
+		Prints what is contained in all of the attributes of this Host.
 		'''
 
 	# def sendPacket(self, packet):
