@@ -33,6 +33,7 @@ class Packet:
 
 	def print_contents():
 		'''
+		Prints statistics about this Packet.
 		'''
 
 
