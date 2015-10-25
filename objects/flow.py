@@ -9,7 +9,8 @@ PACKET_COUNT = 0
 
 class Flow:
 
-	def __init__(self, the_flow_name, the_src, the_dest, the_size, the_start):
+	def __init__(self, the_flow_name, the_src, the_dest, the_size, 
+				 the_algorithm):
 		'''
 		Initialize an instance of Flow by intitializing its attributes.
 		'''
@@ -25,60 +26,69 @@ class Flow:
 		# Amount of data being sent, an int (in MB)
 		self.size = the_size
 
-		# Time the flow started (in sec), a float
-		self.start = the_start
-
-		# Integer representing the number of Packet in the Flow
-		self.num_packets = 0
-
-		# List of Packet being sent in the flow
-		self.packets = []
-
 		# Congestion control algorithm -- default algorithm is FAST-TCP
-		self.algorithm = FLOW_FAST_TCP
+		self.algorithm = the_algorithm
 
-	def get_num_packets(self):
-		'''
-		Computes and returns the number of Packet required to send for this 
-		Flow.
-		'''
-		return MB_to_bits(self.size) // PACKET_DATA_SIZE
+		# Window size as computed 
+		window_size = 0
 
-	def make_packets(self):
-		'''
-		Updates the 'num_packets' and 'packets' attributes.
-		'''
-		global PACKET_COUNT
+		# List of packets in the network
+		packets_in_flight = []
 
-		# Update the 'num_packets' attribute of this Flow to contain the 
-		# number of Packet it is carrying
-		self.num_packets = self.get_num_packets()
-
-		# Fill up a list of the Packet being carried in the flow
-		packets = []
-		for i in range(self.num_packets):
-			packet_id = str(PACKET_COUNT)
-			p = Packet(packet_id, self, self.src, self.dest, Packet_Types.data, 
-					   PACKET_DATA_SIZE, 1.0)
-			packets.append(p)
-			PACKET_COUNT += 1
-
-		# Update the 'packets' attribute of this Flow to contiain a list of 
-		# the Packet it is carrying
-		self.packets = packets
-
-	def print_contents(self, VERBOSE=False):
+	def print_contents():
 		'''
-		Prints the contents of the flow to standard output.
+		For debugging use. Print out the contents of the Flow.
 		'''
-		print("-" * 25)
-		print("Flow Name: " + self.flow_name)
-		print("Flow Source: " + self.src)
-		print("Flow Destination: " + self.dest)
-		print("Flow Size: " + str(self.size))
-		print("Number of Packets: " + str(self.num_packets))
-		if VERBOSE:
-			print("Packets: ")
-			for i, packet in zip(range(len(self.packets)), self.packets):
-				print("  " + str(i + 1) + ". " + packet.ID)
-		print("-" * 25)
+
+
+
+
+
+
+
+
+	# def get_num_packets(self):
+	# 	'''
+	# 	Computes and returns the number of Packet required to send for this 
+	# 	Flow.
+	# 	'''
+	# 	return MB_to_bits(self.size) // PACKET_DATA_SIZE
+
+	# def make_packets(self):
+	# 	'''
+	# 	Updates the 'num_packets' and 'packets' attributes.
+	# 	'''
+	# 	global PACKET_COUNT
+
+	# 	# Update the 'num_packets' attribute of this Flow to contain the 
+	# 	# number of Packet it is carrying
+	# 	self.num_packets = self.get_num_packets()
+
+	# 	# Fill up a list of the Packet being carried in the flow
+	# 	packets = []
+	# 	for i in range(self.num_packets):
+	# 		packet_id = str(PACKET_COUNT)
+	# 		p = Packet(packet_id, self, self.src, self.dest, Packet_Types.data, 
+	# 				   PACKET_DATA_SIZE, 1.0)
+	# 		packets.append(p)
+	# 		PACKET_COUNT += 1
+
+	# 	# Update the 'packets' attribute of this Flow to contiain a list of 
+	# 	# the Packet it is carrying
+	# 	self.packets = packets
+
+	# def print_contents(self, VERBOSE=False):
+	# 	'''
+	# 	Prints the contents of the flow to standard output.
+	# 	'''
+	# 	print("-" * 25)
+	# 	print("Flow Name: " + self.flow_name)
+	# 	print("Flow Source: " + self.src)
+	# 	print("Flow Destination: " + self.dest)
+	# 	print("Flow Size: " + str(self.size))
+	# 	print("Number of Packets: " + str(self.num_packets))
+	# 	if VERBOSE:
+	# 		print("Packets: ")
+	# 		for i, packet in zip(range(len(self.packets)), self.packets):
+	# 			print("  " + str(i + 1) + ". " + packet.ID)
+	# 	print("-" * 25)

@@ -3,6 +3,11 @@
 FLOW_FAST_TCP = 0
 FLOW_TCP_RENO = 1
 
+# Packet types
+PACKET_DATA = 0
+PACKET_ACK = 1
+PACKET_ROUTING = 2
+
 # Packet sizes (in bits)
 PACKET_DATA_SIZE   	= 1024 		# Size of data Packet
 PACKET_ACK_SIZE 	= 64 		# Size of ack Packet

@@ -14,70 +14,92 @@ class Link:
 
 		# Flag indicating whether Link is used/free in one direction
 		#     LINK_USED_HIGH -> Used in direction of higher Host/Router name
-		#     LINK_USED_LOW -> Used in direction of lower Host/Router name
-		#     LINK_FREE -> Free in both directions
+		#     LINK_USED_LOW  -> Used in direction of lower Host/Router name
+		#     LINK_FREE      -> Free in both directions
 		self.in_use = LINK_FREE
 
 		# How fast the Router can send data (in MB/sec) 
-		self.capacity = the_capacity
+		self.rate = the_rate
+
+		# How much data can be stored in the buffer (in KB)
+		self.buffer_size = the_buffer_size
 		
-		# Packets on link currently
-		self.packetsCarrying = []
+		# Packets currently on the link
+		self.packets_carrying = []
 		
 		# Amount of data on link
-		self.currentLoad = 0
+		self.current_load = 0
 
 		# Amount of time it takes to send Packet down link (in ms)
 		self.delay = the_delay
 		
 		# Define the endpoints so we know how to define flow on this 
 		# half-duplex link. Could be a Router or Host
-		self.endPoints = (endPt1, endPt2)
+		self.end_points = (end_pt1, end_pt2)
 
 		# Router buffer which will hold Packet before transmitted to link
 		# When initialized, the buffers are both empty
-		self.buffer = ([],[]])
+		self.buffers = ([],[]])
 		
-	def carryPacket(self, packet):
+	def enqueue_packet():
 		'''
-		Update to reflect that packet is being sent on link.  This returns an 
-		appropriate error code.
 		'''
-		# Make sure the packet is able to be sent on this link.
-		if packet.src not in self.endPoints:
-			return LINK_ERROR
-		elif packet.dest not in self.endPoints:
-			return LINK_ERROR
+
+	def dequeue_packet():
+		'''
+		'''
+
+	def carry_packet():
+		'''
+		'''
+
+	def print_contents():
+		'''
+		'''
+
+
+
+
+	# def carryPacket(self, packet):
+	# 	'''
+	# 	Update to reflect that packet is being sent on link.  This returns an 
+	# 	appropriate error code.
+	# 	'''
+	# 	# Make sure the packet is able to be sent on this link.
+	# 	if packet.src not in self.endPoints:
+	# 		return LINK_ERROR
+	# 	elif packet.dest not in self.endPoints:
+	# 		return LINK_ERROR
 			
-		# Check if there is enough space for this packet
-		if self.currentLoad + packet.size > self.capacity:
-			return LINK_FULL
+	# 	# Check if there is enough space for this packet
+	# 	if self.currentLoad + packet.size > self.capacity:
+	# 		return LINK_FULL
 		
-		# Make sure the data is going in the correct direction.
-		if self.in_use != LINK_FREE:
-			if packet.dest == endPoints[1] and self.in_use != LINK_USED_HIGH:
-				return LINK_FULL
-			elif self.in_use != LINK_USED_LOW:
-				return LINK_FULL
-		elif packet.dest == endPoints[1]:
-			self.in_use = LINK_USED_HIGH
-		else:
-			self.in_use = LINK_USED_LOW
+	# 	# Make sure the data is going in the correct direction.
+	# 	if self.in_use != LINK_FREE:
+	# 		if packet.dest == endPoints[1] and self.in_use != LINK_USED_HIGH:
+	# 			return LINK_FULL
+	# 		elif self.in_use != LINK_USED_LOW:
+	# 			return LINK_FULL
+	# 	elif packet.dest == endPoints[1]:
+	# 		self.in_use = LINK_USED_HIGH
+	# 	else:
+	# 		self.in_use = LINK_USED_LOW
 			
-		# Add the data to the link
-		self.packetsCarrying.append(packet)
-		self.currentLoad += packet.size
+	# 	# Add the data to the link
+	# 	self.packetsCarrying.append(packet)
+	# 	self.currentLoad += packet.size
 		
-		return SUCCESS
+	# 	return SUCCESS
 		
 
-	def print_contents(self):
-		'''
-		Prints the contents of the Link to standard output.
-		'''
-		print("-" * 25)
-		print("Link Name: " + self.link_name)
-		print("Link: " + str(self.in_use))
-		print("Capacity: " + str(self.capacity))
-		print("Delay: " + str(self.delay))
-		print("-" * 25)
+	# def print_contents(self):
+	# 	'''
+	# 	Prints the contents of the Link to standard output.
+	# 	'''
+	# 	print("-" * 25)
+	# 	print("Link Name: " + self.link_name)
+	# 	print("Link: " + str(self.in_use))
+	# 	print("Capacity: " + str(self.capacity))
+	# 	print("Delay: " + str(self.delay))
+	# 	print("-" * 25)

@@ -1,11 +1,6 @@
 # Packet Class
 
-from enum import Enum
-
-class Packet_Types(Enum):
-	data = 1
-	ack = 2
-	routing = 3
+from CS143Project.misc.constants import *
 
 class Packet:
 
@@ -17,37 +12,43 @@ class Packet:
 		# ID of the Link, each ID is a unique string (i.e. "L1")
 		self.ID = the_ID
 
-		# Flow that the Packet belongs to (gives access to source and 
-		# destination)
+		# Flow that the Packet belongs to 
+		# Gives access to source and destination, uniquely identifies Packet
 		self.flow = the_flow
 
-		# Name of the Host/Router sending the Packet
+		# Host/Router sending the Packet
 		self.src = the_src
 
-		# Name of the Host/Router to receive the Packet
+		# Host/Router to receive the Packet
 		self.dest = the_dest
 
-		# Enum representing the type of Packet being sent (data, ack, routing)
+		# Constant representing the type of Packet being sent 
+		# PACKET_DATA, PACKET_ACK, PACKET_ROUTING
 		self.type = the_type
 
 		# Integer representing the size of the Packet, dependent on its type
-		# Will be either DATA_PACKET_SIZE, ACK_PACKET_SIZE, OR 
-		# ROUTING_PACKET_SIZE
+		# PACKET_DATA_SIZE, PACKET_ACK_SIZE, or PACKET_ROUTING_SIZE
 		self.size = the_size
-		
-		# Update the time that the packet was sent
-		self.time = the_time
 
-	def print_contents(self):
+
+	def print_contents():
 		'''
-		Prints the contents of the Packet to standard output.
 		'''
-		print("-" * 25)
-		print("Packet ID: " + self.ID)
-		print("Time: " + self.time)
-		print("Flow: " + self.flow.flow_name)
-		print("Source: " + self.src)
-		print("Destination: " + self.dest)
-		print("Type: " + self.type.name)
-		print("Size: " + str(self.size))
-		print("-" * 25)
+
+
+
+
+
+	# def print_contents(self):
+	# 	'''
+	# 	Prints the contents of the Packet to standard output.
+	# 	'''
+	# 	print("-" * 25)
+	# 	print("Packet ID: " + self.ID)
+	# 	print("Time: " + self.time)
+	# 	print("Flow: " + self.flow.flow_name)
+	# 	print("Source: " + self.src)
+	# 	print("Destination: " + self.dest)
+	# 	print("Type: " + self.type.name)
+	# 	print("Size: " + str(self.size))
+	# 	print("-" * 25)
