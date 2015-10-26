@@ -1,8 +1,8 @@
 # Simulator module
 
 #! This will probably have to be in a module of its own...
-event_queue = [] # Contains events for the network such as (e.g. sending packets) in
-		 # 	the form of Event instances
+event_queue = [] # Contains (time, event) tuples in a heap queue so that when popping,
+	 	 # 	the next chronological event is what is returned.
 
 def load_network_objects():
 	'''
