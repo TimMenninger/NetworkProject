@@ -1,8 +1,8 @@
 # Simulator module
 
-#! This will probably have to be in a module of its own...
-event_queue = [] # Contains (time, event) tuples in a heap queue so that when popping,
-	 	 # 	the next chronological event is what is returned.
+# Contains (time, event) tuples in a heap queue so that when events are popped
+# in chronological order
+event_queue = [] 
 
 def load_network_objects():
 	'''
@@ -26,6 +26,7 @@ def main():
 	Run the simulation.
 	'''
 	
+
 	# Proposed pseudocode:
 	#
 	# // load and configure network
@@ -43,4 +44,3 @@ def main():
 	#		record network status // for realtime updates
 	#		next_data_recording += network_recording_increments
 	#	do event // each event will enqueue another event if necessary
-	#

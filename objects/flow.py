@@ -17,16 +17,16 @@ class Flow:
 		# Name of the Flow, each ID is a unique string (i.e. "F1")
 		self.flow_name = the_flow_name
 
-		# Hostname of source host, a string
+		# host_name of source Host, a string
 		self.src = the_src
 
-		# Hostname of destination host, a string
+		# host_name of destination Host, a string
 		self.dest = the_dest
 
 		# Amount of data being sent, an int (in MB)
 		self.size = the_size
 
-		# Congestion control algorithm -- default algorithm is FAST-TCP
+		# Congestion control algorithm
 		self.algorithm = the_algorithm
 
 		# Window size as computed 

@@ -23,43 +23,43 @@ class Link:
 
 		# How much data can be stored in the buffer (in KB)
 		self.buffer_size = the_buffer_size
-		
-		# Packets currently on the link
-		self.packets_carrying = []
-		
-		# Amount of data on link
-		self.current_load = 0
 
 		# Amount of time it takes to send Packet down link (in ms)
 		self.delay = the_delay
-		
+
 		# Define the endpoints so we know how to define flow on this 
 		# half-duplex link. Could be a Router or Host
 		self.end_points = (end_pt1, end_pt2)
 
-		# Router buffer which will hold Packet before transmitted to link
-		# When initialized, the buffers are both empty
+		# Router buffer which will hold the IDs of Packet before the
+		# corresponding Packet are transmitted to Link 
 		self.buffers = ([],[]])
+		
+		# IDs of Packet currently on the link
+		self.packets_carrying = []
+		
+		# Amount of data on link
+		self.current_load = 0
 		
 	def enqueue_packet():
 		'''
-		Adds a packet to the packet queue where it will wait to be transmitted
+		Adds a Packet to the Packet queue where it will wait to be transmitted
 		along this link.
 		'''
 
 	def dequeue_packet():
 		'''
-		Dequeues a packet from the packet queue to transmit along this link.
+		Dequeues a Packet from the Packet queue to transmit along this link.
 		'''
 
 	def carry_packet():
 		'''
-		Updates the link to reflect that a packet is now in transmission.
+		Updates the Link to reflect that a packet is now in transmission.
 		'''
 
 	def print_contents():
 		'''
-		Prints the status of all atributes of this link.
+		Prints the status of all atributes of this Pink.
 		'''
 
 

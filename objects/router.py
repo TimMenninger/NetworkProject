@@ -9,8 +9,7 @@ class Router:
 		# Name of the Router, each name is a unique string (i.e., "R1")
 		self.router_name = the_router_name
 
-		# List of string names corresponding to the Link that are attached to 
-		# this Router
+		# List of Link that are attached to this Router
 		self.links = the_links
 
 		# Python dictionary - contains destination hostnames as keys and Link
