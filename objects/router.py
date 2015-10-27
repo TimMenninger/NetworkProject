@@ -20,6 +20,61 @@ class Router:
 		'''
 		Sets the routing table for this Router.
 		'''
+		
+	def send_config_packet():
+		'''
+		Creates a special configuration packet that, when received by other routers,
+		is understood as a configuration packet.
+		'''
+		
+		#
+		# Proposed pseudocode for this (bellman-ford):
+		#	In this, we are going to initiate the process here with a specially
+		# formatted packet that routers will understand as the "configuration" packet.
+		#
+		# 	We will send a packet with the form [origin_router_name, distance_to] where
+		# origin_router is the router sending the first "configuration" packet and 
+		# distance_to is the total weight from the origin to this particular router.
+		# Clearly, when sending this first packet, we will have [self.router_name, 0].
+		# When receiving this packet, receive_packet should call parse_config_packet.  Refer
+		# to that function for the rest of the computation involved with configuring the
+		# routing tables.
+		#
+		#	For this to work, we want to keep track of the shortest distance to each
+		# router from this one.  Initialize all these values to be infinity.
+		#
+		
+	def parse_config_packet():
+		'''
+		Receives a configuration packet and updates the routing table if any new, useful
+		information is learned from it.
+		'''
+		
+		#
+		# Proposed pseudocode (continuation of send_config_packet):
+		#
+		#	This will be called when the router receives a config packet, which is in
+		# the format [origin_router, distance_to].  The origin_router was the router which
+		# initially sent this packet, and distance_to is the distance from the origin router
+		# to this router using whatever path it used.
+		#
+		# Pseudocode:
+		#	receive packet
+		#	if distance_to < [previously thought shortest distance to origin router]:
+		#		update routing table for origin_router with router that sent packet
+		#		send [origin_router, distance_to] to all links besides one it came on
+		#
+		#
+		# All we need is some way of quantifying distance_to.  Maybe it's time, maybe not, I
+		# don't know yet...
+		#
+		# This will work because every router will do this.  If the routers 
+		# are all connected, then by relaying the messages whenever the distance is improved,
+		# all routers will get a packet to all other routers at least once.  We only need to
+		# continue propagation if it is improved because if not, then the time that the better
+		# packet came through, that was propagated.  Therefore, we know this process will
+		# terminate.
+		#
 
 	def send_packet():
 		'''
