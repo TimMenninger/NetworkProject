@@ -31,11 +31,11 @@ class Link:
 		# half-duplex link. Could be a Router or Host
 		self.end_points = (end_pt1, end_pt2)
 
-		# Router buffer which will hold the IDs of Packet before the
+		# Router buffer which will hold the Packet before the
 		# corresponding Packet are transmitted to Link 
 		self.buffers = ([],[]])
 		
-		# IDs of Packet currently on the link
+		# Packet currently on the link
 		self.packets_carrying = []
 		
 		# Amount of data on link

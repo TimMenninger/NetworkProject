@@ -14,7 +14,11 @@ class Router:
 
 		# Python dictionary - contains destination hostnames as keys and Link
 		# names as values
-		self.routing_table = {}
+		self.routing_table_a = {}
+
+		# Python dictionary - contains destination hostnames as keys and Link
+		# names as values
+		self.routing_table_b = {}
 
 	def set_routing_table():
 		'''
