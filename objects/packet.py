@@ -1,6 +1,12 @@
-# Packet Class
+#
+# packet.py
+#
+# This contains the packet class, which is the data structure that represents
+# the actual data being transmitted in the simulated network.
+#
 
-from CS143Project.misc.constants import *
+# Import network objects
+import simulator, link, flow, router, event, host
 
 class Packet:
 
@@ -35,10 +41,6 @@ class Packet:
 		'''
 		Prints statistics about this Packet.
 		'''
-
-
-
-
 
 	# def print_contents(self):
 	# 	'''

@@ -1,0 +1,13 @@
+hostSpecs (ID):
+H1
+H2
+
+linkSpecs (ID Rate Delay Buffer):
+L1 10 10 64
+
+flowSpecs (ID Src Dest Data Start):
+F1 H1 H2 20 1.0
+
+Links (firstID linkID secondID):
+H1 L1 H2
+

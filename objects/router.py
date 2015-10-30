@@ -1,8 +1,17 @@
-# Router class
+#
+# router.py
+#
+# This contains the router class, which contains methods for simulating the
+# routers in the network.  It also contains methods which periodically run
+# a Bellman-Ford algorithm to build its own routing table.
+#
+
+# Import network objects
+import packet, link, flow, simulator, event, host
 
 class Router:
 
-	def __init__(self, the_router_name, the_links):
+	def __init__(self, the_router_name):
 		'''
 		Initialize an instance of Router by intitializing its attributes.
 		'''
@@ -10,15 +19,21 @@ class Router:
 		self.router_name = the_router_name
 
 		# List of Link that are attached to this Router
-		self.links = the_links
+		self.links = []
 
 		# Python dictionary - contains destination hostnames as keys and Link
 		# names as values
-		self.routing_table_a = {}
-
-		# Python dictionary - contains destination hostnames as keys and Link
-		# names as values
-		self.routing_table_b = {}
+		self.routing_table_A = {}
+		self.routing_table_B = {}
+		self.using_table_A = True
+		
+		
+	def add_link(link_name):
+		'''
+		Adds a link to the router.
+		'''
+		self.links.append(link_name)
+		
 
 	def set_routing_table():
 		'''
@@ -95,8 +110,6 @@ class Router:
 		'''
 		Prints attribute values for this Router.
 		'''
-
-
 
 
 

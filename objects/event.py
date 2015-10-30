@@ -1,7 +1,16 @@
+#
+# event.py
+#
+# This file contains the event class, which is a class describing a particular
+# event using its actor, function call and parameter list.
+#
+
+import packet, link, flow, router, simulator, host
+
 class Event:
 
 	def __init__(self, in_actor, in_function, in_parameters):
-    	'''
+		'''
 		Create an event for the network and all of the information necessary
 		for execution.
 		'''
@@ -20,6 +29,6 @@ class Event:
                 
                 
 		def print_contents():
-		'''
-		Prints contents of this event.
-		'''
+			'''
+			Prints contents of this event.
+			'''
