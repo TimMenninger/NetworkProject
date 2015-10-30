@@ -33,7 +33,7 @@ class Link:
 
 		# Router buffer which will hold the Packet before the
 		# corresponding Packet are transmitted to Link 
-		self.buffers = ([],[]])
+		self.buffers = ([],[])
 		
 		# Packet currently on the link
 		self.packets_carrying = []
