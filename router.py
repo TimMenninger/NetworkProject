@@ -1,4 +1,8 @@
 #
+# Ricky Galliani, Tim Menninger, Rush Joshi, Schaeffer Reed
+# Network Simulator Project
+# CS 143 -- Fall 2015
+#
 # router.py
 #
 # This contains the router class, which contains methods for simulating the
@@ -7,7 +11,16 @@
 #
 
 # Import network objects
-import packet, link, flow, simulator, event, host
+import packet as p
+import link as l
+import flow as f
+import router as r
+import host as h
+import event as e
+
+# Import the constants and the conversion functions
+import constants as ct
+import conversion as cv
 
 class Router:
 

@@ -7,10 +7,16 @@
 #
 
 # Import network objects
-import packet, link, simulator, router, event, host
+import packet as p
+import link as l
+import flow as f
+import router as r
+import host as h
+import event as e
 
-from misc.constants import *
-from misc.conversion import *
+# Import the constants and the conversion functions
+import constants as ct
+import conversion as cv
 
 # A global count of Packets that are sent
 packet_count = 0

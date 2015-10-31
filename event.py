@@ -1,11 +1,25 @@
 #
+# Ricky Galliani, Tim Menninger, Rush Joshi, Schaeffer Reed
+# Network Simulator Project
+# CS 143 -- Fall 2015
+#
 # event.py
 #
 # This file contains the event class, which is a class describing a particular
 # event using its actor, function call and parameter list.
 #
 
-import packet, link, flow, router, simulator, host
+# Import network objects
+import packet as p
+import link as l
+import flow as f
+import router as r
+import host as h
+import event as e
+
+# Import the constants and the conversion functions
+import constants as ct
+import conversion as cv
 
 class Event:
 

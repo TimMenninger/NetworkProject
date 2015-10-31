@@ -1,4 +1,8 @@
 #
+# Ricky Galliani, Tim Menninger, Rush Joshi, Schaeffer Reed
+# Network Simulator Project
+# CS 143 -- Fall 2015
+#
 # host.py
 #
 # This contains the host class, which is the object used to represent a
@@ -6,7 +10,16 @@
 #
 
 # Import network objects
-import packet, link, flow, router, event, simulator
+import packet as p
+import link as l
+import flow as f
+import router as r
+import host as h
+import event as e
+
+# Import the constants and the conversion functions
+import constants as ct
+import conversion as cv
 
 class Host:
 
@@ -25,7 +38,7 @@ class Host:
 		Alters the 'link' attribute of the Host to reflect the link
 		connecting the Host to the network.
 		'''
-		self.link = []
+		self.link = link_name
 
 	def send_packet():
 		'''

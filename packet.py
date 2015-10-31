@@ -1,4 +1,8 @@
 #
+# Ricky Galliani, Tim Menninger, Rush Joshi, Schaeffer Reed
+# Network Simulator Project
+# CS 143 -- Fall 2015
+#
 # packet.py
 #
 # This contains the packet class, which is the data structure that represents
@@ -6,7 +10,16 @@
 #
 
 # Import network objects
-import simulator, link, flow, router, event, host
+import packet as p
+import link as l
+import flow as f
+import router as r
+import host as h
+import event as e
+
+# Import the constants and the conversion functions
+import constants as ct
+import conversion as cv
 
 class Packet:
 

@@ -1,3 +1,14 @@
+#
+# Ricky Galliani, Tim Menninger, Rush Joshi, Schaeffer Reed
+# Network Simulator Project
+# CS 143 -- Fall 2015
+#
+# conversion.py
+#
+# This contains the conversion module.  This is where functions that convert
+# between common network units (i.e., MB, bits) are defined and implemented.
+#
+
 # Conversion helper functions
 
 def MB_to_bits(num_in_MB):
