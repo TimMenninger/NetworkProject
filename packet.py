@@ -69,6 +69,13 @@ class Packet:
 		self.data = data
 		
 		
+	def set_src(src):
+		'''
+		Sets the source attribute of the packet.
+		'''
+		self.src = src
+		
+		
 	def set_time(time = -1):
 		'''
 		Sets the timestamp of the packet.  If nothing is argued (or the argument is negative),
