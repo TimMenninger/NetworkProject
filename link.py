@@ -17,6 +17,9 @@ import router as r
 import host as h
 import event as e
 
+# Import simulator so we can access global dictionaries.
+import simulator as sim
+
 # Import the constants and the conversion functions
 import constants as ct
 import conversion as cv
@@ -73,7 +76,7 @@ class Link:
 		[endpoint_name, flow_name, packet_name] = argument_list
 		
 		# For ease and code readability, extract the packet
-		packet = dict_packets[(flow_name, packet_name)]
+		packet = sim.packets[(flow_name, packet_name)]
 		
 		# Figure out which endpoint this packet was received from.
 		ep = 0
@@ -101,7 +104,7 @@ class Link:
 		# Dequeue the next packet from the buffer at the argued endpoint. Then,
 		# 	update the load on the buffer.
 		packet_desc = self.buffers.pop()
-		packet = dict_packets[(packet_desc[1], packet_desc[ep][2])]
+		packet = sim.packets[(packet_desc[1], packet_desc[ep][2])]
 		self.buffer_current_load[ep] -= packet.size
 			
 		return packet_desc[1], packet_desc[2]
@@ -122,7 +125,7 @@ class Link:
 			ep = 1
 			
 		# Put the packet in a container
-		packet = dict_packets[(self.buffers[ep][1], self.buffers[ep][2])]
+		packet = sim.packets[(self.buffers[ep][1], self.buffers[ep][2])]
 			
 		
 		# Using the amount of data on the link and the direction of flow,
@@ -168,7 +171,7 @@ class Link:
 		flow_name, packet_name = self.dequeue_packet(endpoint)
 		
 		# Create a packet from the info dequeuing gave us.
-		packet = dict_packets[(flow_name, packet_name)]
+		packet = sim.packets[(flow_name, packet_name)]
 		
 		# Put the packet into the link itself and update our size tracker.
 		self.packets_carrying.append((flow_name, packet_name))
@@ -177,7 +180,7 @@ class Link:
 		# The next event will be this packet is received by the other endpoint,
 		#	and that will be after the propagation delay.
 		time_delay = packet.size / self.rate
-		receive_event = Event(dict_endpoints[self.endpoints[endpoint]], receive_packet, [])
+		receive_event = Event(sim.endpoints[self.endpoints[endpoint]], receive_packet, [])
 		
 		# Enqueue the event.
 		event_queue.append((time_delay, receive_event))
