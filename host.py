@@ -17,6 +17,9 @@ import router as r
 import host as h
 import event as e
 
+# Import simulator so we can access global dictionaries.
+import simulator as sim
+
 # Import the constants and the conversion functions
 import constants as ct
 import conversion as cv
@@ -71,7 +74,6 @@ class Host:
 		
 	# 	# We are now waiting for acknowledgement
 	# 	self.waiting_for_ack[packet.ID] = packet
-		self.link = link_name
 		
 
 	def send_packet(argument_list):
@@ -107,7 +109,7 @@ class Host:
 		[flow_name, packet_name] = argument_list
 		
 		# Create a packet for the argued description.
-		packet = dict_packets[(flow_name, packet_name)]
+		packet = sim.packets[(flow_name, packet_name)]
 		
 		if packet.type == PACKET_DATA:
 			# Create acknowledgement packet.
