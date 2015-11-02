@@ -31,10 +31,13 @@ import simulate as s
 import config_parser as cp
 
 
-def compute_routing_tables():
-	'''
-	Sets the routing tables for the network.
-	'''
+# Global variables containing objects in the network as well as events.
+packets 	= {} # Packets in the system
+links 		= {} # Links in the network
+endpoints 	= {} # Hosts and routers in the network
+flows 		= {} # Flows of data in the network
+event_queue	= [] # Heap queue containing (time, event) tuples
+
 	
 def create_initial_events():
 	'''
@@ -46,10 +49,6 @@ def run_network():
 	'''
 	Run the simulation.
 	'''
-
-	# Contains (time, event) tuples in a heap queue so that when events are 
-	# popped in chronological order
-	event_queue = [] 
 
 	# For debugging purposes?
 	u.print_dict_keys("endpoints", endpoints)
