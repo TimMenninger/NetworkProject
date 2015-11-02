@@ -40,10 +40,14 @@ class Flow:
 		self.size = the_size
 
 		# Window size as computed 
-		window_size = 0
+		self.window_size = 0
 
 		# List of packets in the network
-		packets_in_flight = []
+		self.packets_in_flight = []
+		
+		# The last used packet ID for this flow.  The first packet ID should be 0, so a
+		#	value of -1 implies no packets have been created yet.
+		self.last_packet_ID = -1
 
 	def set_algorithm(algorithm):
 		'''
@@ -55,11 +59,11 @@ class Flow:
 		'''
 		Returns an unused ID for a packet.
 		'''
-		# Increment the ID for the next call.
+		# Increment the ID to get the next unused packet ID.
 		self.next_packet_ID += 1
 		
-		# Return the old one.
-		return self.next_packet_ID - 1
+		# Return the ID.
+		return self.next_packet_ID
 		
 	def print_contents():
 		'''
