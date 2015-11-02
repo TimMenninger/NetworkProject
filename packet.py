@@ -48,6 +48,47 @@ class Packet:
 		# Integer representing the size of the Packet, dependent on its type
 		# PACKET_DATA_SIZE, PACKET_ACK_SIZE, or PACKET_ROUTING_SIZE
 		self.size = the_size
+		
+		# Keep track of data contained in this packet (only relevant for routing packets
+		#	at the moment)
+		self.data = None
+		
+	
+	def set_dest(dest_name):
+		'''
+		Sets the destination for this packet.
+		'''
+		self.dest = dest_name
+		
+		
+	def set_data(data):
+		'''
+		Sets the data for this packet to send.
+		'''
+		# Check if data is less than packet size?
+		self.data = data
+		
+		
+	def set_time(time = -1):
+		'''
+		Sets the timestamp of the packet.  If nothing is argued (or the argument is negative),
+		then it is set to the current time.
+		'''
+		if time >= 0:
+			self.time = time
+		else:
+			self.time = now()
+			
+			
+	def set_ID(the_id = -1):
+		'''
+		Sets the ID of the packet.  If no ID is given or it is negative, then the next available
+		ID for the packet's flow is taken.
+		'''
+		if the_id >= 0:
+			self.ID = the_id
+		else:
+			self.ID = self.flow.create_packet_ID()
 
 
 	def print_contents():
