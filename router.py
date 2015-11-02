@@ -35,10 +35,14 @@ class Router:
 		self.links = []
 
 		# Python dictionary - contains destination hostnames as keys and Link
-		# names as values
-		self.routing_table_A = {}
-		self.routing_table_B = {}
-		self.using_table_A = True
+		# names as values.
+		self.routing_tables = ({}, {})
+		
+		# Keep track of the distances so we know how to update the routing tables when necessary.
+		self.routing_dists = {}
+		
+		# The index of the routing table in use.
+		self.using_table = 0
 		
 		
 	def add_link(link_name):
@@ -53,7 +57,42 @@ class Router:
 		Sets the routing table for this Router.
 		'''
 		
-	def send_config_packet():
+	def switch_routing_table():
+		# Get the index of the table not in use.
+		other_table = (self.using_table + 1) % 2
+		
+		# Make sure if there was an entry in the routing table before that there
+		#	is still an entry in the routing table.
+		for key in self.routing_tables[self.using_table]:
+			if key not in self.routing_tables[other_table]:
+				self.routing_tables[other_table][key] = self.routing_tables[self.using_table][key]
+				
+		# After populating the new table, clear the current one so we can refill it.
+		self.routing_tables[using_table] = {}
+		self.routing_dists = {}
+				
+		# Update the index of which routing table is in use.
+		self.using_table = other_table
+		
+	def create_config_packet():
+		'''
+		Creates a special configuration packet that, when received by other routers,
+		is understood as a configuration packet and can be used to set up routing
+		tables.
+		'''
+		#
+		# PSEUDOCODE:
+		#
+		# config_pkt = p.Packet(None, FLOW, self.router_name, None,
+		#		      PACKET_ROUTING, PACKET_ROUTING_SIZE, None)
+		#
+		# config_pkt.set_data(self.router_name, now())
+		#
+		# return config_pkt
+		#
+		
+		
+	def send_config_packet(config_pkt):
 		'''
 		Creates a special configuration packet that, when received by other routers,
 		is understood as a configuration packet.
@@ -75,8 +114,19 @@ class Router:
 		#	For this to work, we want to keep track of the shortest distance to each
 		# router from this one.  Initialize all these values to be infinity.
 		#
+		#
+		#
+		# PSEUDOCODE:
+		#
+		# for link in self.links:
+		#	config_pkt.set_time()
+		#	config_pkt.set_ID()
+		#	config_pkt.set_src(self.router_name)
+		#	config_pkt.set_dest(link.link_name)
+		#	send_packet(config_pkt)
+		#
 		
-	def parse_config_packet():
+	def parse_config_packet(config_pkt):
 		'''
 		Receives a configuration packet and updates the routing table if any new, useful
 		information is learned from it.
@@ -107,8 +157,23 @@ class Router:
 		# packet came through, that was propagated.  Therefore, we know this process will
 		# terminate.
 		#
+		#
+		#
+		#
+		#
+		# PSEUDOCODE:
+		#
+		# other_table = (self.using_table + 1) % 2
+		#
+		# if config_pkt.data[0] not in self.routing_tables[other_table] OR
+		#    routing_dists[config_pkt.data[0]] > config_pkt.data[1]:
+		#	self.routing_tables[other_table][config_pkt.data[0]] = config_pkt.src
+		#	self.routing_dists[config_pkt.data[0]] = config_pkt.data[1]
+		#	send_config_packet(config_pkt)
+		#
+		#
 
-	def send_packet():
+	def send_packet(packet):
 		'''
 		Sends a packet from this Router to a particular destination using a
 		specific link connected to this Router.
