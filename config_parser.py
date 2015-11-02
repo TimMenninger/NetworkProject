@@ -114,8 +114,12 @@ def load_network_objects(network_file):
 
 	# Close the file.
 	network.close()
+	
+	# Create a dictionary for the packets.  Will be empty at first, but let's do it here
+	#	so all of the dictionaries are created at once/in one place.
+	dict_packets = {}
 
 	# Return all the dictionaries
-	return (dict_endpoints, dict_links, dict_flows)
+	return (dict_endpoints, dict_links, dict_flows, dict_packets)
 
 
