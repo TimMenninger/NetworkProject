@@ -21,30 +21,33 @@ TEST_CASE_1_FILENAME = "misc/test_configs/case_1.txt"
 TEST_CASE_2_FILENAME = "misc/test_configs/case_2.txt"
 
 # Congestion Control algorithm
-FLOW_FAST_TCP 		= 0
-FLOW_TCP_RENO 		= 1
+FLOW_FAST_TCP       = 0
+FLOW_TCP_RENO       = 1
 
 # Packet types
-PACKET_DATA 		= 0
-PACKET_ACK 		= 1
-PACKET_ROUTING 		= 2
+PACKET_DATA         = 0
+PACKET_ACK          = 1
+PACKET_ROUTING      = 2
 
 # Packet sizes (in bits)
-PACKET_DATA_SIZE   	= 1024 		# Size of data Packet
-PACKET_ACK_SIZE 	= 64 		# Size of ack Packet
-PACKET_ROUTING_SIZE 	= 64 		# Size of routing Packet
+PACKET_DATA_SIZE    = 1024      # Size of data Packet
+PACKET_ACK_SIZE     = 64        # Size of ack Packet
+PACKET_ROUTING_SIZE = 64        # Size of routing Packet
 
 # Status codes
-SUCCESS			= 0		# Operation was success
-LINK_ERROR		= 1		# Unknown error with link
-LINK_FULL		= 2		# Link was full
+SUCCESS             = 0         # Operation was success
+LINK_ERROR          = 1         # Unknown error with link
+LINK_FULL           = 2         # Link was full
 
 # Constants indicating whether link is used/free
-LINK_FREE 		= 0 		# Link free in both directions
-LINK_USED_HIGH 		= 1 		# Link used in direction of higher Host/Router name
-LINK_USED_LOW 		= -1 		# Link used in direction of lower Host/Router name
+LINK_FREE           = 0         # Link free in both directions
+LINK_USED_HIGH      = 1         # Link used in direction of higher Host/Router name
+LINK_USED_LOW       = -1        # Link used in direction of lower Host/Router name
 
 # Time constants
-RECORDING_INTERVAL	= 10		# Number of milliseconds between each network status recording
-SIMULATION_TIME		= 1e6		# Maximum number of milliseconds the network should run.
+RECORDING_INTERVAL  = 10        # Number of milliseconds between each network status recording
+SIMULATION_TIME     = 1e6       # Maximum number of milliseconds the network should run.
 
+        
+if __name__ == '__main__':
+    pass
