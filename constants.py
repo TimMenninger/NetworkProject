@@ -47,7 +47,3 @@ LINK_USED_LOW       = -1        # Link used in direction of lower Host/Router na
 # Time constants
 RECORDING_INTERVAL  = 10        # Number of milliseconds between each network status recording
 SIMULATION_TIME     = 1e6       # Maximum number of milliseconds the network should run.
-
-        
-if __name__ == '__main__':
-    pass

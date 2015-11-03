@@ -96,6 +96,7 @@ def network_now():
     '''
     Returns the time in simulated milliseconds since the network was initiated.
     '''
+    
     return network_time
     
 
@@ -210,6 +211,9 @@ def run_network():
     '''
     Run the simulation.
     '''
+    
+    # Declare that we are using/changing the global variable.
+    global network_time
 
     # For debugging purposes?
     u.print_dict_keys("endpoints", endpoints)
@@ -222,20 +226,13 @@ def run_network():
     # Make the first recording of the network status.
     record_network_status()
     
-    # Time in milliseconds the next recording should be made.
-    next_data_recording = ct.RECORDING_INTERVAL
-    
-    # Initialize the network time.
-    network_time = 0
-    
     # Iterate until there are no more events or the simulation time is over.
     while len(event_queue) > 0 and network_time < ct.SIMULATION_TIME:
         # dequeue next event in chronology
         next_event = heapq.heappop(event_queue)
         
-        # Forward the time to the time of the next event.  For whatever reason, the time is stored
-        #   as a string, so we are converting it to an integer here.
-        network_time = round(float(next_event[0]), 0)
+        # Forward the time to the time of the next event.
+        network_time = next_event[0]
         
         # Extract the information about the next event so we can execute it.
         (actor, event_function, event_parameters) = next_event[1].get_info()

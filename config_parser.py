@@ -161,7 +161,8 @@ def load_network_objects(network_file):
         flow = flow.split()
 
         # Create a flow and add it to the dictionary.
-        sim.flows['flow_' + flow[0]] = f.Flow('flow_' + flow[0], flow[1], flow[2], int(flow[3]), flow[4])
+        sim.flows['flow_' + flow[0]] = f.Flow('flow_' + flow[0], flow[1], \
+					flow[2], int(flow[3]), 1000 * round(float(flow[4]), 0))
         
         # Read the next line.
         flow = network.readline()
