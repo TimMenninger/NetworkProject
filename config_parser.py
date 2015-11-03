@@ -1,3 +1,4 @@
+################################################################################
 #
 # Ricky Galliani, Tim Menninger, Rush Joshi, Schaeffer Reed
 # Network Simulator Project
@@ -9,6 +10,19 @@
 # the event queue is here, the lists of objects are here and the main loop
 # is here.
 #
+################################################################################
+
+
+
+
+
+
+################################################################################
+#                                                                              #
+#                               Imported Modules                               #
+#                                                                              #
+################################################################################
+
 
 # Import network objects
 import packet as p
@@ -22,11 +36,51 @@ import event as e
 import constants as ct
 import conversion as cv
 
-# Dictionaries that will be populated during config parsing and returned in 
-# load_network_objects.
-dict_endpoints = {}
-dict_links = {}
-dict_flows = {}
+# Import the simulator so we have access to the global variables in it.
+import simulate as sim
+
+
+################################################################################
+#                                                                              #
+#                                   Functions                                  #
+#                                                                              #
+################################################################################
+
+#
+# load_network_objects
+#
+#
+# Description:  	Loads the network topology from a config file that is argued
+# 					at the command line.  For each object in the network
+#					topology, this creates an object and indexes it in a
+#					dictionary by its name/ID.
+#
+# Arguments:		network_file (string) - A string representing the name of
+#						the network topology config file.
+#
+# Return Values:	sim.endpoints (dictionary) - A dictionary of routers and
+#						hosts indexed by their name.
+#					sim.links (dictionary) - A dictionary of links indexed by
+#						their respective names.
+#					sim.flows (dictionary) - A dictionary of flows indexed by
+#						the flow names.
+#					sim.packets (dictionary) - A dictionary of packets, which is
+#						left untouched (and thus empty) by this function.
+#
+# Global Variables:	sim.endpoints (WRITE) - Adds hosts and routers to this
+#						dictionary when loading the network objects.
+#					sim.links (WRITE) - Adds links to this dictionary when
+#						loading the network objects.
+#					sim.flows (WRITE) - Adds flow objects to this dictionary
+#						when loading network objects.
+#
+# Limitations:		Only works if the network topology file is in the correct
+#					format.  Behavior is undefined otherwise.
+#
+# Known Bugs:		None.
+#
+# Revision History:	2015/11/02: Created
+#
 
 def load_network_objects(network_file):
 	'''
@@ -50,7 +104,7 @@ def load_network_objects(network_file):
 		host_name = host_name.strip()
 
 		# Create a host and add it to the dictionary.
-		dict_endpoints[host_name] = h.Host('host_' + host_name)
+		sim.endpoints['host_' + host_name] = h.Host('host_' + host_name)
 		
 		# Read the host_name on the next.
 		host_name = network.readline()
@@ -69,7 +123,7 @@ def load_network_objects(network_file):
 		router_name = router_name.strip()
 
 		# Create a router and add it to the dictionary.
-		dict_endpoints[router_name] = r.Router('router_' + router_name)
+		sim.endpoints['router_' + router_name] = r.Router('router_' + router_name)
 		
 		# Read the next line.
 		router_name = network.readline()
@@ -88,8 +142,8 @@ def load_network_objects(network_file):
 		link = link.split()
 
 		# Create a link and add it to the dictionary
-		dict_links[link[0]] = l.Link('link_' + link[0], float(link[1]), int(link[2]), 
-								      int(link[3]), (link[4], link[5]))
+		sim.links['link_' + link[0]] = l.Link('link_' + link[0], float(link[1]), int(link[2]), 
+												int(link[3]), (link[4], link[5]))
 		
 		# Read the next line.
 		link = network.readline()
@@ -102,12 +156,12 @@ def load_network_objects(network_file):
 	# Iterate through flow specs, create Flows, and add them to the flows
 	# dictionary.
 	while flow != '\n':
-		# Flow text encoding: (ID Src Dest Data)
+		# Flow text encoding: (ID Src Dest Data Start_Time)
 		# Get list storing: [ID, Src, Dest, Data]
 		flow = flow.split()
 
 		# Create a flow and add it to the dictionary.
-		dict_flows[flow[0]] = f.Flow('flow_' + flow[0], flow[1], flow[2], int(flow[3]))
+		sim.flows['flow_' + flow[0]] = f.Flow('flow_' + flow[0], flow[1], flow[2], int(flow[3]), flow[4])
 		
 		# Read the next line.
 		flow = network.readline()
@@ -117,9 +171,9 @@ def load_network_objects(network_file):
 	
 	# Create a dictionary for the packets.  Will be empty at first, but let's do it here
 	#	so all of the dictionaries are created at once/in one place.
-	dict_packets = {}
+	sim.packets = {}
 
 	# Return all the dictionaries
-	return (dict_endpoints, dict_links, dict_flows, dict_packets)
+	return (sim.endpoints, sim.links, sim.flows, sim.packets)
 
 
