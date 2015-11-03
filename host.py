@@ -1,3 +1,4 @@
+################################################################################
 #
 # Ricky Galliani, Tim Menninger, Rush Joshi, Schaeffer Reed
 # Network Simulator Project
@@ -8,6 +9,18 @@
 # This contains the host class, which is the object used to represent a
 # host in the network.
 #
+################################################################################
+
+
+
+
+
+
+################################################################################
+#                                                                              #
+#                               Imported Modules                               #
+#                                                                              #
+################################################################################
 
 # Import network objects
 import packet as p
@@ -18,11 +31,18 @@ import host as h
 import event as e
 
 # Import simulator so we can access global dictionaries.
-import simulator as sim
+import simulate as sim
 
 # Import the constants and the conversion functions
 import constants as ct
 import conversion as cv
+
+
+################################################################################
+#                                                                              #
+#                                   Host Class                                 #
+#                                                                              #
+################################################################################
 
 class Host:
 
@@ -36,47 +56,65 @@ class Host:
 		# The link_name representing the Link to this Host
 		self.link = None
 		
-	def set_link(link_name):
+		
+#
+# set_link
+#
+# Description:		This sets the link the host is connected to.
+#
+# Arguments:		self (Host)
+#					link_name (string) - The name of the link that is associated
+#						with this host.
+#
+# Return Values:	None.
+#
+# Shared Variables: self.link (WRITE) - This sets the link attribute.
+#
+# Global Variables: None.
+#
+# Limitations:		None.
+#
+# Known Bugs:		None.
+#
+# Revision History: 2015/10/29: Created
+#
+		
+	def set_link(self, link_name):
 		'''
 		Alters the 'link' attribute of the Host to reflect the link
 		connecting the Host to the network.
 		'''
 		self.link = link_name
+	
 
-	def send_packet():
-		'''
-		Sends a Packet from this Host to a particular destination.  Then, it 
-		adds the appropriate subsequent event to the Simulator event queue.
-		'''
+#
+# send_packet
+#
+# Description:		This sends a packet from this host onto the link that is
+#					attached to it.
+#
+# Arguments:		self (Host)
+#					argument_list ([string, string]) - A list of arguments that
+#						is unpacked by the function.  This is a list to
+#						facilitate class definition.  The list should contain
+#						the flow name and the packet name.
+#
+# Return Values:	None.
+#
+# Shared Variables: self.link (READ) - This function uses the link name to send
+#						a packet to it.
+#
+# Global Variables: None.
+#
+# Limitations:		None.
+#
+# Known Bugs:		None.
+#
+# Revision History: 2015/10/22: Created function handle and docstring.
+#					2015/10/29: Filled in.
+#
 
-	def receive_packet():
-		'''
-		Receives a Packet from a Link.  Then, it adds the appropriate event to 
-		the Simulator event queue.
-		'''
-
-	def print_contents():
-		'''
-		Prints what is contained in all of the attributes of this Host.
-		'''
-
-
-
-
-
-
-	# def sendPacket(self, packet):
-	# 	'''
-	# 	Send a packet.
-	# 	'''
-	# 	# Send the packet onto the link.
-	# 	self.link.carry_packet(packet)
-		
-	# 	# We are now waiting for acknowledgement
-	# 	self.waiting_for_ack[packet.ID] = packet
-		
-
-	def send_packet(argument_list):
+	def send_packet(self, argument_list):
 		'''
 		Sends a Packet from this Host to a particular destination.  Then, it 
 		adds the appropriate subsequent event to the Simulator event queue.
@@ -85,22 +123,40 @@ class Host:
 		# Unpack the argument list.
 		[flow_name, packet_name] = argument_list
 		
-		# Enqueue the packet on the link.
+		# Create an event to enqueue the packet on the link.
 		self.link.enqueue_packet(self.host_name, flow_name, packet_name)
 		
-	# def receivePacket(self, packet):
-	# 	'''
-	# 	Receive a packet and react to it.
-	# 	'''
-	# 	# If it is an acknowledgement, update to reflect no longer waiting
-	# 	if packet.type == Packet_Types.ack:
-	# 		self.waitingForAck.pop(packet.ID)
 		
-	# 	# If it is data, record the data.
-	# 	elif packet.type == Packet_Types.data:
-	# 		self.receivedData.append(packet)
+#
+# receive_packet
+#
+# Description:		Receives a packet from the link and responds accordingly by
+#					enqueuing an event.  This event may be sending an ack packet
+#					or otherwise.
+#
+# Arguments:		self (Host)
+#					argument_list ([string, string]) - A list of arguments that
+#						is unpacked by the function.  This implementation is to
+#						facilitate the event class.  The list should contain
+#						the flow name and the packet name.
+#
+# Return Values:	None.
+#
+# Shared Variables: None.
+#
+# Global Variables:	sim.packets (READ) - This gets the packet instance from the
+#						dictionary using the argued key.
+#
+# Limitations:		None.
+#
+# Known Bugs:		None.
+#
+# Revision History: 2015/10/22: Created function handle and docstring.
+#					2015/10/29: Filled in function.
+#
+		
 
-	def receive_packet(argument_list):
+	def receive_packet(self, argument_list):
 		'''
 		Receives a Packet from a Link.  Then, it adds the appropriate event to 
 		the Simulator event queue.
@@ -115,14 +171,35 @@ class Host:
 			# Create acknowledgement packet.
 			ack_packet = Packet(flow.create_ID(), packet.flow,
 								self.host_name, packet.src, PACKET_ACK,
-								PACKET_ACK_SIZE, now())
+								PACKET_ACK_SIZE, sim.network_now())
 			# Compute how long the host must wait to send acknowledgement.
 			time_delay = 0
 			# Create an event to send this packet.
 			send_ack_event = Event(self, send_packet, [ack_packet.flow, ack_packet.ID])
 		
-
-	def print_contents():
+		
+#
+# print_contents
+#
+# Description:		Prints the attributes and their contained values.  This is
+#					used mainly for debugging purposes.
+#
+# Arguments:		self (Host)
+#
+# Return Values:	None.
+#
+# Shared Variables: None.
+#
+# Global Variables: None.
+#
+# Limitations:		None.
+#
+# Known Bugs:		None.
+#
+# Revision History: 2015/10/??: Created function handle
+#
+		
+	def print_contents(self):
 		'''
-		Prints what is contained in all of the attributes of this Host.
+		For debugging use. Print out the contents of the Flow.
 		'''
