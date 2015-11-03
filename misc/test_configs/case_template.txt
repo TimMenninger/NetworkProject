@@ -3,6 +3,7 @@ hostSpecs (ID):
 
 routerSpecs (ID):
 
+
 linkSpecs (ID Rate Delay Buffer Endpoint1 Endpoint2):
 
 

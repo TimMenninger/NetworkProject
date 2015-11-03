@@ -1,3 +1,4 @@
+################################################################################
 #
 # Ricky Galliani, Tim Menninger, Rush Joshi, Schaeffer Reed
 # Network Simulator Project
@@ -8,6 +9,18 @@
 # This file contains the event class, which is a class describing a particular
 # event using its actor, function call and parameter list.
 #
+################################################################################
+
+
+
+
+
+
+################################################################################
+#                                                                              #
+#                               Imported Modules                               #
+#                                                                              #
+################################################################################
 
 # Import network objects
 import packet as p
@@ -20,6 +33,13 @@ import event as e
 # Import the constants and the conversion functions
 import constants as ct
 import conversion as cv
+
+
+################################################################################
+#                                                                              #
+#                                  Event Class                                 #
+#                                                                              #
+################################################################################
 
 class Event:
 
@@ -40,9 +60,65 @@ class Event:
                 
 		# List of parameters for the function being executed
 		self.parameters = in_parameters
+		
+		
+#
+# get_info
+#
+# Description:		Returns the actor, function and parameters of this event
+#					instance.
+#
+# Arguments:		self (Event)
+#
+# Return Values:	self.actor (Union) - The actor for the argued event.  This
+#						can be a flow, host, link, packet, router, etc.
+#					self.function (FnPtr) - A pointer to the function that this
+#						event represents.
+#					self.parameters (List) - A list of parameters for the 
+#						function this Event represents.
+#
+# Shared Variables: self.actor (READ) - Returned by this function.
+#					self.function (READ) - Returned by this function.
+#					self.parameters (READ) - Returned by this function.
+#
+# Global Variables:	None.
+#
+# Limitations:		None.
+#
+# Known Bugs:		None.
+#
+# Revision History: 2015/11/02: Created
+#
+		
+	def get_info(self):
+		'''
+		Returns the actor, function and parameters for this event.
+		'''
+		return self.actor, self.function, self.parameters
+            
                 
+#
+# print_contents
+#
+# Description:		Prints the attributes and their contained values.  This is
+#					used mainly for debugging purposes.
+#
+# Arguments:		self (Event)
+#
+# Return Values:	None.
+#
+# Shared Variables: None.
+#
+# Global Variables: None.
+#
+# Limitations:		None.
+#
+# Known Bugs:		None.
+#
+# Revision History: 2015/10/??: Created function handle
+#
                 
-		def print_contents():
-			'''
-			Prints contents of this event.
-			'''
+	def print_contents(self):
+		'''
+		Prints contents of this event.
+		'''
