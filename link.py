@@ -1,3 +1,4 @@
+################################################################################
 #
 # Ricky Galliani, Tim Menninger, Rush Joshi, Schaeffer Reed
 # Network Simulator Project
@@ -8,6 +9,18 @@
 # This contains the link class.  It has methods that enqueue packets then
 # transmit them at calculated times.
 #
+################################################################################
+
+
+
+
+
+
+################################################################################
+#                                                                              #
+#                               Imported Modules                               #
+#                                                                              #
+################################################################################
 
 # Import network objects
 import packet as p
@@ -18,11 +31,18 @@ import host as h
 import event as e
 
 # Import simulator so we can access global dictionaries.
-import simulator as sim
+import simulate as sim
 
 # Import the constants and the conversion functions
 import constants as ct
 import conversion as cv
+
+
+################################################################################
+#                                                                              #
+#                                   Link Class                                 #
+#                                                                              #
+################################################################################
 
 class Link:
 
@@ -66,7 +86,42 @@ class Link:
 		# Amount of data on link
 		self.current_load = 0
 		
-	def enqueue_packet(argument_list):
+		
+#
+# enqueue_packet
+#
+# Description:		This enqueues a packet onto the buffer at the end that the
+#					packet was received from.
+#
+# Arguments:		self (Link)
+#					argument_list ([string, string, string]) - A list of
+#						arguments to the function, representing the endpoint
+#						name, flow name and packet name, respectively.
+#
+# Return Values:	(integer) - A status integer that indicates the success or
+#						lack thereof of the function.
+#
+# Shared Variables:	self.buffers (WRITE) - This function enqueues a packet onto
+#						one of the buffers (potentially).
+#					self.end_points (READ) - This is read to determine which
+#						buffer should be altered, if any.
+#					self.buffer_current_load (READ) - This is used to determine
+#						if there is space on the buffer to enqueue a packet.
+#					self.buffer_size (READ) - This is used to determine if there
+#						is enough space on the buffer to enqueue a packet.
+#
+# Global Variables:	sim.packets (READ) - This dictionary is read from to get a
+#						packet instance from its flow and packet names.
+#
+# Limitations:		None.
+#
+# Known Bugs:		None.
+#
+# Revision History: 2015/10/22: Created function handle and docstring
+#					2015/10/29: Filled function in.
+#
+		
+	def enqueue_packet(self, argument_list):
 		'''
 		Adds a Packet to the Packet queue where it will wait to be transmitted
 		along this link.
@@ -89,11 +144,44 @@ class Link:
 		if self.buffer_current_load[ep] + packet.size <= self.buffer_size:
 			
 			# Put the packet into the buffer and update its current load.
-			self.buffers[ep].append((now(), flow_name, packet_name))
+			self.buffers[ep].append((sim.network_now(), flow_name, packet_name))
 			self.buffer_current_load[ep] += packet.size
 			
+			return ct.SUCCESS
+			
+		return ct.LINK_FULL
+			
+			
+#
+# dequeue_packet
+#
+# Description:		This dequeues a packet from the argued endpoint, thereby
+#					removing it from the list, and returns it.
+#
+# Arguments:		self (Link)
+#					argument_list ([string]) - A list containing the endpoint
+#						index from which a packet should be dequeued.
+#
+# Return Values:	(string) - The flow name of the dequeued packet.
+#					(string) - The name of the packet dequeued.
+#
+# Shared Variables:	self.buffers (WRITE) - One of the buffers in this loses a
+#						packet.
+#					self.buffer_current_load (WRITE) - Updated to reflect one
+#						one fewer packet.
+#
+# Global Variables:	sim.packets (READ) - Read to get the packet instance from
+#						the flow and packet names.
+#
+# Limitations:		None.
+#
+# Known Bugs:		None.
+#
+# Revision History: 2015/10/22: Created function handle and docstring.
+#					2015/10/29: Filled in function
+#
 
-	def dequeue_packet(argument_list):
+	def dequeue_packet(self, argument_list):
 		'''
 		Dequeues a Packet from the Packet queue to transmit along this link.
 		'''
@@ -103,14 +191,52 @@ class Link:
 		
 		# Dequeue the next packet from the buffer at the argued endpoint. Then,
 		# 	update the load on the buffer.
-		packet_desc = self.buffers.pop()
+		packet_desc = self.buffers[endpoint].pop()
 		packet = sim.packets[(packet_desc[1], packet_desc[ep][2])]
 		self.buffer_current_load[ep] -= packet.size
 			
+		# Return flow name and packet ID
 		return packet_desc[1], packet_desc[2]
 		
 		
-	def enqueue_carry_event():
+#
+# enqueue_carry_event
+#
+# Description:		This decides which of the two buffers should have a packet
+#					popped then sent down the link, then creates an event that
+#					will pop from that buffer and send the packet.
+#
+# Arguments:		self (Link)
+#
+# Return Values:	ep (integer) - The index of the endpoint that contains the
+#						next packet to be sent.
+#					packet.flow_name (string) - The name of the flow the packet
+#						is a part of.
+#					packet.ID (string) - The ID of the packet to be sent.
+#					time_delay (integer) - The amount of time it would take in
+#						theory for this event to occur in real life.  This will
+#						be the amount of time waited before executing the event.
+#
+# Shared Variables:	self.buffers (READ) - Read from to determine which buffer
+#						is more worthy of sending a packet.
+#					self.flowing_from (READ) - Read to determine which direction
+#						the current flow is going.
+#					self.rate (READ) - Used to determine the time delay before
+#						the packet gets sent.
+#					self.link_current_load (READ) - Used to determine the time
+#						until the packet gets sent.
+#
+# Global Variables:	sim.packets (READ) - Used to get the packet instance from
+#						the flow name and packet name.
+#
+# Limitations:		None.
+#
+# Known Bugs:		None.
+#
+# Revision History: 2015/10/29: Created
+#
+		
+	def enqueue_carry_event(self):
 		'''
 		Peeks at the next packet that is to be sent.  This returns which
 		endpoint the packet is at, its flow and packet names and the time
@@ -136,7 +262,7 @@ class Link:
 		elif ep == self.flowing_from:
 			# The packet must go in the direction of the current flow.  We just
 			#	need to wait until there is enough space on the link.
-			if self.rate - self.buffer_current_load >= packet.size:
+			if self.rate - self.link_current_load >= packet.size:
 				# Enough space to put packet on immediately
 				time_delay = 0
 			else:
@@ -150,15 +276,48 @@ class Link:
 			time_delay = self.link_current_load / self.rate
 			
 		# Create the next event.
-		carry_event = Event(self, carry_packet, [ep])
+		carry_event = e.Event(self, carry_packet, [ep])
 			
 		# Create the event for carrying the packet.
-		event_queue.append(time_delay, carry_event)
+		heapq.heappush(sim.event_queue, (time_delay, carry_event))
 		
 		return ep, packet.flow_name, packet.ID, time_delay
 		
 
-	def carry_packet(argument_list):
+#
+# carry_packet
+#
+# Description:		Simulates the link carrying the packet.  This pops a packet
+#					from the appropriate buffer and then changes the link
+#					attributes to reflect the packet on the link and enqueues
+#					an event for the other end to receive the packet.  Along
+#					with this event, this calculates how much time should pass
+#					before the reception is made.
+#
+# Arguments:		self (Link)
+#					argument_list ([string]) - A list containing the index of
+#						the endpoint that the packet is being sent from.
+#
+# Return Values:	None.
+#
+# Shared Variables:	self.packets_carrying (WRITE) - The packet that is being put
+#						onto the link is added to this list.
+#					self.link_current_load (WRITE) - Updated to reflect the new
+#						load on the link.
+#					self.delay (READ) - Used to determine the time that should
+#						pass before the packet is received.
+#
+# Global Variables:	sim.packets (READ) - Used to get a packet instance from a
+#						flow name and a packet name.
+#
+# Limitations:		None.
+#
+# Known Variables:	None.
+#
+# Revision History: 2015/10/29: Created
+#
+
+	def carry_packet(self, argument_list):
 		'''
 		Updates the Link to reflect that a packet is now in transmission.
 		'''
@@ -180,19 +339,34 @@ class Link:
 		# The next event will be this packet is received by the other endpoint,
 		#	and that will be after the propagation delay.
 		time_delay = packet.size / self.rate
-		receive_event = Event(sim.endpoints[self.endpoints[endpoint]], receive_packet, [])
+		receive_event = e.Event(sim.endpoints[self.endpoints[endpoint]], receive_packet, [])
 		
 		# Enqueue the event.
-		event_queue.append((time_delay, receive_event))
+		heapq.heappush(sim.event_queue, (time_delay, receive_event))
 		
-		# Compute how much time "God" must wait to tell the link to load another
-		#	packet onto the link.
-		next_packet_delay = packet.size * self.delay
 		
-		return next_packet_delay
+#
+# print_contents
+#
+# Description:		Prints the attributes and their contained values.  This is
+#					used mainly for debugging purposes.
+#
+# Arguments:		self (Link)
+#
+# Return Values:	None.
+#
+# Shared Variables: None.
+#
+# Global Variables: None.
+#
+# Limitations:		None.
+#
+# Known Bugs:		None.
+#
+# Revision History: 2015/10/??: Created function handle
+#
 		
-
-	def print_contents():
+	def print_contents(self):
 		'''
 		Prints the status of all atributes of this Pink.
 		'''
