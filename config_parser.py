@@ -123,7 +123,7 @@ def load_network_objects(network_file):
         router_name = router_name.strip()
 
         # Create a router and add it to the dictionary.
-        sim.endpoints['router_' + router_name] = 
+        sim.endpoints['router_' + router_name] = \
                                               r.Router('router_' + router_name)
         
         # Read the next line.

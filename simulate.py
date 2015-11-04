@@ -47,7 +47,7 @@ import config_parser as cp
 import sys
 
 # Import heapq library so we can use it for our events.
-import heapq
+import heapq 
 
 
 ################################################################################
@@ -130,8 +130,8 @@ def create_initial_events():
     
     # Create an event for each flow.
     for flow in flows:
-        # Create the event for the flow starting.  There are no arguments, but the
-        #   event class expects an argument list.
+        # Create the event for the flow starting.  There are no arguments, 
+        # but the event class expects an argument list.
         flow_event = e.Event(flows[flow], flows[flow].start_flow, [])
         
         # Enqueue the event in our heap queue.
@@ -166,20 +166,21 @@ def create_initial_events():
     
 def record_network_status(unused_list = None):
     '''
-    This records the status of various attributes of the network such as time and congestion.
+    This records the status of various attributes of the network such as time 
+    and congestion.
     '''
     
     # TODO: Record network status
     
     # Create an event for the next recording if there are more events in the 
-    #   queue.  If there are no more events, we don't need to keep recording.
-    #   Otherwise, the event queue would never be empty and run_network would
-    #   always run for the entire allotted time.
+    # queue.  If there are no more events, we don't need to keep recording.
+    # Otherwise, the event queue would never be empty and run_network would
+    # always run for the entire allotted time.
     if len(event_queue) > 0:
         next_record_time = network_now() + ct.RECORDING_INTERVAL
         record_event = e.Event(None, record_network_status, [])
         heapq.heappush(event_queue, (next_record_time, record_event))
-    
+     
     
 #
 # run_network
@@ -227,8 +228,8 @@ def run_network():
     record_network_status()
     
     # Iterate until there are no more events or the simulation time is over.
-    while len(event_queue) > 0 and network_time < ct.SIMULATION_TIME:
-        # dequeue next event in chronology
+    while len(event_queue) > 0 and network_time < ct.MAX_SIMULATION_TIME:
+        # Dequeue next event in chronology
         next_event = heapq.heappop(event_queue)
         
         # Forward the time to the time of the next event.
@@ -246,7 +247,8 @@ def run_network():
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         # Input was incorrect
-        print 'usage: python simulate.py [config_file]\n'
+        print("usage: python simulate.py [config_file]\n")
+        exit()
         
     # Take the config filename from the commandline.
     network_file = sys.argv[1]
@@ -257,5 +259,5 @@ if __name__ == "__main__":
     # Run the network simulation loop
     status = run_network()
     
-    print 'Network ran with no errors.\n'
+    print("\nNetwork ran with no errors.\n")
     

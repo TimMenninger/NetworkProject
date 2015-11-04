@@ -60,8 +60,38 @@ class Event:
                 
         # List of parameters for the function being executed
         self.parameters = in_parameters
-        
-        
+
+#
+# __lt__
+#
+# Description:      A function that is required because Event instances will 
+#                   be placed into tuples that will be pushed onto the 
+#                   event_queue heapq.  If two tuples in the event_queue heapq
+#                   have the same exact time associated with them, the heapq
+#                   needs to know which heapq to pop.  This function 
+#                   essentially tells the heapq that the one is "less than" the
+#                   other.  We should strive to avoid having this situation 
+#                   though by not assigning the same time to multiple events,
+#                   to the best of our ability.
+#
+# Arguments:        self (Event)
+#                   other (Event)
+#
+# Return Values:    self (Event)
+#
+#
+# Global Variables: None.
+#
+# Limitations:      None.
+#
+# Known Bugs:       None.
+#
+# Revision History: 2015/11/02: Created
+#
+
+    def __lt__(self, other):
+        return self
+
 #
 # get_info
 #
