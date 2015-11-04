@@ -172,10 +172,16 @@ class Host:
             ack_packet = Packet(flow.create_ID(), packet.flow,
                                 self.host_name, packet.src, PACKET_ACK,
                                 PACKET_ACK_SIZE, sim.network_now())
+            
             # Compute how long the host must wait to send acknowledgement.
             time_delay = 0
+            
             # Create an event to send this packet.
             send_ack_event = Event(self, send_packet, [ack_packet.flow, ack_packet.ID])
+
+            # Add send ack packet event to the simulation priority queue
+            heapq.heappush(sim.event_queue, ((sim.network_now() + time_delay), 
+                                              send_ack_event))
         
         
 #

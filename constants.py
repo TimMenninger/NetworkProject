@@ -40,9 +40,9 @@ LINK_ERROR          = 1     # Unknown error with link
 LINK_FULL           = 2     # Link was full
 
 # Constants indicating whether link is used/free
-LINK_FREE           = 0     # Link free in both directions
-LINK_USED_HIGH      = 1     # Link used in direction of higher Host/Router name
-LINK_USED_LOW       = -1    # Link used in direction of lower Host/Router name
+LINK_NOT_USED        = -1   # Link not being used in either direction
+LINK_USED_HIGH       = 1    # Link being used towards higher Host/Router name
+LINK_USED_LOW        = 0    # Link being used towards lower Host/Router name
 
 # Time constants
 RECORDING_INTERVAL  = 10    # Number of milliseconds between each network 
