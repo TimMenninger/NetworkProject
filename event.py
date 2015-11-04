@@ -115,7 +115,7 @@ class Event:
 #
 # Known Bugs:       None.
 #
-# Revision History: 2015/10/??: Created function handle
+# Revision History: 2015/10/21: Created function handle
 #
                 
     def print_contents(self):

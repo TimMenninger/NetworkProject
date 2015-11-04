@@ -35,7 +35,7 @@
 #
 # Known Bugs:       None.
 #
-# Revision History: 2015/10/??: Created
+# Revision History: 2015/10/21: Created
 #
 
 def MB_to_bits(num_in_MB):
@@ -64,7 +64,7 @@ def MB_to_bits(num_in_MB):
 #
 # Known Bugs:       None.
 #
-# Revision History: 2015/10/??: Created
+# Revision History: 2015/10/21: Created
 #
 
 def bits_to_MB(num_in_bits):

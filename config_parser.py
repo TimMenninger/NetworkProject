@@ -123,7 +123,8 @@ def load_network_objects(network_file):
         router_name = router_name.strip()
 
         # Create a router and add it to the dictionary.
-        sim.endpoints['router_' + router_name] = r.Router('router_' + router_name)
+        sim.endpoints['router_' + router_name] = 
+                                              r.Router('router_' + router_name)
         
         # Read the next line.
         router_name = network.readline()
@@ -142,8 +143,9 @@ def load_network_objects(network_file):
         link = link.split()
 
         # Create a link and add it to the dictionary
-        sim.links['link_' + link[0]] = l.Link('link_' + link[0], float(link[1]), int(link[2]), 
-                                                int(link[3]), (link[4], link[5]))
+        sim.links['link_' + link[0]] = l.Link('link_' + link[0], 
+                                              float(link[1]), int(link[2]), 
+                                              int(link[3]), (link[4], link[5]))
         
         # Read the next line.
         link = network.readline()
@@ -170,8 +172,8 @@ def load_network_objects(network_file):
     # Close the file.
     network.close()
     
-    # Create a dictionary for the packets.  Will be empty at first, but let's do it here
-    #   so all of the dictionaries are created at once/in one place.
+    # Create a dictionary for the packets.  Will be empty at first, but let's 
+    # do it here so all of the dictionaries are created at once/in one place.
     sim.packets = {}
 
     # Return all the dictionaries

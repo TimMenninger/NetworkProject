@@ -61,7 +61,8 @@ class Router:
         # names as values.
         self.routing_tables = ({}, {})
         
-        # Keep track of the distances so we know how to update the routing tables when necessary.
+        # Keep track of the distances so we know how to update the routing 
+        # tables when necessary.
         self.routing_dists = {}
         
         # The index of the routing table in use.
@@ -71,7 +72,8 @@ class Router:
 #
 # add_link
 #
-# Description:      Adds a link to the list of links associated with this router.
+# Description:      Adds a link to the list of links associated with this 
+#                   router.
 #
 # Arguments:        self (Router)
 #                   link_name (string) - The name of the link being added.
@@ -222,24 +224,27 @@ class Router:
 # Notes:
         #
         #   In this, we are going to initiate the process here with a specially
-        # formatted packet that routers will understand as the "configuration" packet.
+        # formatted packet that routers will understand as the "configuration" 
+        # packet.
         #
-        #   We will send a packet with the form [origin_router_name, distance_to] where
-        # origin_router is the router sending the first "configuration" packet and 
-        # distance_to is the total weight from the origin to this particular router.
-        # Clearly, when sending this first packet, we will have [self.router_name, 0].
-        # When receiving this packet, receive_packet should call parse_config_packet.  Refer
-        # to that function for the rest of the computation involved with configuring the
-        # routing tables.
+        #   We will send a packet with the form 
+        # [origin_router_name, distance_to] where origin_router is the router 
+        # sending the first "configuration" packet and distance_to is the 
+        # total weight from the origin to this particular router. Clearly, 
+        # when sending this first packet, we will have [self.router_name, 0].
+        # When receiving this packet, receive_packet should call 
+        # parse_config_packet.  Refer to that function for the rest of the 
+        # computation involved with configuring the routing tables.
         #
-        #   For this to work, we want to keep track of the shortest distance to each
-        # router from this one.  Initialize all these values to be infinity.
+        #   For this to work, we want to keep track of the shortest distance to 
+        # each router from this one.  Initialize all these values to be 
+        # infinity.
         #
         
     def send_config_packet(self, config_pkt):
         '''
-        Creates a special configuration packet that, when received by other routers,
-        is understood as a configuration packet.
+        Creates a special configuration packet that, when received by other 
+        routers, is understood as a configuration packet.
         '''
         
         for link in self.links:
@@ -282,43 +287,50 @@ class Router:
 #
 # Notes:
         #
-        #   This will be called when the router receives a config packet, which is in
-        # the format [origin_router, distance_to].  The origin_router was the router which
-        # initially sent this packet, and distance_to is the distance from the origin router
-        # to this router using whatever path it used.
+        #   This will be called when the router receives a config packet, 
+        # which is in the format [origin_router, distance_to].  The 
+        # origin_router was the router which initially sent this packet, 
+        # and distance_to is the distance from the origin router to this router 
+        # using whatever path it used.
         #
-        # All we need is some way of quantifying distance_to.  Maybe it's time, maybe not, I
-        # don't know yet...
+        # All we need is some way of quantifying distance_to.  Maybe it's time, 
+        # maybe not, I don't know yet...
         #
         # This will work because every router will do this.  If the routers 
-        # are all connected, then by relaying the messages whenever the distance is improved,
-        # all routers will get a packet to all other routers at least once.  We only need to
-        # continue propagation if it is improved because if not, then the time that the better
-        # packet came through, that was propagated.  Therefore, we know this process will
+        # are all connected, then by relaying the messages whenever the 
+        # distance is improved, all routers will get a packet to all other 
+        # routers at least once.  We only need to continue propagation if it is 
+        # improved because if not, then the time that the better packet came 
+        # through, that was propagated.  Therefore, we know this process will
         # terminate.
         #
 
         
     def parse_config_packet(self, config_pkt):
         '''
-        Receives a configuration packet and updates the routing table if any new, useful
-        information is learned from it.
+        Receives a configuration packet and updates the routing table if any 
+        new, useful information is learned from it.
         '''
         
-        # Get the index of the table that is being populated (not the one being used)
+        # Get the index of the table that is being populated (not the one 
+        # being used)
         other_table = (self.using_table + 1) % 2
         
-        # If we learn anything new from the information in this packet, update the new table.
+        # If we learn anything new from the information in this packet, update 
+        # the new table.
         if (config_pkt.data[0] not in self.routing_tables[other_table]) or \
            (routing_dists[config_pkt.data[0]] > config_pkt.data[1]):
-            # Update the dictionary at the key corresponding to the router that sent this packet
-            #   to reflect that it should be used to send data to the source.
+            # Update the dictionary at the key corresponding to the router that 
+            # sent this packet to reflect that it should be used to send data 
+            # to the source.
             self.routing_tables[other_table][config_pkt.data[0]] = config_pkt.src
             
-            # Update the distances dictionary so we know if a better option comes around.
+            # Update the distances dictionary so we know if a better option 
+            # comes around.
             self.routing_dists[config_pkt.data[0]] = sim.network_now() - config_pkt.data[1]
             
-            # Create events to propagate this "better route" to src that was found and enqueue it.
+            # Create events to propagate this "better route" to src that was 
+            # found and enqueue it.
             config_prop_delay = 0
             config_prop_event = e.Event(self, self.send_config_packet, [config_pkt])
             sim.enqueue_event(config_prop_delay, config_prop_event)

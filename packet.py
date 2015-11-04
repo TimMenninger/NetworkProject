@@ -72,8 +72,8 @@ class Packet:
         # PACKET_DATA_SIZE, PACKET_ACK_SIZE, or PACKET_ROUTING_SIZE
         self.size = the_size
         
-        # Keep track of data contained in this packet (only relevant for routing packets
-        #   at the moment)
+        # Keep track of data contained in this packet (only relevant for 
+        # routing packets at the moment)
         self.data = None
         
         
@@ -83,7 +83,8 @@ class Packet:
 # Description:      Sets the destination of the packet.
 #
 # Arguments:        self (Packet)
-#                   dest_name (string) - The name of the destination of this packet.
+#                   dest_name (string) - The name of the destination of this 
+#                                        packet.
 #
 # Return Values:    None.
 #
@@ -188,8 +189,8 @@ class Packet:
     
     def set_time(self, time = -1):
         '''
-        Sets the timestamp of the packet.  If nothing is argued (or the argument is negative),
-        then it is set to the current time.
+        Sets the timestamp of the packet.  If nothing is argued (or the 
+        argument is negative), then it is set to the current time.
         '''
         if time >= 0:
             self.time = time
@@ -220,8 +221,8 @@ class Packet:
     
     def set_ID(self, the_id = -1):
         '''
-        Sets the ID of the packet.  If no ID is given or it is negative, then the next available
-        ID for the packet's flow is taken.
+        Sets the ID of the packet.  If no ID is given or it is negative, then 
+        the next available ID for the packet's flow is taken.
         '''
         if the_id >= 0:
             self.ID = the_id

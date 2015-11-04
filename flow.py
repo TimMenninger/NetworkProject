@@ -1,10 +1,15 @@
 ################################################################################
 #
+# Ricky Galliani, Tim Menninger, Rush Joshi, Schaeffer Reed
+# Network Simulator Project
+# CS 143 -- Fall 2015
+#
 # flow.py
 #
-# This contains the flow class.  The flow class acts as "God" for the network
-# simulation by telling hosts when to and when not to send packets based on
-# congestion control algorithms it runs.
+# This contains the flow class.  The flow is an abstract concept used to 
+# simplify the notion of sending packets from a source to a destination.  
+# Congestion control algorithms determine when and how many packets are sent 
+# at any given time during the simulation.
 #
 ################################################################################
 
@@ -65,8 +70,8 @@ class Flow:
         # List of packets in the network
         self.packets_in_flight = []
         
-        # The last used packet ID for this flow.  The first packet ID should be 0, so a
-        #   value of -1 implies no packets have been created yet.
+        # The last used packet ID for this flow.  The first packet ID should 
+        # be 0, so a value of -1 implies no packets have been created yet.
         self.last_packet_ID = -1
         
     
