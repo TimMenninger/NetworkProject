@@ -46,8 +46,7 @@ import simulate as sim
 
 class Packet:
 
-    def __init__(self, the_ID, the_flow, the_src, the_dest, the_type, the_size, 
-                 the_time):
+    def __init__(self, the_ID, the_flow, the_src, the_dest, the_type, the_size):
         '''
         Initialize an instance of Packet by intitializing its attributes.
         '''
@@ -71,10 +70,6 @@ class Packet:
         # Integer representing the size of the Packet, dependent on its type
         # PACKET_DATA_SIZE, PACKET_ACK_SIZE, or PACKET_ROUTING_SIZE
         self.size = the_size
-        
-        # Keep track of data contained in this packet (only relevant for 
-        # routing packets at the moment)
-        self.data = None
         
         
 #

@@ -14,6 +14,7 @@
 
 
 
+TIME_BIT = .0001
 
 # Test case file names
 TEST_CASE_0_FILENAME = "misc/test_configs/case_0.txt"
@@ -38,11 +39,6 @@ PACKET_ROUTING_SIZE = 64    # Size of routing Packet
 SUCCESS             = 0     # Operation was success
 LINK_ERROR          = 1     # Unknown error with link
 LINK_FULL           = 2     # Link was full
-
-# Constants indicating whether link is used/free
-LINK_NOT_USED        = -1   # Link not being used in either direction
-LINK_USED_HIGH       = 1    # Link being used towards higher Host/Router name
-LINK_USED_LOW        = 0    # Link being used towards lower Host/Router name
 
 # Time constants
 RECORDING_INTERVAL  = 10    # Number of milliseconds between each network 

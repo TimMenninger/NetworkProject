@@ -53,8 +53,8 @@ class Event:
         #       (self.executor).(self.function)(self.parameters)
                 
         # The object (e.g. Router) that will be executing the event
-        self.actor = in_actor
-                
+        self.actor = in_actor  
+
         # Function to be executed by the object
         self.function = in_function
                 
@@ -93,7 +93,7 @@ class Event:
         return self
 
 #
-# get_info
+# get_elements
 #
 # Description:      Returns the actor, function and parameters of this event
 #                   instance.
@@ -118,9 +118,10 @@ class Event:
 # Known Bugs:       None.
 #
 # Revision History: 2015/11/02: Created
+#                   2015/11/13: Changed name to get_elements()
 #
         
-    def get_info(self):
+    def get_elements(self):
         '''
         Returns the actor, function and parameters for this event.
         '''

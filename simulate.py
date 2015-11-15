@@ -22,6 +22,8 @@
 #                                                                              #
 ################################################################################
 
+import sys
+
 # Import network objects
 import packet as p
 import link as l
@@ -42,9 +44,6 @@ import simulate as s
 
 # Import the config parser
 import config_parser as cp
-
-# So we can use command line arguments.
-import sys
 
 # Import heapq library so we can use it for our events.
 import heapq 
@@ -98,7 +97,6 @@ def network_now():
     '''
     
     return network_time
-    
 
 #
 # create_initial_events
@@ -121,21 +119,21 @@ def network_now():
 #
 # Revision History: 2015/11/02: Created
 #
-    
+
 def create_initial_events():
     '''
     This takes the set of flows and their descriptors and fills the event queue
     with events that signify the start of the respective flow.
     '''
-    
+
     # Create an event for each flow.
-    for flow in flows:
+    for flow_name in flows:
         # Create the event for the flow starting.  There are no arguments, 
         # but the event class expects an argument list.
-        flow_event = e.Event(flows[flow], flows[flow].start_flow, [])
-        
+        flow_event = e.Event(flow_name, 'start_flow', [])
+
         # Enqueue the event in our heap queue.
-        heapq.heappush(event_queue, (flows[flow].start_time, flow_event))
+        heapq.heappush(event_queue, (flows[flow_name].start_time, flow_event))
         
     
 #
@@ -225,22 +223,45 @@ def run_network():
     create_initial_events()
     
     # Make the first recording of the network status.
-    record_network_status()
+    # record_network_status()
     
     # Iterate until there are no more events or the simulation time is over.
     while len(event_queue) > 0 and network_time < ct.MAX_SIMULATION_TIME:
         # Dequeue next event in chronology
-        next_event = heapq.heappop(event_queue)
+        event = heapq.heappop(event_queue)
         
-        # Forward the time to the time of the next event.
-        network_time = next_event[0]
-        
+        # Get the time out of the event tuple (time, event)
+        event_time = event[0]
+
+        # Forward the network time to the time of the next event
+        network_time = event_time
+
+        # Extract the event from the (time, event) tuple
+        event = event[1]
+
         # Extract the information about the next event so we can execute it.
-        (actor, event_function, event_parameters) = next_event[1].get_info()
-        
+        (actor_name, function_name, event_parameters) = event.get_elements()
+
         # Do the event (each event will enqueue another event if necessary)
-        event_function(event_parameters)
-    
+        if actor_name.startswith("F"):
+            actor = flows[actor_name]
+            event_function = getattr(f.Flow, function_name)
+        elif actor_name.startswith("H") or actor_name.startswith("R"):
+            actor = endpoints[actor_name]
+            if actor_name.startswith("H"):
+                event_function = getattr(h.Host, function_name)
+            else:
+                event_function = getattr(r.Router, function_name)
+        #elif actor_name.startswith("packet"):
+        #    actor = packets[]
+        else: 
+            actor = links[actor_name]
+            event_function = getattr(l.Link, function_name)
+
+        print("\nEVENT: " + actor_name + "." + function_name + "(" + str(event_parameters) + ") -- " + str(event_time))
+        event_function(actor, event_parameters)
+
+
     return ct.SUCCESS
 
 
@@ -259,5 +280,5 @@ if __name__ == "__main__":
     # Run the network simulation loop
     status = run_network()
     
-    print("\nNetwork ran with no errors.\n")
+    print("\n[SUCCESS]: Network simulation complete.\n")
     

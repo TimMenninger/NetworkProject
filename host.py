@@ -22,20 +22,34 @@
 #                                                                              #
 ################################################################################
 
+# So we can use command line arguments.
+import sys
+
 # Import network objects
 import packet as p
 import link as l
-import flow as f
 import router as r
-import host as h
+import flow as f
 import event as e
-
-# Import simulator so we can access global dictionaries.
-import simulate as sim
 
 # Import the constants and the conversion functions
 import constants as ct
 import conversion as cv
+
+# Import utility functions
+import utility as u
+
+# Import functions to carry out the simulation
+sim  = sys.modules['__main__']
+
+# Import the config parser
+import config_parser as cp
+
+# Import the queue Python package for the link buffers which are FIFO
+import queue
+
+# Import heapq library so we can use it for our events.
+import heapq 
 
 
 ################################################################################
@@ -56,6 +70,9 @@ class Host:
         # The link_name representing the Link to this Host
         self.link = None
         
+        # Either 0 or 1 indicating for each Link that this Host is connected 
+        # to, whether it is the "higher" (0) or "lower" (0) endpoint
+        self.endpoint = None
         
 #
 # set_link
@@ -88,6 +105,37 @@ class Host:
     
 
 #
+# set_endpoint
+#
+# Description:      This sets the endpoint for this Host (only useful in 
+#                    conjunction with the 'link' attribute.
+#
+# Arguments:        self (Host)
+#                   endpoint (int) - The index of the endpoint (0 or 1) that 
+#                   is associated with this Host and the Link
+#
+# Return Values:    None.
+#
+# Shared Variables: self.endpoint (WRITE) - This sets the endpoint attribute.
+#
+# Global Variables: None.
+#
+# Limitations:      None.
+#
+# Known Bugs:       None.
+#
+# Revision History: 2015/11/13: Created
+#
+        
+    def set_endpoint(self, endpoint_name):
+        '''
+        Alters the 'link' attribute of the Host to reflect the link
+        connecting the Host to the network.
+        '''
+        self.endpoint = endpoint_name
+    
+
+#
 # send_packet
 #
 # Description:      This sends a packet from this host onto the link that is
@@ -114,7 +162,7 @@ class Host:
 #                   2015/10/29: Filled in.
 #
 
-    def send_packet(self, argument_list):
+    def transmit_packet(self, argument_list):
         '''
         Sends a Packet from this Host to a particular destination.  Then, it 
         adds the appropriate subsequent event to the Simulator event queue.
@@ -124,7 +172,8 @@ class Host:
         [flow_name, packet_name] = argument_list
         
         # Create an event to enqueue the packet on the link.
-        self.link.enqueue_packet(self.host_name, flow_name, packet_name)
+        link = sim.links[self.link]
+        link.put_packet_on_buffer([self.host_name, flow_name, packet_name])
         
         
 #
@@ -153,8 +202,8 @@ class Host:
 #
 # Revision History: 2015/10/22: Created function handle and docstring.
 #                   2015/10/29: Filled in function.
+#                   2015/11/13: Decremented Link 'num_on_link' attribute.
 #
-        
 
     def receive_packet(self, argument_list):
         '''
@@ -164,12 +213,16 @@ class Host:
         # Unpack the argument list.
         [flow_name, packet_name] = argument_list
         
-        # Create a packet for the argued description.
+        # Create a Packet for the argued description.
         packet = sim.packets[(flow_name, packet_name)]
+
+        # Create a Flow for the argued description.
+        flow = sim.flows[flow_name]
         
-        if packet.type == PACKET_DATA:
+        if packet.type == ct.PACKET_DATA:
+
             # Create acknowledgement packet.
-            ack_packet = Packet(flow.create_ID(), packet.flow,
+            ack_packet = Packet(packet.ID, packet.flow,
                                 self.host_name, packet.src, PACKET_ACK,
                                 PACKET_ACK_SIZE, sim.network_now())
             
@@ -177,11 +230,35 @@ class Host:
             time_delay = 0
             
             # Create an event to send this packet.
-            send_ack_event = Event(self, send_packet, [ack_packet.flow, ack_packet.ID])
+            send_ack_event = e.Event(self, send_packet, [ack_packet.flow, ack_packet.ID])
 
             # Add send ack packet event to the simulation priority queue
             heapq.heappush(sim.event_queue, ((sim.network_now() + time_delay), 
                                               send_ack_event))
+
+        elif packet.type == ct.PACKET_ACK:
+            # Indicate in the Flow that the Packet that this Ack Packet 
+            # corresponds to has been acknowledged
+            if packet.ID == flow.acked.queue(0):
+                # Pop it off the queue, it has been acknowledged
+                flow.acked.get()
+
+                # Decrement the number of Packet in flight for the flow because
+                # just received an acknowledgement for one
+                flow.packets_in_flight -= 1
+
+                # See if a new Packet can be sent
+                flow.check_status()
+
+            else:
+                # There is an error, we must retransmit a Packet
+                pass
+
+
+        # Decrement the number of Packet going from the other endpoint to 
+        # this endpoint
+        other_ep = self.endpoint + 1 % 2
+        self.link.num_on_link[other_ep] -= 1
         
         
 #

@@ -104,7 +104,7 @@ def load_network_objects(network_file):
         host_name = host_name.strip()
 
         # Create a host and add it to the dictionary.
-        sim.endpoints['host_' + host_name] = h.Host('host_' + host_name)
+        sim.endpoints[host_name] = h.Host(host_name)
         
         # Read the host_name on the next.
         host_name = network.readline()
@@ -123,8 +123,7 @@ def load_network_objects(network_file):
         router_name = router_name.strip()
 
         # Create a router and add it to the dictionary.
-        sim.endpoints['router_' + router_name] = \
-                                              r.Router('router_' + router_name)
+        sim.endpoints[router_name] = r.Router(router_name)
         
         # Read the next line.
         router_name = network.readline()
@@ -143,10 +142,14 @@ def load_network_objects(network_file):
         link = link.split()
 
         # Create a link and add it to the dictionary
-        sim.links['link_' + link[0]] = l.Link('link_' + link[0], 
-                                              float(link[1]), int(link[2]), 
-                                              int(link[3]), (link[4], link[5]))
-        
+        sim.links[link[0]] = l.Link(link[0], float(link[1]), int(link[2]), 
+                                             int(link[3]), (link[4], link[5]))
+
+        # Add the name of this Link as an endpoint attribute to each of the 
+        # endpoints 
+        sim.endpoints[link[4]].link = link[0]
+        sim.endpoints[link[5]].link = link[1]
+
         # Read the next line.
         link = network.readline()
     
@@ -163,8 +166,8 @@ def load_network_objects(network_file):
         flow = flow.split()
 
         # Create a flow and add it to the dictionary.
-        sim.flows['flow_' + flow[0]] = f.Flow('flow_' + flow[0], flow[1], \
-					flow[2], int(flow[3]), 1000 * round(float(flow[4]), 0))
+        sim.flows[flow[0]] = f.Flow(flow[0], flow[1], \
+				  flow[2], int(flow[3]), 1000 * round(float(flow[4]), 0))
         
         # Read the next line.
         flow = network.readline()

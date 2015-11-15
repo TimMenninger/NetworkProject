@@ -22,23 +22,34 @@
 #                                                                              #
 ################################################################################
 
+# So we can use command line arguments.
+import sys
+
 # Import network objects
 import packet as p
-import link as l
 import flow as f
 import router as r
 import host as h
 import event as e
 
-# Import simulator so we can access global dictionaries
-import simulate as sim
-
 # Import the constants and the conversion functions
 import constants as ct
 import conversion as cv
 
+# Import utility functions
+import utility as u
+
+# Import functions to carry out the simulation
+sim  = sys.modules['__main__']
+
+# Import the config parser
+import config_parser as cp
+
 # Import the queue Python package for the link buffers which are FIFO
 import queue
+
+# Import heapq library so we can use it for our events.
+import heapq 
 
 ################################################################################
 #                                                                              #
@@ -55,10 +66,6 @@ class Link:
         '''
         # Name of the Link, each name is a unique string (i.e. "L1")
         self.link_name = the_link_name
-
-        # Flag indicating which direction the Link is sending data in (could 
-        # indicate that it's sending data in neither direction)
-        self.in_use = ct.LINK_NOT_USED
 
         # Flag indicating whether you can transmit a Packet onto the beginning
         # of the Link
@@ -79,8 +86,8 @@ class Link:
         # sort the end_points that are passed in so that end_points[0] is 
         # always the endpoint with the lexicographically less name and 
         # endpoints[1] is always the endpoint with the lexicographically 
-        # higher name
-        self.end_points = tuple(sorted(the_endpoints))
+        # greater name
+        self.endpoints = tuple(sorted(the_endpoints))
 
         # Router buffer which will hold the Packet before the
         # corresponding Packet are transmitted to Link 
@@ -92,16 +99,32 @@ class Link:
         # Amount of data on link (in MB)
         self.current_load = 0.0
 
+        # Python dictionary representing how many Packets are on the link
+        # currently
+        # Key: 0 -> Value: Number of Packet traveling from low endpoint to 
+        #                  high endpoint (source = 0) 
+        # Key: 1 -> Value: Number of Packet traveling form high endpoint to 
+        #                  low endpoint (source = 1)
+        self.num_on_link = {0 : 0, 1 : 0}
+
         # A 2-entry dictionary which stores the current load on each of the 
-        # link buffers corresponding to to endpoint 0 and endpoint 1
+        # link buffers corresponding to endpoint 0 and endpoint 1.  The loads
+        # are stored in KB
         self.buffer_current_load = {0 : 0, 1: 0}
-        
+ 
+    def space_for_packet(self, packet, ep):
+        '''
+        Returns true if there is room on the Link buffer for the endpoint 
+        'ep' to enqueue the packet 'packet'.
+        '''
+        cur_buf_load = self.buffer_current_load[ep] # In KB
+        packet_size = cv.bits_to_KB(packet.size) # In KB
+        return cur_buf_load + packet_size <= self.buffer_size        
         
 #
-# enqueue_packet
+# put_packet_on_buffer
 #
-# Description:      This enqueues a packet onto the buffer at the end that the
-#                   packet was received from.
+# Description:      
 #
 # Arguments:        self (Link)
 #                   argument_list ([string, string, string]) - A list of
@@ -134,7 +157,7 @@ class Link:
 #                              packet_name
 #
         
-    def enqueue_packet(self, argument_list):
+    def put_packet_on_buffer(self, argument_list):
         '''
         Adds a Packet to the buffer queue where it will wait to be transmitted
         along this link.
@@ -143,28 +166,40 @@ class Link:
         # Unpack the argument list.
         [endpoint_name, flow_name, packet_name] = argument_list
         
+        flow = sim.flows[flow_name]
+
         # For ease and code readability, extract the packet
-        packet = sim.packets[(flow_name, packet_name)]
+        packet = flow.awaiting_ack[(flow_name, packet_name)]
         
         # Figure out which endpoint this packet was received from.
         ep = 0
-        if self.end_points[1] == endpoint_name:
+        other_ep = 1
+        if self.endpoints[1] == endpoint_name:
             ep = 1
+            other_ep = 0
         
         # We want to check which endpoint the packet came from then put the
         # packet in the appropriate buffer, but only if there is enough space
         # in the buffer.
-        if self.buffer_current_load[ep] + packet.size <= self.buffer_size:
+        print(str(self.buffer_current_load[ep]))
+        print(str(cv.bits_to_KB(packet.size)))
+        print(str(self.buffer_size))
+        if self.space_for_packet(packet, ep):
             
-            # Put the packet into the buffer queue and update its current load.
+            # Put the Packet identifier into the buffer queue and update its 
+            # current load
             self.buffers[ep].put((flow_name, packet_name))
             self.buffer_current_load[ep] += cv.bits_to_MB(packet.size)
-            
+
+            # Enqueue an event to put the first Packet onto the link
+            put_event = e.Event(self.link_name, 'put_packet_on_link', [])
+            heapq.heappush(sim.event_queue, (sim.network_now(), put_event))
+
             return ct.SUCCESS
-            
+
         return ct.LINK_FULL
             
-            
+
 #
 # dequeue_packet
 #
@@ -203,17 +238,20 @@ class Link:
         '''
         
         # Unpack the argument list.
-        [endpoint] = argument_list
+        [ep] = argument_list
         
-        # Dequeue the next packet from the buffer at the argued endpoint. Then,
+        # Dequeue the next Packet from the buffer at the argued endpoint. Then,
         # update the load on the buffer.
-        packet = self.buffers[endpoint].get()
+        flow_name, packet_ID = self.buffers[ep].get()
+
+        # Retrieve the Packet object to dequeue
+        packet = sim.flows[flow_name].awaiting_ack[(flow_name, packet_ID)]
 
         # Remove the Packet size from the correct buffer_current_load
         self.buffer_current_load[ep] -= cv.bits_to_MB(packet.size)
             
         # Return flow name and packet ID
-        return packet[0], packet[1]
+        return flow_name, packet_ID
         
         
 #
@@ -249,61 +287,64 @@ class Link:
 # Limitations:      2015/11/3: Need to consider how to enqueue carry events 
 #                              when a Packet is dequeued from an endpoint that
 #                              would require that the direction of data flow
-#                              changes.
+#                              changes.-
 #
 # Known Bugs:       None.
 #
 # Revision History: 2015/10/29: Created
-#                   2015/11/3: Simplified method to try to limit the enqueuing
+#                   2015/11/3: Simplified method to try to limit the queuing
 #                              of carry events to when the Link is free and 
 #                              data is already being transmitted in the 
 #                              direction that the current Packet wants to be 
 #                              transmitted in
 #
         
-    def enqueue_carry_event(self):
-        '''
-        Peeks at the next packet that is to be sent.  This returns which
-        endpoint the packet is at, its flow and packet names and the time
-        that must be waited until the link will be able to carry it to the
-        other end as well as enqueues the appropriate event.
+    def put_packet_on_link(self, args):
         '''
         
+        '''
         # First, check which next packet should be sent next.  Decide to 
         # send the oldest packet on either buffer.
         ep = 0
-        if self.buffers[1].queue(0) < self.buffers[0].queue(0):
+        other_ep = 1
+        if self.buffers[ep].qsize() < self.buffers[other_ep].qsize(): 
             ep = 1
-            
+            other_ep = 0
+        
+        if self.buffers[ep].qsize() == 0:
+            return
+               
         # Put the Packet in a container, note: it does not pop the Packet from
         # the link buffer -- that happens in carry_packet()
-        packet = self.buffers[ep].queue[0]
+        flow_name, packet_name = self.buffers[ep].queue[0]
+
+        # Retrieve the Packet object
+        packet = sim.flows[flow_name].awaiting_ack[(flow_name, packet_name)]
         
         # We know that every single Packet will take at least 
         # packet size (MB) / link rate (MB/s) = (s) time to be transmitted
         # onto the link
-        transmission_time = cv.bits_to_MB(packet.size) / self.rate
+        transmit_time = cv.bits_to_MB(packet.size) / self.rate
  
-        # The Link has to be "free" in order for us to be able to transmit 
-        # a Packet
-        if self.free:
-            # The packet must also go in the direction of the current flow. 
-            # For example, if the endpoint that we're sending a Packet from is 
-            # 0 and the Link is already sending data towards the "higher" 
-            # hostname, then we do not have to wait for the direction of the 
-            # data transfer within the Link to change and we can enqueue a 
-            # Packet transmission event.    
-            if ep == 0 and self.in_use == LINK_USED_HIGH or \
-               ep == 1 and self.in_use == LINK_USED_LOW:
-                # Create a carry event that will carry the Packet to the other 
-                # end of the Link
-                carry_event = e.Event(self, carry_packet, [ep])
-                heapq.heappush(sim.event_queue, (sim.network_now(), carry_event))
-                lockdown_link(transmission_time)
+        # The Link has to be "free" in this direction in order for us to be 
+        # able to transmit a Packet
+        # This happens in 1 of 2 situations: 
+        #   1) Both endpoints are not sending data down the link at this time
+        #   2) Only our endpoint is ending data down the link at this time
+        # We have to create and enqueue two carry events: 
+        #   1) After the transmit time (if data flow direction doesn't have to
+        #      change direction)
+        #   2) After the transmit and propagation delay (if data flow does have
+        #      to change direction)
+        if self.num_on_link[other_ep] == 0:
+            carry_event_1 = e.Event(self.link_name, 'carry_packet', [ep])
+            carry_event_2 = e.Event(self.link_name, 'carry_packet', [ep])
+            time_1 = sim.network_now() + transmit_time
+            time_2 = time_1 + self.delay
+            heapq.heappush(sim.event_queue, (time_1, carry_event_1))
+            heapq.heappush(sim.event_queue, (time_2, carry_event_2))
+            self.lockdown_link([transmit_time])
         
-        return ep, packet.flow_name, packet.ID, time_delay
-        
-
 #
 # carry_packet
 #
@@ -342,32 +383,34 @@ class Link:
 
     def carry_packet(self, argument_list):
         '''
-        Updates the Link to reflect that a packet is now in transmission.
+        Updates the Link to reflect that a packet is now being carried down 
+        the link.
         '''
         
         # Unpack the arguments
-        [endpoint] = argument_list
+        [ep] = argument_list
         
         # Dequeue from the buffer at the argued endpoint.  This will give us
         # the packet description we are looking for.
-        flow_name, packet_name = self.dequeue_packet(endpoint)
+        flow_name, packet_ID = self.dequeue_packet([ep])
         
-        # Get the packet size
-        packet_size = sim.packets[(flow_name, packet_name)].size
+        # Retrieve the Packet object to dequeue
+        packet = sim.flows[flow_name].awaiting_ack[(flow_name, packet_ID)]
         
-        # Put the packet into the link itself and update our size tracker.
-        self.packets_carrying.append((flow_name, packet_name))
-        self.link_current_load += cv.bits_to_MB(packet_size)
-        
+        # Put the Packet onto the Link itself and update the attributes
+        self.packets_carrying.append((flow_name, packet_ID))
+        self.current_load += cv.bits_to_MB(packet.size)
+        self.num_on_link[ep] += 1
+
         # Enqueue an event to receive this packet at the other end of the Link
-        # after the propogation delay
-        other_endpoint = (endpoint + 1) % 2
-        receive_event = e.Event(sim.endpoints[self.endpoints[other_endpoint]], 
-                                                        receive_packet, [])
+        # after the propagation delay
+        other_ep = (ep + 1) % 2
+        other_host_name = sim.endpoints[self.endpoints[other_ep]].host_name
+        receive_event = e.Event(other_host_name, 'receive_packet', [])
         
         # Enqueue the receive_event
-        heapq.heappush(sim.event_queue, 
-            (sim.network_now + link.delay, receive_event))
+        receive_time = sim.network_now() + self.delay
+        heapq.heappush(sim.event_queue, (receive_time, receive_event))
     
 #
 # free_link()
@@ -393,11 +436,12 @@ class Link:
     
     def free_link(self, argument_list):
         '''
-        Sets self.free = True.  It's called after the transmission onto the Link 
-        and then enqueues an event that re-frees the time for putting a Packet 
-        onto a Link has elapsed to free up the Link for use. 
+        Called after the transmission onto the Link.  It enqueues an event 
+        that tells the Link for putting a Packet onto a Link has elapsed to 
+        free up the Link for use. 
         ''' 
-        self.free = True
+        put_event = e.Event(self.link_name, 'put_packet_on_link', [])
+        heapq.heappush(sim.event_queue, (sim.network_now() + ct.TIME_BIT, put_event))
 
 #
 # lockdown_link
@@ -424,21 +468,19 @@ class Link:
 
     def lockdown_link(self, argument_list):
         '''
-        Sets self.free = False while a Packet is being transmitted onto the 
-        Link and then enqueues an event that re-frees the Link 
-        (self.free = True) after the Packet has been fully transmitted.
+        Enqueues an event that re-frees the Link after the Packet has been 
+        fully transmitted.
         '''
         # Unpack the arguments
-        [transmission_time] = argument_list
+        [time] = argument_list
 
         # Lock the link so that no other Packet may be transmitted 
         self.free = False
 
         # Enqueue a free link event to start after the current Packet 
         # transmission
-        free_link_event = e.Event(self, free_link, [])
-        heapq.heappush(sim.event_queue, 
-            (sim.network_now() + transmission_time, free_link_event))
+        free_link_event = e.Event(self.link_name, 'free_link', [])
+        heapq.heappush(sim.event_queue, (sim.network_now() + time, free_link_event))
 
 #
 # print_contents
