@@ -65,14 +65,19 @@ class Flow:
         self.size = the_size
 
         # Window size as computed 
-        self.window_size = 0
-
-        # List of packets in the network
-        self.packets_in_flight = []
+        self.window_size = 1
         
-        # The last used packet ID for this flow.  The first packet ID should 
-        # be 0, so a value of -1 implies no packets have been created yet.
-        self.last_packet_ID = -1
+        # Every packet whose ID is this or lower has been sent and ack has
+        #   been received (only relevant to src).
+        self.last_complete = -1
+        
+        # Every packet whose ID is strictly lower has been received and ack
+        #   has been sent (only relevant to dest).
+        self.waiting_for = 0
+
+        # List of packets in the network.  The ID's of these pacets should be
+        #   (last_sent + 1) through (last_sent + window_size)
+        self.packets_in_flight = []
         
     
 #
@@ -101,7 +106,13 @@ class Flow:
     def start_flow(self, unused_list):
         '''
         Begins the flow.  The argument is unused.
-        ''' 
+        '''
+        # Create the first packet.
+        first_packet = p.Packet(self.create_packet_ID, self, self.src,\
+                                self.dest, PACKET_DATA, PACKET_DATA_SIZE)
+        
+        # Send this packet.
+        self.src.send_packet([self.flow_name, first_packet.ID])
         
         
 #
@@ -164,11 +175,9 @@ class Flow:
         '''
         Returns an unused ID for a packet.
         '''
-        # Increment the ID to get the next unused packet ID.
-        self.next_packet_ID += 1
         
         # Return the ID.
-        return str(self.next_packet_ID)
+        return str(self.last_complete + len(self.packets_in_flight) + 1)
         
         
 #

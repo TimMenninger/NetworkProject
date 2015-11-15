@@ -46,6 +46,8 @@ LINK_USED_LOW        = 0    # Link being used towards lower Host/Router name
 
 # Time constants
 RECORDING_INTERVAL  = 10    # Number of milliseconds between each network 
-							# status recording
+                            # status recording
 MAX_SIMULATION_TIME = 1e6   # Maximum number of milliseconds the network should 
-							# run
+                            #   run
+ACK_TIMEOUT         = 1000  # Number of milliseconds to wait for acknowledgement
+                            #   before timeout

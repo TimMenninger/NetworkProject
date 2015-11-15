@@ -76,6 +76,10 @@ class Packet:
         # routing packets at the moment)
         self.data = None
         
+        # If this is a data packet, add it to the dictionary of packets.
+        if self.type == PACKET_DATA:
+			sim.packets[(self.flow, self.ID)] = self
+        
         
 #
 # set_dest

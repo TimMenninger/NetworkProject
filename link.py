@@ -53,7 +53,7 @@ class Link:
         '''
         Initialize an instance of Link by intitializing its attributes.
         '''
-        # Name of the Link, each name is a unique string (i.e. "L1")
+        # Name of the Link, each name is a unique string (e.g. "link_L1")
         self.link_name = the_link_name
 
         # Flag indicating which direction the Link is sending data in (could 
@@ -94,7 +94,7 @@ class Link:
 
         # A 2-entry dictionary which stores the current load on each of the 
         # link buffers corresponding to to endpoint 0 and endpoint 1
-        self.buffer_current_load = {0 : 0, 1: 0}
+        self.buffer_current_load = {0 : 0, 1 : 0}
         
         
 #
@@ -129,9 +129,9 @@ class Link:
 #
 # Revision History: 2015/10/22: Created function handle and docstring
 #                   2015/10/29: Filled function in.
-#                   2015/11/3: Changed the link buffers to use the python queue
-#                              data structure and only store the flow_name and 
-#                              packet_name
+#                   2015/11/03: Changed the link buffers to use the python queue
+#                               data structure and only store the flow_name and 
+#                               packet_name
 #
         
     def enqueue_packet(self, argument_list):
@@ -192,9 +192,9 @@ class Link:
 #
 # Revision History: 2015/10/22: Created function handle and docstring.
 #                   2015/10/29: Filled in function
-#                   2015/11/3: Changed the link buffers to use the python queue
-#                              data structure and only store the flow_name and 
-#                              packet_name
+#                   2015/11/03: Changed the link buffers to use the python queue
+#                               data structure and only store the flow_name and 
+#                               packet_name
 #
 
     def dequeue_packet(self, argument_list):
@@ -254,9 +254,9 @@ class Link:
 # Known Bugs:       None.
 #
 # Revision History: 2015/10/29: Created
-#                   2015/11/3: Simplified method to try to limit the enqueuing
-#                              of carry events to when the Link is free and 
-#                              data is already being transmitted in the 
+#                   2015/11/03: Simplified method to try to limit the enqueuing
+#                               of carry events to when the Link is free and 
+#                               data is already being transmitted in the 
 #                              direction that the current Packet wants to be 
 #                              transmitted in
 #
@@ -335,9 +335,9 @@ class Link:
 # Known Variables:  None.
 #
 # Revision History: 2015/10/29: Created
-#                   2015/11/3: Added bits to MB conversion, switched receive
-#                              event Host to be the Host at the other end of 
-#                              the Link, fixed time_delay error 
+#                   2015/11/03: Added bits to MB conversion, switched receive
+#                               event Host to be the Host at the other end of 
+#                               the Link, fixed time_delay error 
 #
 
     def carry_packet(self, argument_list):
@@ -372,7 +372,8 @@ class Link:
 #
 # free_link()
 #
-# Description:      Sets self.free = True.  It's called after the transmission                   onto the Link and then enqueues an event that re-frees the
+# Description:      Sets self.free = True.  It's called after the transmission
+#                   onto the Link and then enqueues an event that re-frees the
 #                   time for putting a Packet onto a Link has elapsed to free
 #                   up the Link for use. 
 #
@@ -389,7 +390,7 @@ class Link:
 #
 # Known Bugs:       None.
 #
-# Revision History: 2015/11/3: Created function 
+# Revision History: 2015/11/03: Created function 
     
     def free_link(self, argument_list):
         '''
@@ -420,7 +421,8 @@ class Link:
 #
 # Known Bugs:       None.
 #
-# Revision History: 2015/11/3: Created function       
+# Revision History: 2015/11/03: Created function
+#
 
     def lockdown_link(self, argument_list):
         '''
