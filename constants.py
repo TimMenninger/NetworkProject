@@ -14,7 +14,7 @@
 
 
 
-TIME_BIT = .0001
+TIME_BIT = .00001
 
 # Test case file names
 TEST_CASE_0_FILENAME = "misc/test_configs/case_0.txt"
@@ -30,10 +30,10 @@ PACKET_DATA         = 0
 PACKET_ACK          = 1
 PACKET_ROUTING      = 2
 
-# Packet sizes (in bits)
-PACKET_DATA_SIZE    = 1024  # Size of data Packet
-PACKET_ACK_SIZE     = 64    # Size of ack Packet
-PACKET_ROUTING_SIZE = 64    # Size of routing Packet
+# Packet sizes in bits
+PACKET_DATA_SIZE    = 1024  # Size of data Packet in bytes
+PACKET_ACK_SIZE     = 64    # Size of ack Packet in bytes (64 bits)
+PACKET_ROUTING_SIZE = 64    # Size of routing Packet in bytes (64 bits)
 
 # Status codes
 SUCCESS             = 0     # Operation was success

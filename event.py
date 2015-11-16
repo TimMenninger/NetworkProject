@@ -53,103 +53,17 @@ class Event:
         #       (self.executor).(self.function)(self.parameters)
                 
         # The object (e.g. Router) that will be executing the event
-        self.actor = in_actor  
-
+        self.actor = in_actor
+                
         # Function to be executed by the object
         self.function = in_function
                 
         # List of parameters for the function being executed
         self.parameters = in_parameters
-
-#
-# __lt__
-#
-# Description:      A function that is required because Event instances will 
-#                   be placed into tuples that will be pushed onto the 
-#                   event_queue heapq.  If two tuples in the event_queue heapq
-#                   have the same exact time associated with them, the heapq
-#                   needs to know which heapq to pop.  This function 
-#                   essentially tells the heapq that the one is "less than" the
-#                   other.  We should strive to avoid having this situation 
-#                   though by not assigning the same time to multiple events,
-#                   to the best of our ability.
-#
-# Arguments:        self (Event)
-#                   other (Event)
-#
-# Return Values:    self (Event)
-#
-#
-# Global Variables: None.
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/11/02: Created
-#
-
-    def __lt__(self, other):
-        return self
-
-#
-# get_elements
-#
-# Description:      Returns the actor, function and parameters of this event
-#                   instance.
-#
-# Arguments:        self (Event)
-#
-# Return Values:    self.actor (Union) - The actor for the argued event.  This
-#                       can be a flow, host, link, packet, router, etc.
-#                   self.function (FnPtr) - A pointer to the function that this
-#                       event represents.
-#                   self.parameters (List) - A list of parameters for the 
-#                       function this Event represents.
-#
-# Shared Variables: self.actor (READ) - Returned by this function.
-#                   self.function (READ) - Returned by this function.
-#                   self.parameters (READ) - Returned by this function.
-#
-# Global Variables: None.
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/11/02: Created
-#                   2015/11/13: Changed name to get_elements()
-#
-        
+                
+                
     def get_elements(self):
         '''
         Returns the actor, function and parameters for this event.
         '''
         return self.actor, self.function, self.parameters
-            
-                
-#
-# print_contents
-#
-# Description:      Prints the attributes and their contained values.  This is
-#                   used mainly for debugging purposes.
-#
-# Arguments:        self (Event)
-#
-# Return Values:    None.
-#
-# Shared Variables: None.
-#
-# Global Variables: None.
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/10/21: Created function handle
-#
-                
-    def print_contents(self):
-        '''
-        Prints contents of this event.
-        '''
