@@ -65,7 +65,33 @@ ev_time_dict = {}
 
 
 
-
+     
+    
+#
+# run_network
+#
+# Description:      Starts the loop that will run the network.  This loop will
+#                   run either until there are no more events (which means the
+#                   network either failed or completed successfully) or until
+#                   the maximum simulation time is reached.  This starts by 
+#                   creating initial events and then the loop is fueled by
+#                   functions adding events.
+#
+# Arguments:        None.
+#
+# Return Values:    None.
+#
+# Global Variables: network_time (WRITE) - Updated to show current time.
+#                   event_queue (WRITE) - Updated to have next events.
+#
+# Limitations:      None.
+#
+# Known Bugs:       None.
+#
+# Revision History: 2015/10/22: Created as main()
+#                   2015/10/29: Changed to run_network and filled in more than
+#                                   print functions.
+#
 
 def run_network():
     '''
@@ -112,15 +138,55 @@ def run_network():
 
         #print("\nEVENT: " + actor_name + "." + function_name + "(" + str(event_parameters) + ") -- " + str(event_time))
         event_function(actor, event_parameters)
-        
-        
+
+
+#
+# network_now
+#
+# Description:      Returns the current simulation time in milliseconds.
+#
+# Arguments:        None.
+#
+# Return Values:    (integer) - The number of milliseconds since the network
+#                       simulation began.
+#
+# Global Variables: None.
+#
+# Limitations:      None.
+#
+# Known Bugs:       None.
+#
+# Revision History: 2015/11/02: Created
+#
+
 def network_now():
     '''
     Returns the time of the network simulation.
     '''
     return network_time
-    
-    
+
+#
+# create_initial_events
+#
+# Description:      This takes the flows and creates the initial events for
+#                   them.  The initial event will be the same for all flows,
+#                   but the time of the event will depend on the flow start
+#                   time.
+#
+# Arguments:        None.
+#
+# Return Values:    None.
+#
+# Global Variables: event_queue (WRITE) - The event_queue heapqueue has the
+#                       initial flow events enqueued.
+#
+# Limitations:      None.
+#
+# Known Bugs:       None.
+#
+# Revision History: 2015/11/02: Created
+#
+
 def create_initial_events():
     '''
     This takes the set of flows and their descriptors and fills the event queue
@@ -137,6 +203,34 @@ def create_initial_events():
         enqueue_event(flows[flow_name].start_time, flow_event)
     
     
+#
+# enqueue_event
+#
+# Description:		This enqueues an event onto the event queue.  Python queues
+#					do not accept two identical entries, and because it cannot
+#					sort Event instances, two entries of the same time counts as
+#					a duplicate entry.  Thus, this counts how many entries the
+#					time has, and includes that number so that Python has a way
+#					of differentiating and sorting the heap.
+#
+# Arguments:		time (float) - The time the event is to occur/be enqueued.
+#					event (Event) - The event that is to occur/be enqueued.
+#
+# Return Values:	None.
+#
+# Shared Variables:	None.
+#
+# Global Variables:	ev_time_dict (WRITE) - Uses this to count how many times a
+#						particular time appears in the event queue.
+#					event_queue (WRITE) - Enqueues the event.
+#
+# Limitations:		This orders events that are otherwise supposed to be
+#					simultaneous.
+#
+# Known Bugs:		None.
+#
+# Revision History:	2015/11/16: Created
+#
     
 def enqueue_event(time, event):
     '''

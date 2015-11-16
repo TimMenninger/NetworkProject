@@ -62,6 +62,30 @@ class Event:
         self.parameters = in_parameters
                 
                 
+    #
+    # get_elements
+    #
+    # Description:		Returns the attributes of this event.
+    #
+    # Arguments:		None.
+    #
+    # Return Values:	(string) - The name of the actor for the event.
+    #					(string) - The name of the function for the event.
+    #					(list) - A list of arguments for the function.
+    #
+    # Shared Variables:	self.actor (READ) - Returned
+    #					self.function (READ) - Returned
+    #					self.parameters (READ) - Returned
+    #
+    # Global Variables: None.
+    #
+    # Limitations:		None.
+    #
+    # Known Bugs:		None.
+    #
+    # Revision History:	11/02/15: Created
+    #
+                
     def get_elements(self):
         '''
         Returns the actor, function and parameters for this event.
