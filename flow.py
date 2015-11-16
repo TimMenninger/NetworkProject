@@ -95,7 +95,7 @@ class Flow:
         self.size = the_size
 
         # Window size as computed.
-        self.window_size = INITIAL_WINDOW_SIZE
+        self.window_size = ct.INITIAL_WINDOW_SIZE
         
         # The time the flow is starting.
         self.start_time = the_start_time
