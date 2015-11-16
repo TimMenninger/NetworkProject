@@ -151,7 +151,7 @@ class Host:
         
         # Create an event that will search for acknowledgement after some amount
         #   of time.  If ack was not received, it will resend the packets.
-        tmout_time = sim.network_now() + ct.ACK_TIMEOUT_FACTOR * flow.max_RTT
+        tmout_time = sim.network_now() + ct.ACK_TIMEOUT_FACTOR * flow.last_RTT
         tmout_event = e.Event(self.host_name, 'check_ack_timeout', [packet])
         sim.enqueue_event(tmout_time, tmout_event)
         
@@ -206,7 +206,7 @@ class Host:
         #   Therefore, if there have been no acks received at all, increase
         #   the waiting time.
         if flow.to_complete == 0:
-            flow.max_RTT *= ct.ACK_TIMEOUT_FACTOR
+            flow.last_RTT *= ct.ACK_TIMEOUT_FACTOR
  
         
 #
@@ -279,10 +279,12 @@ class Host:
                 flow.to_complete += 1
                 heapq.heappop(flow.packets_in_flight)
                 flow.update_flow()
+                last_RTT = sim.network_now() - packet.time
                 
             elif packet.data > flow.to_complete:
                 # Packets were lost.  Resend any and all that were in flight.
                 flow.resend_inflight_packets()
+                flow.num_packets_lost += 1
             
             # else the packet has already been received
         

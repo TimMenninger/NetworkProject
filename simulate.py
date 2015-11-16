@@ -33,7 +33,7 @@ import conversion as cv
 import utility as u
 
 # Import functions to carry out the simulation
-import simulate as s
+import status as s
 
 # Import the config parser
 import config_parser as cp
@@ -119,9 +119,14 @@ def run_network():
         
         # Extract the information about the next event so we can execute it.
         (actor_name, function_name, event_parameters) = event.get_elements()
-
+        
+        # If there is no actor, then this event is asking to record network
+        #   status.
+        if actor_name == None:
+            s.record_network_status()
+            continue
         # Do the event (each event will enqueue another event if necessary)
-        if actor_name.startswith("F"):
+        elif actor_name.startswith("F"):
             actor = flows[actor_name]
             event_function = getattr(f.Flow, function_name)
         elif actor_name.startswith("H") or actor_name.startswith("R"):
@@ -136,7 +141,6 @@ def run_network():
             actor = links[actor_name]
             event_function = getattr(l.Link, function_name)
 
-        #print("\nEVENT: " + actor_name + "." + function_name + "(" + str(event_parameters) + ") -- " + str(event_time))
         event_function(actor, event_parameters)
 
 
@@ -202,34 +206,39 @@ def create_initial_events():
         # Enqueue the event in our heap queue.
         enqueue_event(flows[flow_name].start_time, flow_event)
     
+    # Create the event that will record the network status.
+    rec_stat_time = network_now()
+    rec_stat_ev = e.Event(None, None, None)
+    enqueue_event(rec_stat_time, rec_stat_ev)
+    
     
 #
 # enqueue_event
 #
-# Description:		This enqueues an event onto the event queue.  Python queues
-#					do not accept two identical entries, and because it cannot
-#					sort Event instances, two entries of the same time counts as
-#					a duplicate entry.  Thus, this counts how many entries the
-#					time has, and includes that number so that Python has a way
-#					of differentiating and sorting the heap.
+# Description:      This enqueues an event onto the event queue.  Python queues
+#                   do not accept two identical entries, and because it cannot
+#                   sort Event instances, two entries of the same time counts as
+#                   a duplicate entry.  Thus, this counts how many entries the
+#                   time has, and includes that number so that Python has a way
+#                   of differentiating and sorting the heap.
 #
-# Arguments:		time (float) - The time the event is to occur/be enqueued.
-#					event (Event) - The event that is to occur/be enqueued.
+# Arguments:        time (float) - The time the event is to occur/be enqueued.
+#                   event (Event) - The event that is to occur/be enqueued.
 #
-# Return Values:	None.
+# Return Values:    None.
 #
-# Shared Variables:	None.
+# Shared Variables: None.
 #
-# Global Variables:	ev_time_dict (WRITE) - Uses this to count how many times a
-#						particular time appears in the event queue.
-#					event_queue (WRITE) - Enqueues the event.
+# Global Variables: ev_time_dict (WRITE) - Uses this to count how many times a
+#                       particular time appears in the event queue.
+#                   event_queue (WRITE) - Enqueues the event.
 #
-# Limitations:		This orders events that are otherwise supposed to be
-#					simultaneous.
+# Limitations:      This orders events that are otherwise supposed to be
+#                   simultaneous.
 #
-# Known Bugs:		None.
+# Known Bugs:       None.
 #
-# Revision History:	2015/11/16: Created
+# Revision History: 2015/11/16: Created
 #
     
 def enqueue_event(time, event):

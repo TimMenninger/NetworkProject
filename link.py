@@ -51,6 +51,7 @@ import queue
 # Import heapq library so we can use it for our events.
 import heapq 
 
+
 ################################################################################
 #                                                                              #
 #                                   Link Class                                 #
@@ -88,16 +89,22 @@ class Link:
         # The packet buffers on either end of the half-duplex link
         self.buffers = [ [], [] ]
         
-        # The amount of data in the buffer in bits.
+        # The amount of data in the buffer in bytes.
         self.buffer_load = [ 0, 0 ]
         
         # The number of packets on the link from the indexed endpoint.  One of
         #   these must be empty at all times because the link is half-duplex.
         self.packets_on_link = [ [], [] ]
         
+        # The amount of data on the link in MB
+        self.data_on_link = 0
+        
         # If a packet is currently being moved from the buffer to the link,
         #   this is true.
-        self.in_transmission = False       
+        self.in_transmission = False   
+        
+        # Keep track of the number of packets lost
+        self.num_packets_lost = 0    
         
     #
     # put_packet_on_buffer
@@ -216,6 +223,8 @@ class Link:
     #                       travel and written to put packets on the link.
     #                   in_transmission (WRITE) - Written to True when a packet
     #                       is being transmitted.
+    #                   data_on_link (WRITE) - The amount of data on the link is
+    #                       updated
     #
     # Global Variables: None.
     #
@@ -301,10 +310,11 @@ class Link:
             heapq.heappush(self.packets_on_link[next_pop],
                            (sim.network_now(), flow_name, packet_ID))
             self.buffer_load[next_pop] -= sim.packets[(flow_name, packet_ID)].size
+            self.data_on_link += cv.bytes_to_MB(sim.packets[(flow_name, packet_ID)].size)
             
             # Calculate the transmission time as the size of the packet divided
             #   by the link capacity (aka rate).
-            transmission_time = cv.bits_to_MB(sim.packets[(flow_name, packet_ID)].size) / self.rate
+            transmission_time = cv.bytes_to_MB(sim.packets[(flow_name, packet_ID)].size) / self.rate
             
             # Create an event after this packet's transmission to reset the
             #   in_transmission flag.  Subtract a small amount of time to assure
@@ -334,6 +344,33 @@ class Link:
             sim.enqueue_event(rcv_time, rcv_event)
             
             
+    #
+    # handoff_packet
+    #
+    # Description:      This changes all the appropriate variables so the link
+    #                   reflects that it no longer has the packet on it.  It
+    #                   then allows the endpoint to receive the packet.
+    #
+    # Arguments:        self (Link)
+    #                   list_sender ([sender_index]) - A list containing the
+    #                       index of the sender in the shared arrays.
+    #
+    # Shared Variables: data_on_link (WRITE) - Decremented to show data has
+    #                       been taken off link.
+    #                   packets_on_link (WRITE) - Packet popped off of link.
+    #                   ep_names (READ) - Used to get the name of the endpoint.
+    #
+    # Global Variables: sim.packets (READ) - Used to get the size of data being
+    #                       taken off of the link.
+    #                   sim.endpoints (READ) - Used to obtain endpoint object.
+    #
+    # Limitations:      None.
+    #
+    # Known Bugs:       None.
+    #
+    # Revision History: 2015/11/16: Created
+    #
+            
     def handoff_packet(self, list_sender):
         '''
         This changes a few variables related to the packet being taken off of
@@ -345,6 +382,7 @@ class Link:
         # Take the packet off of the link by removing it from the queue.
         [time, flow_name, packet_ID] = \
                 heapq.heappop(self.packets_on_link[sender_index])
+        self.data_on_link -= cv.bytes_to_MB(sim.packets[(flow_name, packet_ID)].size)
                 
         # Use the sender index to figure out the receiver index.
         rcv_index = (sender_index + 1) % 2

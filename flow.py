@@ -117,10 +117,10 @@ class Flow:
         #   this has been acknowledged)
         self.to_complete = 0
         
-        # Keep track of the maximum round trip time a packet has taken so we
-        #   can guage an accurate timeout-check delay.  Before any acks are
+        # Keep track of the round trip time a packet has taken so we can
+        #   guage an appropriate timeout-check delay.  Before any acks are
         #   received, this is more of a blind guess.
-        self.max_RTT = ct.INITIAL_ASSUMED_RTT
+        self.last_RTT = ct.INITIAL_ASSUMED_RTT
         
         
     #

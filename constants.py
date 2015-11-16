@@ -30,10 +30,10 @@ PACKET_DATA         = 0
 PACKET_ACK          = 1
 PACKET_ROUTING      = 2
 
-# Packet sizes in bits
+# Packet sizes in bytes
 PACKET_DATA_SIZE    = 1024  # Size of data Packet in bytes
-PACKET_ACK_SIZE     = 64    # Size of ack Packet in bytes (64 bits)
-PACKET_ROUTING_SIZE = 64    # Size of routing Packet in bytes (64 bits)
+PACKET_ACK_SIZE     = 64    # Size of ack Packet in bytes
+PACKET_ROUTING_SIZE = 64    # Size of routing Packet in bytes
 
 # Status codes
 SUCCESS             = 0     # Operation was success
@@ -49,6 +49,6 @@ MAX_SIMULATION_TIME = 1e6   # Maximum number of milliseconds the network should
 
 ACK_TIMEOUT_FACTOR  = 2     # Number of milliseconds to wait for acknowledgement
                             # before timeout
-INITIAL_ASSUMED_RTT	= 500	# Before we know the round trip time, we need to
+INITIAL_ASSUMED_RTT	= 50	# Before we know the round trip time, we need to
 							#	define an initial one that we assume (in ms)
-INITIAL_WINDOW_SIZE = 1		# The initial window size for each flow.
+INITIAL_WINDOW_SIZE = 2		# The initial window size for each flow.
