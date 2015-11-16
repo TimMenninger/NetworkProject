@@ -49,5 +49,6 @@ MAX_SIMULATION_TIME = 1e6   # Maximum number of milliseconds the network should
 
 ACK_TIMEOUT_FACTOR  = 2     # Number of milliseconds to wait for acknowledgement
                             # before timeout
-INITIAL_ASSUMED_RTT	= 5000	# Before we know the round trip time, we need to
-							#	define an initial one that we assume.
+INITIAL_ASSUMED_RTT	= 500	# Before we know the round trip time, we need to
+							#	define an initial one that we assume (in ms)
+INITIAL_WINDOW_SIZE = 1		# The initial window size for each flow.

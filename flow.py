@@ -95,7 +95,7 @@ class Flow:
         self.size = the_size
 
         # Window size as computed.
-        self.window_size = 1
+        self.window_size = INITIAL_WINDOW_SIZE
         
         # The time the flow is starting.
         self.start_time = the_start_time
@@ -113,8 +113,14 @@ class Flow:
         self.expecting = 0
         
         # The next chronological packet the source is looking to receive
-        #   ack for.
+        #   ack for (i.e. every packet whose data is strictly less than
+        #   this has been acknowledged)
         self.to_complete = 0
+        
+        # Keep track of the maximum round trip time a packet has taken so we
+        #   can guage an accurate timeout-check delay.  Before any acks are
+        #   received, this is more of a blind guess.
+        self.max_RTT = ct.INITIAL_ASSUMED_RTT
         
         
     #

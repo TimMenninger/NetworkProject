@@ -130,10 +130,12 @@ class Host:
 
     def send_packet(self, arg_list):
         '''
-        Enqueues a packet to be sent.
+        Enqueues a packet to be sent and creates an event to check for
+        timeout.
         '''
         # The argument list is just the packet.
         [packet] = arg_list
+        flow = sim.flows[packet.flow]
         print (self.host_name + ' sending packet ' + packet.ID + ' with data ' + str(packet.data) + ' at time ' + str(sim.network_now()))
         
         # First want to put the current time on the packet so we can calculate
@@ -146,6 +148,65 @@ class Host:
         # Give the packet to the link to handle.  Here, it will either be
         #   enqueued on a buffer or transmitted.
         link.put_packet_on_buffer(self.host_name, packet)
+        
+        # Create an event that will search for acknowledgement after some amount
+        #   of time.  If ack was not received, it will resend the packets.
+        tmout_time = sim.network_now() + ct.ACK_TIMEOUT_FACTOR * flow.max_RTT
+        tmout_event = e.Event(self.host_name, 'check_ack_timeout', [packet])
+        sim.enqueue_event(tmout_time, tmout_event)
+        
+        
+    #
+    # check_ack_timeout
+    #
+    # Description:      This is called after some amount of time to check if
+    #                   we have been waiting "too long" for the argued packet
+    #                   to be acknowledged.  If the packet has reached its
+    #                   timeout, then all of the packets in flight are resent
+    #                   and it is assumed that the packet is lost.
+    #
+    # Arguments:        self (Host)
+    #                   list_packet ([Packet]) - A list containing the packet
+    #                       we are searching acknowledgement for.
+    #
+    # Return Values:    None.
+    #
+    # Shared Variables: None.
+    #
+    # Global Variables: sim.flows (READ) - The flow the packet is a part of is
+    #                       read from this dictionary.
+    #
+    # Limitations:      None.
+    #
+    # Known Bugs:       None.
+    #
+    # Revision History: 2015/11/16: Created
+    #
+        
+    def check_ack_timeout(self, list_packet):
+        '''
+        Called after some timeout time to check if the packet contained in the
+        list has been acknowledged.
+        '''
+        # Unpack the argument list.
+        [packet] = list_packet
+        flow = sim.flows[packet.flow]
+        
+        # Check if acknowledgement has been received for this packet.  If so,
+        #   disregard, we are done here.
+        if packet.data < flow.to_complete:
+            return
+            
+        # If not, we want to first resend all packets in flight.
+        flow.resend_inflight_packets()
+        
+        # Next, because we want to check if the time we waited for timeout is
+        #   sufficient.  If we have not received any acknowledgements yet, it
+        #   is possible that we simply aren't waiting long enough for ack.
+        #   Therefore, if there have been no acks received at all, increase
+        #   the waiting time.
+        if flow.to_complete == 0:
+            flow.max_RTT *= ct.ACK_TIMEOUT_FACTOR
  
         
 #
@@ -197,7 +258,7 @@ class Host:
                                
             # Set the data of the ack to be what we are expecting.  The src will
             #   cross check this with what he sent and resend or not accordingly
-            ack_pkt.set_data(flow.expecting)
+            ack_pkt.set_data(packet.data)
             
             # Add the packet to our dictionary of packets.
             sim.packets[(flow_name, ack_pkt.ID)] = ack_pkt
@@ -216,15 +277,14 @@ class Host:
                 # This is what we were waiting for.  We now have one more
                 #   complete
                 flow.to_complete += 1
-                flow.window_size += 1
                 heapq.heappop(flow.packets_in_flight)
                 flow.update_flow()
                 
-            else:
+            elif packet.data > flow.to_complete:
                 # Packets were lost.  Resend any and all that were in flight.
-                flow.window_size = 1
                 flow.resend_inflight_packets()
-        
+            
+            # else the packet has already been received
         
         
         
