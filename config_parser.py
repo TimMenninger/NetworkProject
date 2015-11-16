@@ -147,8 +147,8 @@ def load_network_objects(network_file):
 
         # Add the name of this Link as an endpoint attribute to each of the 
         # endpoints 
-        sim.endpoints[link[4]].link = link[0]
-        sim.endpoints[link[5]].link = link[1]
+        sim.endpoints[link[4]].add_link(link[0])
+        sim.endpoints[link[5]].add_link(link[0])
 
         # Read the next line.
         link = network.readline()

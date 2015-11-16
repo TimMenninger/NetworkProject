@@ -68,14 +68,14 @@ class Host:
         self.host_name = the_host_name
         
         # The link_name representing the Link to this Host
-        self.link = None
+        self.link = []
         
         # Either 0 or 1 indicating for each Link that this Host is connected 
         # to, whether it is the "higher" (0) or "lower" (0) endpoint
         self.endpoint = None
         
 #
-# set_link
+# add_link
 #
 # Description:      This sets the link the host is connected to.
 #
@@ -96,7 +96,7 @@ class Host:
 # Revision History: 2015/10/29: Created
 #
         
-    def set_link(self, link_name):
+    def add_link(self, link_name):
         '''
         Alters the 'link' attribute of the Host to reflect the link
         connecting the Host to the network.
@@ -156,7 +156,8 @@ class Host:
 #
 # Limitations:      None.
 #
-# Known Bugs:       None.
+# Known Bugs:       This is occasionally called with a packet that is not in
+#                       the dictionary.
 #
 # Revision History: 2015/10/22: Created function handle and docstring.
 #                   2015/10/29: Filled in.
@@ -172,8 +173,11 @@ class Host:
         
         # Unpack the argument list.
         [flow_name, packet_name] = argument_list
-        packet = sim.packets[(flow_name, packet_name)]
-        flow = sim.flows[flow_name]
+        try:
+            packet = sim.packets[(flow_name, packet_name)]
+            flow = sim.flows[flow_name]
+        except:
+            return
         
         # Create an event to enqueue the packet on the link.
         link = sim.links[self.link]
@@ -186,16 +190,13 @@ class Host:
                                        'check_for_timeout', 
                                        [flow_name, packet_name])
             heapq.heappush(sim.event_queue, 
-                          (sim.network_now() + ct.ACK_TIMEOUT_FACTOR, \
+                          (sim.network_now() + ct.ACK_TIMEOUT_FACTOR * flow.RTT, 
                            ack_timeout_event))
-             
-            """                                 
-            # If this packet is not in our packets_in_flight array, add it to it.
-            # It's not given that it is not in the array because this may be
-            # a packet resend.
-            if argument_list not in flow.packets_in_flight:
-                flow.packets_in_flight.append(argument_list)
-            """
+                           
+            # Set the data to be the current time so we know the RTT when its
+            #   acknowledgement comes.
+            sim.packets[(flow_name, packet_name)].data[1] = sim.network_now()
+                                              
                                                                                  
 #
 # check_for_timeout
@@ -237,18 +238,16 @@ class Host:
         
         # For ease, get the packet and flow corresponding to these.
         packet = sim.packets[(flow_name, packet_ID)]
-        flow = sim.flows[(flow_name, packet_ID)]
+        flow = sim.flows[flow_name]
         
-        # If the packet ID is less than or equal to the last received, then
+        # If the packet value is less than or equal to the last received, then
         #   ack has been received for this packet.  Otherwise, we must resend
         #   it.
-        if int(packet.ID) <= flow.last_complete:
+        if int(packet.data[0]) <= flow.last_complete:
             return
             
         # If here, there was a timeout and we must resend the packets in flight
-        for packet in flow.packets_in_flight:
-            # Resend the packets in the list up to and including this lost one.
-            self.send_packet(packet)
+        flow.resend_packets_in_flight()
  
         
 #
@@ -298,44 +297,63 @@ class Host:
         if packet.type == ct.PACKET_DATA:
 
             # Create acknowledgement packet.
-            ack_packet = Packet(packet.ID, packet.flow,
-                                self.host_name, packet.src, PACKET_ACK, 
-                                PACKET_ACK_SIZE)
+            ack_packet = p.Packet(flow.create_packet_ID(), packet.flow,
+                                  self.host_name, packet.src, ct.PACKET_ACK, 
+                                  ct.PACKET_ACK_SIZE)
+                                  
+            # Add the time the original packet was sent to this ack packet.
+            ack_packet.set_data(packet.data)
+
+            # Add this acknowledgement packet to our packet dictionary.
+            sim.packets[(ack_packet.ID, ack_packet.flow)] = ack_packet
             
             # Compute how long the host must wait to send acknowledgement.
             time_delay = 0
             
             # Create an event to send this packet.
-            send_ack_event = e.Event(self, send_packet, [ack_packet.flow, 
-                                     ack_packet.ID])
+            send_ack_event = e.Event(self.host_name, 'transmit_packet',
+                                        [ack_packet.flow, ack_packet.ID])
 
             # Add send ack packet event to the simulation priority queue
             heapq.heappush(sim.event_queue, ((sim.network_now() + time_delay), \
                                               send_ack_event))
 
         elif packet.type == ct.PACKET_ACK:
-            # Indicate in the Flow that the Packet that this Ack Packet 
-            # corresponds to has been acknowledged
-            if packet.ID == flow.acked.queue(0):
-                # Pop it off the queue, it has been acknowledged
-                flow.acked.get()
-
+            # Check if this has the data of the next packet we expect.
+            if int(packet.data[0]) == flow.last_complete + 1:
+                # Remove this packet, it has been acknowledged
+                flow.packets.pop()
+                
+                # Reflect that another packet has been complete.
+                flow.last_complete += 1
+                
+                # Calculate the round trip time for this packet.
+                pkt_RTT = sim.network_now() - packet.data[0]
+                
                 # Decrement the number of Packet in flight for the flow because
                 # just received an acknowledgement for one
                 flow.packets_in_flight -= 1
 
                 # See if a new Packet can be sent
-                flow.check_status()
-
-            else:
-                # There is an error, we must retransmit a Packet
+                flow.check_flow_status()
+                
+                print (len(flow.packets))
+                
+            # If the packet ID is less than the last complete, then it belongs
+            #   to a packet who has already made a round trip.  This happens
+            #   as a result of retransmitting packets.  In this case, ignore
+            #   the acknowledgement.
+            elif int(packet.data[0]) <= flow.last_complete:
                 pass
 
+            else:
+                # There is an error, we must retransmit the packets.
+                flow.resend_packets_in_flight()
 
         # Decrement the number of Packet going from the other endpoint to 
         # this endpoint
-        other_ep = self.endpoint + 1 % 2
-        self.link.num_on_link[other_ep] -= 1
+        sim.links[self.link].update_num_on_link(1)
+        
            
 #
 # print_contents

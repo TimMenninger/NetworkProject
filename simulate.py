@@ -46,7 +46,7 @@ import simulate as s
 import config_parser as cp
 
 # Import heapq library so we can use it for our events.
-import heapq 
+import heapq
 
 
 ################################################################################
@@ -258,11 +258,12 @@ def run_network():
             actor = links[actor_name]
             event_function = getattr(l.Link, function_name)
 
-        print("\nEVENT: " + actor_name + "." + function_name + "(" + str(event_parameters) + ") -- " + str(event_time))
+        #print("\nEVENT: " + actor_name + "." + function_name + "(" + str(event_parameters) + ") -- " + str(event_time))
         event_function(actor, event_parameters)
 
 
     return ct.SUCCESS
+
 
 
 if __name__ == "__main__":

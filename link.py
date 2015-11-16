@@ -169,7 +169,7 @@ class Link:
         flow = sim.flows[flow_name]
 
         # For ease and code readability, extract the packet
-        packet = flow.awaiting_ack[(flow_name, packet_name)]
+        packet = sim.packets[(flow_name, packet_name)]
         
         # Figure out which endpoint this packet was received from.
         ep = 0
@@ -181,9 +181,9 @@ class Link:
         # We want to check which endpoint the packet came from then put the
         # packet in the appropriate buffer, but only if there is enough space
         # in the buffer.
-        print(str(self.buffer_current_load[ep]))
-        print(str(cv.bits_to_KB(packet.size)))
-        print(str(self.buffer_size))
+        #print(str(self.buffer_current_load[ep]))
+        #print(str(cv.bits_to_KB(packet.size)))
+        #print(str(self.buffer_size))
         if self.space_for_packet(packet, ep):
             
             # Put the Packet identifier into the buffer queue and update its 
@@ -198,7 +198,46 @@ class Link:
             return ct.SUCCESS
 
         return ct.LINK_FULL
-            
+        
+        
+#
+# update_num_on_link
+#
+# Description:      This is called by a host/router to update the count of data
+#                   on the link.
+#
+# Arguments:        self (Link)
+#                   size_rcvd (int) - The amount of data received by the caller.
+#
+# Return Values:    None.
+#
+# Shared Variables: num_on_link (WRITE) - The amount of data on the link is
+#                       decreased according to the argument.
+#
+# Global Variables: None.
+#
+# Limitations:      This assumes nothing has gone wrong.  This means that
+#                   exactly one direction has data flowing (if neither had data
+#                   then nobody could have called this and if both, then we are
+#                   violating the half-duplex link)
+#
+# Known Bugs:       None.
+#
+# Revision History: 11/16/15: Created
+#
+        
+    def update_num_on_link(self, size_rcvd):
+        '''
+        This is called by a host/router to update the counter for amount of
+        data on the link.
+        '''
+        # This is called by a host/router that received data.  If nothing
+        #   is going wrong, then the caller is clearly the endpoint that is
+        #   not sending anything.
+        if self.num_on_link[0] == 0:
+            self.num_on_link[1] -= 1
+        else:
+            self.num_on_link[0] -= 1
 
 #
 # dequeue_packet
@@ -245,7 +284,7 @@ class Link:
         flow_name, packet_ID = self.buffers[ep].get()
 
         # Retrieve the Packet object to dequeue
-        packet = sim.flows[flow_name].awaiting_ack[(flow_name, packet_ID)]
+        packet = sim.packets[(flow_name, packet_ID)]
 
         # Remove the Packet size from the correct buffer_current_load
         self.buffer_current_load[ep] -= cv.bits_to_MB(packet.size)
@@ -295,8 +334,8 @@ class Link:
 #                   2015/11/03: Simplified method to try to limit the enqueuing
 #                               of carry events to when the Link is free and 
 #                               data is already being transmitted in the 
-#                              direction that the current Packet wants to be 
-#                              transmitted in
+#                               direction that the current Packet wants to be 
+#                               transmitted in
 #
         
     def put_packet_on_link(self, args):
@@ -313,13 +352,13 @@ class Link:
         
         if self.buffers[ep].qsize() == 0:
             return
-               
+        
         # Put the Packet in a container, note: it does not pop the Packet from
         # the link buffer -- that happens in carry_packet()
         flow_name, packet_name = self.buffers[ep].queue[0]
 
         # Retrieve the Packet object
-        packet = sim.flows[flow_name].awaiting_ack[(flow_name, packet_name)]
+        packet = sim.packets[(flow_name, packet_name)]
         
         # We know that every single Packet will take at least 
         # packet size (MB) / link rate (MB/s) = (s) time to be transmitted
@@ -395,7 +434,7 @@ class Link:
         flow_name, packet_ID = self.dequeue_packet([ep])
         
         # Retrieve the Packet object to dequeue
-        packet = sim.flows[flow_name].awaiting_ack[(flow_name, packet_ID)]
+        packet = sim.packets[(flow_name, packet_ID)]
         
         # Put the Packet onto the Link itself and update the attributes
         self.packets_carrying.append((flow_name, packet_ID))
@@ -406,11 +445,12 @@ class Link:
         # after the propagation delay
         other_ep = (ep + 1) % 2
         other_host_name = sim.endpoints[self.endpoints[other_ep]].host_name
-        receive_event = e.Event(other_host_name, 'receive_packet', [])
+        receive_event = e.Event(other_host_name, 'receive_packet', [flow_name, packet_ID])
         
         # Enqueue the receive_event
         receive_time = sim.network_now() + self.delay
         heapq.heappush(sim.event_queue, (receive_time, receive_event))
+    
     
 #
 # free_link()
