@@ -162,6 +162,8 @@ class Flow:
             # Put the Packet into the queue
             self.packets.put(packet)
 
+            sim.packets[(self.flow_name, packet_ID)] = packet
+
             # Put the Packet identifier (key) and Packet itself into the 
             # awaiting_ack dictionary
             self.awaiting_ack[(self.flow_name, packet_ID)] = packet
@@ -258,35 +260,7 @@ class Flow:
         '''
         Returns an unused ID for a packet.
         '''
-        # Increment the ID to get the next unused packet ID.
-        self.next_packet_ID += 1
         
         # Return the ID.
+        self.next_packet_ID += 1
         return str(self.next_packet_ID - 1)
-         
-    #
-    # print_contents
-    #
-    # Description:      Prints the attributes and their contained values.  This is
-    #                   used mainly for debugging purposes.
-    #
-    # Arguments:        self (Flow)
-    #
-    # Return Values:    None.
-    #
-    # Shared Variables: None.
-    #
-    # Global Variables: None.
-    #
-    # Limitations:      None.
-    #
-    # Known Bugs:       None.
-    #
-    # Revision History: 2015/10/??: Created function handle
-    #
-        
-    def print_contents(self):
-        '''
-        For debugging use. Print out the contents of the Flow.
-        '''
-

@@ -71,7 +71,6 @@ class Packet:
         # PACKET_DATA_SIZE, PACKET_ACK_SIZE, or PACKET_ROUTING_SIZE
         self.size = the_size
         
-        
 #
 # set_dest
 #

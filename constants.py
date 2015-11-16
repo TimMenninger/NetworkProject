@@ -42,6 +42,10 @@ LINK_FULL           = 2     # Link was full
 
 # Time constants
 RECORDING_INTERVAL  = 10    # Number of milliseconds between each network 
-							# status recording
+                            # status recording
 MAX_SIMULATION_TIME = 1e6   # Maximum number of milliseconds the network should 
-							# run
+                            # run
+
+
+ACK_TIMEOUT_FACTOR  = 2     # Number of milliseconds to wait for acknowledgement
+                            # before timeout

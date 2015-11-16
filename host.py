@@ -160,6 +160,8 @@ class Host:
 #
 # Revision History: 2015/10/22: Created function handle and docstring.
 #                   2015/10/29: Filled in.
+#                   2015/11/14: Enqueues event to check for timeout.
+#                               Responds according to packet type
 #
 
     def transmit_packet(self, argument_list):
@@ -170,11 +172,84 @@ class Host:
         
         # Unpack the argument list.
         [flow_name, packet_name] = argument_list
+        packet = sim.packets[(flow_name, packet_name)]
+        flow = sim.flows[flow_name]
         
         # Create an event to enqueue the packet on the link.
         link = sim.links[self.link]
         link.put_packet_on_buffer([self.host_name, flow_name, packet_name])
         
+        if packet.type == ct.PACKET_DATA:
+            # Wait for timeout (defined as constant) to check that ack has been
+            # received for this packet.
+            ack_timeout_event = e.Event(self.host_name, 
+                                       'check_for_timeout', 
+                                       [flow_name, packet_name])
+            heapq.heappush(sim.event_queue, 
+                          (sim.network_now() + ct.ACK_TIMEOUT_FACTOR, \
+                           ack_timeout_event))
+             
+            """                                 
+            # If this packet is not in our packets_in_flight array, add it to it.
+            # It's not given that it is not in the array because this may be
+            # a packet resend.
+            if argument_list not in flow.packets_in_flight:
+                flow.packets_in_flight.append(argument_list)
+            """
+                                                                                 
+#
+# check_for_timeout
+#
+# Description:      This checks whether the host has received acknowledgement
+#                   for the argued packet.  If it has, the function does 
+#                   nothing.  However, if it hasn't, the function will resend
+#                   the packets up to and including itself (nothing after,
+#                   because their ack timeouts haven't been reached yet).
+#
+# Arguments:        self (Host)
+#                   argument_list ([string, string]) - The first string is the
+#                       name of the flow that the packet is a part of and the
+#                       second is the packet ID.
+#
+# Return Values:    None.
+#
+# Shared Variables: self.flow (READ) - Reads the attributes of the flow to
+#                       decide whether acknowledgement was received and if not,
+#                       how to handle it.
+#
+# Global Variables: None.
+#
+# Limitations:      None.
+#
+# Known Bugs:       None.
+#
+# Revision History: 2015/11/14: Created
+#
+
+    def check_for_timeout(self, argument_list):
+        '''
+        Checks whether acknowledgement has been received for the packet in the
+        argued list.
+        '''
+        
+        # Unpack the argument list.
+        [flow_name, packet_ID] = argument_list
+        
+        # For ease, get the packet and flow corresponding to these.
+        packet = sim.packets[(flow_name, packet_ID)]
+        flow = sim.flows[(flow_name, packet_ID)]
+        
+        # If the packet ID is less than or equal to the last received, then
+        #   ack has been received for this packet.  Otherwise, we must resend
+        #   it.
+        if int(packet.ID) <= flow.last_complete:
+            return
+            
+        # If here, there was a timeout and we must resend the packets in flight
+        for packet in flow.packets_in_flight:
+            # Resend the packets in the list up to and including this lost one.
+            self.send_packet(packet)
+ 
         
 #
 # receive_packet
@@ -203,6 +278,7 @@ class Host:
 # Revision History: 2015/10/22: Created function handle and docstring.
 #                   2015/10/29: Filled in function.
 #                   2015/11/13: Decremented Link 'num_on_link' attribute.
+#                   2015/11/14: Responds according to packet type and ID.
 #
 
     def receive_packet(self, argument_list):
@@ -223,17 +299,18 @@ class Host:
 
             # Create acknowledgement packet.
             ack_packet = Packet(packet.ID, packet.flow,
-                                self.host_name, packet.src, PACKET_ACK,
-                                PACKET_ACK_SIZE, sim.network_now())
+                                self.host_name, packet.src, PACKET_ACK, 
+                                PACKET_ACK_SIZE)
             
             # Compute how long the host must wait to send acknowledgement.
             time_delay = 0
             
             # Create an event to send this packet.
-            send_ack_event = e.Event(self, send_packet, [ack_packet.flow, ack_packet.ID])
+            send_ack_event = e.Event(self, send_packet, [ack_packet.flow, 
+                                     ack_packet.ID])
 
             # Add send ack packet event to the simulation priority queue
-            heapq.heappush(sim.event_queue, ((sim.network_now() + time_delay), 
+            heapq.heappush(sim.event_queue, ((sim.network_now() + time_delay), \
                                               send_ack_event))
 
         elif packet.type == ct.PACKET_ACK:
@@ -259,8 +336,7 @@ class Host:
         # this endpoint
         other_ep = self.endpoint + 1 % 2
         self.link.num_on_link[other_ep] -= 1
-        
-        
+           
 #
 # print_contents
 #
