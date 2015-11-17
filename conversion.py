@@ -67,10 +67,10 @@ def MB_to_bits(num_in_MB):
 #
 
 def bits_to_KB(num_in_bits):
-	'''
-	Converts the parameter to KB and returns the result.
-	'''
-	return num_in_bits / 8000
+    '''
+    Converts the parameter to KB and returns the result.
+    '''
+    return num_in_bits / 8000
 
 #
 # bits_to_MB
@@ -122,17 +122,17 @@ def bits_to_MB(num_in_bits):
 #
 
 def MB_to_KB(num_in_MB):
-	'''
-	Converts the parameter to KB and returns the result.
-	'''
-	return num_in_MB * 1000
-	
-	
+    '''
+    Converts the parameter to KB and returns the result.
+    '''
+    return num_in_MB * 1000
+    
+    
 def bytes_to_MB(num_in_bytes):
-	'''
-	Converts the parameter to MB and returns it.
-	'''
-	return (1.0 * num_in_bytes) / (10 ** 6)
+    '''
+    Converts the parameter to MB and returns it.
+    '''
+    return (1.0 * num_in_bytes) / (10 ** 6)
 
 
 

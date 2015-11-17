@@ -10,9 +10,9 @@
 #
 
 def print_dict_keys(dict_name, dict):
-	'''
-	Prints the keys of a dictionary.
-	'''
-	print("- " + dict_name + " -")
-	for key in dict.keys():
-		print("\t" + key)
+    '''
+    Prints the keys of a dictionary.
+    '''
+    print("- " + dict_name + " -")
+    for key in dict.keys():
+        print("\t" + key)
