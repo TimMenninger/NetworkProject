@@ -284,7 +284,6 @@ class Host:
             elif packet.data > flow.to_complete:
                 # Packets were lost.  Resend any and all that were in flight.
                 flow.resend_inflight_packets()
-                flow.num_packets_lost += 1
             
             # else the packet has already been received
         

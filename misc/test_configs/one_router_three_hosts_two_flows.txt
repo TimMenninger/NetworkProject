@@ -1,13 +1,19 @@
 hostSpecs (ID):
-
+H1
+H2
+H3
 
 routerSpecs (ID):
-
+R1
 
 linkSpecs (ID Rate Delay Buffer Endpoint1 Endpoint2):
-
+L0 10 10 64 H1 R1
+L1 10 10 64 R1 H2
+L2 10 10 64 R1 H3
 
 flowSpecs (ID Src Dest Data Start):
+F1 H1 H2 20 1.0
+F2 H1 H3 20 1.0
 
 
 
