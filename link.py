@@ -12,10 +12,6 @@
 ################################################################################
 
 
-
-
-
-
 ################################################################################
 #                                                                              #
 #                               Imported Modules                               #
@@ -60,7 +56,8 @@ import heapq
 
 class Link:
 
-    def __init__(self, the_link_name, the_rate, the_delay, the_buffer_size, the_endpoints):
+    def __init__(self, the_link_name, the_rate, the_delay, the_buffer_size, 
+                 the_endpoints):
         '''
         Initialize an instance of Link by intitializing its attributes.
         '''
@@ -86,10 +83,10 @@ class Link:
         self.end_points = { the_endpoints[0] : 0, the_endpoints[1] : 1 }
         self.ep_names = { 0 : the_endpoints[0], 1 : the_endpoints[1] }
         
-        # The packet buffers on either end of the half-duplex link
+        # The packet buffers on either end of the half-duplex link (heapq's)
         self.buffers = [ [], [] ]
         
-        # The amount of data in the buffer in bytes.
+        # The amount of data in the buffer in bits.
         self.buffer_load = [ 0, 0 ]
         
         # The number of packets on the link from the indexed endpoint.  One of
@@ -149,15 +146,20 @@ class Link:
         '''
         # Get the index of the endpoint sender_name represents and then the
         #   index of the opposite endpoint.
-        ep = self.end_points[sender_name]
-        other_ep = (ep + 1) % 2
+        ep, other_ep = u.assign_endpoints(self.end_points, sender_name)
         
         # Put the packet onto the buffer heapqueue corresponding to the sender.
         #   The time we use for this will be now, because we are using first
         #   come first served priority on the links, but only if there is enough
         #   space.
-        if packet.size + self.buffer_load[ep] <= self.buffer_size * (10 ** 3):
-            heapq.heappush(self.buffers[ep], (sim.network_now(), packet.flow, packet.ID))
+        if packet.size + self.buffer_load[ep] <= cv.KB_to_bits(self.buffer_size):
+            # Add the packet identifier to the link buffer heap queue along 
+            # with the time
+            heapq.heappush(self.buffers[ep], 
+                (sim.network_now(), packet.flow, packet.ID))
+
+            # Update the buffer load for this link buffer because it is now
+            # storing an additional packet.size
             self.buffer_load[ep] += packet.size
         
         # We now want to check if this should be sent right away.  The reason
@@ -198,7 +200,85 @@ class Link:
         '''
         self.in_transmission = False
             
+    #
+    # get_next_buffer_pop
+    #
+    # Description:      This function Returns a tuple reflecting 1) the 
+    #                   current direction of data travel on this link by 
+    #                   stating the source of the data flow and 2) the index of 
+    #                   the endpoint on this link that should place a packet 
+    #                   onto the link next (either 0 or 1). 
+    #
+    # Arguments:        self (Link)
+    #                   (no use to include an arg list because this funciton
+    #                    is internal)
+    #
+    # Return Values:    (data_src, next_pop)
+    #                   See docstring for description of these return values
+    #
+    # Shared Variables: buffers (READ/WRITE) - Read to see if there is anything
+    #                       to put on the link, written if something is taken
+    #                       off of the buffer to put on the link.
+    #                   packets_on_link (READ/WRITE) - Read to see direction of
+    #                       travel and written to put packets on the link.
+    #
+    # Global Variables: None.
+    #
+    # Limitations:      None.
+    #
+    # Known Bugs:       None.
+    #
+    # Revision History: 2015/11/18: Moved this code out of put_packet_on_link()
+    #                               and into this function for readability 
+    #                               and easing debugging.
+    #
+
+    def get_next_buffer_pop(self):
+        '''
+        Returns a tuple reflecting 1) the current direction of data travel on 
+        this link by stating the source of the data flow and 2) the index of 
+        the endpoint on this link that should place a packet onto the link 
+        next (either 0 or 1).
+        '''
+        # Find the direction of travel, which is the source of the data on the
+        #   link.  If there is no source, then the data source is -1.
+        data_src = 0
+        if len(self.packets_on_link[0]) == 0 and len(self.packets_on_link[1]) == 0:
+            data_src = -1
+        elif len(self.packets_on_link[1]) > 0:
+            data_src = 1
+        
+        # Check which buffer contains the packet that will be put on the link
+        #   next.  We will use this to determine whether it goes on the link now
+        #   or later (if it must oppose the direction of data).  
+        if len(self.buffers[0]) == 0:
+            # If there is nothing on the queue at 0, then the next packet must
+            #   come from 1.
+            next_pop = 1
+        elif len(self.buffers[1]) == 0:
+            # If there is nothing on the queue at 1, then the packt must come
+            #   from 0.
+            next_pop = 0
+        else:
+            # The next packet will be the first one that arrived.  If the two
+            #   are equal, tie goes to the direction of data travel.  We thus
+            #   get the time of entry for the next packet from either buffer
+            #   by "peeking" the element that would be popped off each of 
+            #   the heapq's.
+            [time0, temp1, temp2] = self.buffers[0][0]
+            [time1, temp1, temp2] = self.buffers[1][0]
             
+            # If the two times are equal, keep sending data in the direction of
+            #   travel.  Otherwise, send the oldest (smallest time) packet.
+            next_pop = 0
+            if time0 == time1:
+                next_pop = data_src
+            elif time1 < time0:
+                next_pop = 1
+
+        return data_src, next_pop
+
+
     #
     # put_packet_on_link
     #
@@ -256,44 +336,9 @@ class Link:
         if len(self.buffers[0]) == 0 and len(self.buffers[1]) == 0:
             return
         
-        # Find the direction of travel, which is the source of the data on the
-        #   link.  If there is no source, then the data source is -1.
-        data_src = 0
-        if len(self.packets_on_link[0]) == 0 and len(self.packets_on_link[1]) == 0:
-            data_src = -1
-        elif len(self.packets_on_link[1]) > 0:
-            data_src = 1
+        # Get which buffer to pop a packet from next (0 or 1)
+        data_src, next_pop = self.get_next_buffer_pop()
         
-        # Check which buffer contains the packet that will be put on the link
-        #   next.  We will use this to determine whether it goes on the link now
-        #   or later (if it must oppose the direction of data).  Unfortunately,
-        #   there is no good way of peeking, so we pop then push.
-        if len(self.buffers[0]) == 0:
-            # If there is nothing on the queue at 0, then the next packet must
-            #   come from 1.
-            next_pop = 1
-        elif len(self.buffers[1]) == 0:
-            # If there is nothing on the queue at 1, then the packt must come
-            #   from 0.
-            next_pop = 0
-        else:
-            # The next packet will be the first one that arrived.  If the two
-            #   are equal, tie goes to the direction of data travel.  We thus
-            #   get the time of entry for the next packet from either buffer.
-            [time0, temp1, temp2] = heapq.heappop(self.buffers[0])
-            heapq.heappush(self.buffers[0], (time0, temp1, temp2))
-            
-            [time1, temp1, temp2] = heapq.heappop(self.buffers[1])
-            heapq.heappush(self.buffers[0], (time1, temp1, temp2))
-            
-            # If the two times are equal, keep sending data in the direction of
-            #   travel.  Otherwise, send the oldest (smallest time) packet.
-            next_pop = 0
-            if time0 == time1:
-                next_pop = data_src
-            elif time1 < time0:
-                next_pop = 1
-                
         # Now that we know the source of the next packet, we know if it goes on
         #   right away.  If the next packet will go in the same direction of 
         #   travel as the other packets, put it on the link.  Otherwise, we must
@@ -303,18 +348,22 @@ class Link:
             self.in_transmission = True
             
             # The next packet will go in the same direction as data on the link.
+            # Pop the packet from the link buffer
             [time, flow_name, packet_ID] = heapq.heappop(self.buffers[next_pop])
             
-            # Put it on the link, but use the current time so we can heapify
-            #   more easily.  Subtract from the buffer load to reflect it.
+            # Put it on the link and use the current time so we can heapify
+            #   more easily.  Subtract from the buffer load to reflect that the
+            #   packet is no longer on the buffer
             heapq.heappush(self.packets_on_link[next_pop],
                            (sim.network_now(), flow_name, packet_ID))
-            self.buffer_load[next_pop] -= sim.packets[(flow_name, packet_ID)].size
-            self.data_on_link += cv.bytes_to_MB(sim.packets[(flow_name, packet_ID)].size)
+            packet_size = sim.packets[(flow_name, packet_ID)].size # in bits
+            self.buffer_load[next_pop] -= packet_size
+            self.data_on_link += cv.bits_to_MB(packet_size)
             
             # Calculate the transmission time as the size of the packet divided
             #   by the link capacity (aka rate).
-            transmission_time = cv.bytes_to_MB(sim.packets[(flow_name, packet_ID)].size) / self.rate
+            packet_size = sim.packets[(flow_name, packet_ID)].size
+            transmission_time =  cv.bits_to_MB(packet_size) / self.rate
             
             # Create an event after this packet's transmission to reset the
             #   in_transmission flag.  Subtract a small amount of time to assure
@@ -382,7 +431,8 @@ class Link:
         # Take the packet off of the link by removing it from the queue.
         [time, flow_name, packet_ID] = \
                 heapq.heappop(self.packets_on_link[sender_index])
-        self.data_on_link -= cv.bytes_to_MB(sim.packets[(flow_name, packet_ID)].size)
+        packet_size = sim.packets[(flow_name, packet_ID)].size # in bits
+        self.data_on_link -= cv.bits_to_MB(packet_size)
                 
         # Use the sender index to figure out the receiver index.
         rcv_index = (sender_index + 1) % 2

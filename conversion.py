@@ -30,6 +30,11 @@ def bits_to_KB(num_in_bits):
     '''
     return num_in_bits / 8000
 
+def KB_to_bits(num_in_KB):
+    '''
+    Converts the parameter to bits and returns the result.
+    '''
+    return num_in_KB * 8000
 
 def bits_to_MB(num_in_bits):
     '''

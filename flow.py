@@ -14,27 +14,6 @@
 ################################################################################
 
 
-# Notes from meeting with Ritty
-# Flow: 
-#    window_size = 16
-#    packets_in_network = k
-
-# if k < 16:
-#       send packet 
-#       k++
-
-# Every time a packet is sent, a retransmission timeout event must be spurred
-#     timeout after 2 * (round trip time)
-
-
-# Need a singleton logger class
-# logger.log("L1", "Drop", "Time")
-# each keyword indicates which log file it's being logged to
-# separate csv log file for packets dropped
-# separate csv log file for throughput
-# separate csv log file for window size
-
-
 ################################################################################
 #                                                                              #
 #                               Imported Modules                               #
@@ -107,15 +86,15 @@ class Flow:
         self.packets_in_flight = []
         
         # Every number less than this has been used as an ID.
-        self.next_available_ID = 0
+        self.next_available_ID = 1
         
         # The next chronological packet that the dest expects from the src.
-        self.expecting = 0
+        self.expecting = 1
         
         # The next chronological packet the source is looking to receive
         #   ack for (i.e. every packet whose data is strictly less than
         #   this has been acknowledged)
-        self.to_complete = 0
+        self.to_complete = 1
         
         # Keep track of the round trip time a packet has taken so we can
         #   guage an appropriate timeout-check delay.  Before any acks are
@@ -153,7 +132,7 @@ class Flow:
         Returns an ID that is not currently in use by any other packet.
         '''
         self.next_available_ID += 1
-        return str(self.next_available_ID - 1)
+        return self.next_available_ID - 1
         
         
     #
@@ -189,7 +168,7 @@ class Flow:
         num_packets = int(cv.MB_to_bits(self.size) / ct.PACKET_DATA_SIZE) + 1
         
         # Create all of the packets.
-        for i in range(num_packets):
+        for i in range(1, num_packets + 1):
             # First, create a packet.
             new_pkt = p.Packet(self.create_packet_ID(), self.flow_name, 
                                self.src, self.dest,
@@ -256,6 +235,8 @@ class Flow:
             new_pkt = p.Packet(self.create_packet_ID(), self.flow_name,
                                old_pkt.src, old_pkt.dest, old_pkt.type,
                                old_pkt.size)
+
+            # Make sure the new packet contains the same data (index)
             new_pkt.set_data(old_pkt.data)
             
             # Add it to the new queue of packets.
@@ -309,17 +290,24 @@ class Flow:
         # If there are no packets to send, the flow is done.
         if len(self.packets_to_send) == 0:
             return
-            
+        
+        sim.log.write("[%.5f] %s: in-flight / window size %d/%d\n" %
+            (sim.network_now(), self.flow_name, len(self.packets_in_flight), 
+                self.window_size))
+
         while len(self.packets_in_flight) < self.window_size:
             # Get a packet from the list of packets to send.
-            (pkt_num, next_pkt) = heapq.heappop(self.packets_to_send)
+            (pkt_num, pkt) = heapq.heappop(self.packets_to_send)
 
             # Put it in flight.
-            heapq.heappush(self.packets_in_flight, (pkt_num, next_pkt))
+            heapq.heappush(self.packets_in_flight, (pkt_num, pkt))
             
             # Tell the host to send the packet by creating an event for it.
             send_time = sim.network_now() + ct.TIME_BIT
-            send_event = e.Event(self.src, 'send_packet', [next_pkt])
+            send_event = e.Event(self.src, 'send_packet', [pkt])
             sim.enqueue_event(send_time, send_event)
-            
+        
+        sim.log.write("[%.5f] %s: in-flight / window size %d/%d\n" %
+            (sim.network_now(), self.flow_name, len(self.packets_in_flight), 
+                self.window_size))
         

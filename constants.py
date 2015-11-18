@@ -11,15 +11,16 @@
 #
 ################################################################################
 
-
-
-
-TIME_BIT = .00001
+# Log output filename 
+OUTPUT_LOG_FILE = "misc/log/case_0.log"
 
 # Test case file names
 TEST_CASE_0_FILENAME = "misc/test_configs/case_0.txt"
 TEST_CASE_1_FILENAME = "misc/test_configs/case_1.txt"
 TEST_CASE_2_FILENAME = "misc/test_configs/case_2.txt"
+
+# Smallest timestep we use
+TIME_BIT = .00001
 
 # Network objects
 FLOW = 0
@@ -42,6 +43,9 @@ PACKET_DATA_SIZE    = 1024  # Size of data Packet in bytes
 PACKET_ACK_SIZE     = 64    # Size of ack Packet in bytes
 PACKET_ROUTING_SIZE = 64    # Size of routing Packet in bytes
 
+# Ack packet prefix
+PACKET_ACK_PREFIX = 'ack_'
+
 # Status codes
 SUCCESS             = 0     # Operation was success
 LINK_ERROR          = 1     # Unknown error with link
@@ -54,8 +58,8 @@ MAX_SIMULATION_TIME = 1e6   # Maximum number of milliseconds the network should
                             # run
 
 
-ACK_TIMEOUT_FACTOR  = 2     # Number of milliseconds to wait for acknowledgement
+ACK_TIMEOUT_FACTOR  = 3     # Number of milliseconds to wait for acknowledgement
                             # before timeout
-INITIAL_ASSUMED_RTT = 50    # Before we know the round trip time, we need to
+INITIAL_ASSUMED_RTT = 100   # Before we know the round trip time, we need to
                             #   define an initial one that we assume (in ms)
 INITIAL_WINDOW_SIZE = 16    # The initial window size for each flow.

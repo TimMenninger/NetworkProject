@@ -23,6 +23,7 @@
 #                                                                              #
 ################################################################################
 
+import sys
 
 # Import network objects
 import packet as p
@@ -181,10 +182,14 @@ def load_network_objects(network_file):
     # do it here so all of the dictionaries are created at once/in one place.
     sim.packets = {}
 
-    # For debugging purposes -- to ensure network topology was loaded correctly
+    # For debugging/user experience purposes -- to ensure network topology was 
+    # loaded correctly
+    print("\nNetwork config file: %s\n" % sys.argv[1])
+    print("--- NETWORK TOPOLOGY ---\n")
     u.print_dict_keys("Endpoints", sim.endpoints)
     u.print_dict_keys("Links", sim.links)
     u.print_dict_keys("Flows", sim.flows)
+    print("\n------------------------")
 
     # Return all the dictionaries
     return (sim.endpoints, sim.links, sim.flows, sim.packets)

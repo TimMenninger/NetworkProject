@@ -16,6 +16,7 @@
 ################################################################################
 
 import sys
+import time
 
 # Import network objects
 import packet as p
@@ -64,9 +65,9 @@ network_time = 0
 #   entries so we have a "tie breaker"
 ev_time_dict = {}
 
+# A file to log output
+log = open(ct.OUTPUT_LOG_FILE, 'w')
 
-
-     
     
 #
 # run_network
@@ -193,11 +194,9 @@ def create_initial_events():
         enqueue_event(flows[flow_name].start_time, flow_event)
     
     # Create the event that will record the network status.
-    rec_stat_time = network_now()
-    rec_stat_ev = e.Event(None, None, None)
-    enqueue_event(rec_stat_time, rec_stat_ev)
+    enqueue_event(network_now(), e.Event(None, None, None))
     
-    
+
 #
 # enqueue_event
 #
@@ -246,7 +245,10 @@ if __name__ == "__main__":
         # Input was incorrect
         print("usage: python simulate.py [config_file]\n")
         exit()
-        
+
+    # Start the timer
+    start = time.time()
+
     # Take the config filename from the commandline.
     network_file = sys.argv[1]
     
@@ -255,6 +257,10 @@ if __name__ == "__main__":
     
     # Run the network simulation loop
     status = run_network()
+
+    # End the timer
+    end = time.time()
     
-    print("\n[SUCCESS]: Network simulation complete.\n")
-    
+    print("\n[SUCCESS]: Network simulation completed.") 
+    print("    [Elapsed Network Time]: %.3f seconds." % (network_now() / 1000))
+    print("    [Elapsed Real Time]:    %.3f seconds.\n" % (end - start))

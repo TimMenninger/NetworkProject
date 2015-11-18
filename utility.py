@@ -68,6 +68,15 @@ def get_actor_and_function(actor_name, function_name):
 
     return actor, event_function
 
+def assign_endpoints(endpoints, sender_name):
+    '''
+    Returns a tuple, either (1,0) or (0,1), given an input of the sender name
+    which indicates what the keys for the ep_names dictionary is in link.py 
+    '''
+    ep = endpoints[sender_name]
+    other_ep = (ep + 1) % 2
+    return ep, other_ep
+
 def print_dict_keys(dict_name, dict):
     '''
     Prints the keys of a dictionary.

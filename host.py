@@ -12,10 +12,6 @@
 ################################################################################
 
 
-
-
-
-
 ################################################################################
 #                                                                              #
 #                               Imported Modules                               #
@@ -136,7 +132,8 @@ class Host:
         # The argument list is just the packet.
         [packet] = arg_list
         flow = sim.flows[packet.flow]
-        print (self.host_name + ' sending packet ' + packet.ID + ' with data ' + str(packet.data) + ' at time ' + str(sim.network_now()))
+        sim.log.write("[%.5f] %s: sent packet %d with data %d.\n" % 
+            (sim.network_now(), self.host_name, packet.ID, packet.data))
         
         # First want to put the current time on the packet so we can calculate
         #   RTT later.
@@ -196,7 +193,7 @@ class Host:
         #   disregard, we are done here.
         if packet.data < flow.to_complete:
             return
-            
+        
         # If not, we want to first resend all packets in flight.
         flow.resend_inflight_packets()
         
@@ -248,15 +245,18 @@ class Host:
         [flow_name, packet_ID] = arg_list
         packet = sim.packets[(flow_name, packet_ID)]
         flow = sim.flows[flow_name]
-        
+        sim.log.write("[%.5f] %s: received packet %d with data %d.\n" % 
+            (sim.network_now(), self.host_name, packet.ID, packet.data))
+
         # If this is a data packet, create an ack packet and send it back.
         if packet.type == ct.PACKET_DATA:   
+
             # This is what we want, create an ack packet and send it.
-            ack_pkt = p.Packet('ack_' + flow.create_packet_ID(), flow_name,
-                               self.host_name, packet.src, ct.PACKET_ACK,
-                               ct.PACKET_ACK_SIZE)
+            ack_pkt = p.Packet(-1 * packet.ID, 
+                               flow_name, self.host_name, packet.src, 
+                               ct.PACKET_ACK, ct.PACKET_ACK_SIZE)
                                
-            # Set the data of the ack to be what we are expecting.  The src will
+            # Set the data of the ack to be what we are expecting. The src will
             #   cross check this with what he sent and resend or not accordingly
             ack_pkt.set_data(packet.data)
             
@@ -270,6 +270,10 @@ class Host:
             if packet.data == flow.expecting:
                 # Increment what we are now expecting.
                 flow.expecting += 1
+            else:
+                # We need to define what happens here if we receive a data 
+                # packet out of order (where packet.data != flow.expecting)
+                pass
                 
         elif packet.type == ct.PACKET_ACK:
             # If this is acknowledgement, see if any packets were lost.
@@ -278,8 +282,13 @@ class Host:
                 #   complete
                 flow.to_complete += 1
                 heapq.heappop(flow.packets_in_flight)
+                
+                # Compute the most recent RTT
+                flow.last_RTT = sim.network_now() - packet.time
+                
+                # See if the flow can be updated (i.e., more packets put in 
+                # flight)
                 flow.update_flow()
-                last_RTT = sim.network_now() - packet.time
                 
             elif packet.data > flow.to_complete:
                 # Packets were lost.  Resend any and all that were in flight.
