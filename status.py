@@ -4,10 +4,9 @@
 # Network Simulator Project
 # CS 143 -- Fall 2015
 #
-# link.py
+# status.py
 #
-# This contains the link class.  It has methods that enqueue packets then
-# transmit them at calculated times.
+# This contains the code to record the network status at fixed time intervals.
 #
 ################################################################################
 
