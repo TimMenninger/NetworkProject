@@ -54,6 +54,7 @@ packets     = {} # Packets in the system
 links       = {} # Links in the network
 endpoints   = {} # Hosts and routers in the network
 flows       = {} # Flows of data in the network
+
 event_queue = [] # Heap queue containing (time, event) tuples
 
 # The time of the network in simulated milliseconds.
@@ -100,11 +101,6 @@ def run_network():
     
     # Declare that we are using/changing the global variable.
     global network_time
-
-    # For debugging purposes?
-    u.print_dict_keys("endpoints", endpoints)
-    u.print_dict_keys("links", links)
-    u.print_dict_keys("flows", flows)
     
     # Create the initial events, which is the start of each flow.
     create_initial_events()
@@ -125,23 +121,13 @@ def run_network():
         if actor_name == None:
             s.record_network_status()
             continue
-        # Do the event (each event will enqueue another event if necessary)
-        elif actor_name.startswith("F"):
-            actor = flows[actor_name]
-            event_function = getattr(f.Flow, function_name)
-        elif actor_name.startswith("H") or actor_name.startswith("R"):
-            actor = endpoints[actor_name]
-            if actor_name.startswith("H"):
-                event_function = getattr(h.Host, function_name)
-            else:
-                event_function = getattr(r.Router, function_name)
-        #elif actor_name.startswith("packet"):
-        #    actor = packets[]
-        else: 
-            actor = links[actor_name]
-            event_function = getattr(l.Link, function_name)
+        else:
+            # Retrieve the actor and the function it will perform on the 
+            # network
+            actor, event = u.get_actor_and_function(actor_name, function_name)
 
-        event_function(actor, event_parameters)
+        # Call the event function with the correct actor and parameters
+        event(actor, event_parameters)
 
 
 #

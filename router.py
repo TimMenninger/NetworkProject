@@ -148,28 +148,3 @@ class Router:
         '''
 
 
-
-
-
-
-    # def print_contents(self):
-    #   '''
-    #   Prints the contents of the Router to standard output.
-    #   '''
-    #   print("-" * 25)
-    #   print("Router Name: " + self.router_name)
-    #   print("Routing Table: ")
-    #   for dest_host_name, link_name in zip(self.routing_table.keys(), 
-    #                                        self.routing_table.values()):
-    #       print("  " + dest_host_name + " --> " + link_name)
-    #   print("Links: ")
-    #   for i, link_name in zip(range(len(self.links)), self.links):
-    #       print("  " + str(i + 1) + ". " + link_name)
-    #   print("Packets in Buffer:\n")
-    #   for i, packet in enumerate(packet_buffer):
-    #       print(i + ":\n")
-    #       packet.print_contents
-    #       print("\n")
-    #   print("-" * 25)
-
-

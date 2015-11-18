@@ -21,6 +21,13 @@ TEST_CASE_0_FILENAME = "misc/test_configs/case_0.txt"
 TEST_CASE_1_FILENAME = "misc/test_configs/case_1.txt"
 TEST_CASE_2_FILENAME = "misc/test_configs/case_2.txt"
 
+# Network objects
+FLOW = 0
+LINK = 1
+ROUTER = 2
+HOST = 3
+PACKET = 4
+
 # Congestion Control algorithm
 FLOW_FAST_TCP       = 0
 FLOW_TCP_RENO       = 1
@@ -51,4 +58,4 @@ ACK_TIMEOUT_FACTOR  = 2     # Number of milliseconds to wait for acknowledgement
                             # before timeout
 INITIAL_ASSUMED_RTT = 50    # Before we know the round trip time, we need to
                             #   define an initial one that we assume (in ms)
-INITIAL_WINDOW_SIZE = 16     # The initial window size for each flow.
+INITIAL_WINDOW_SIZE = 16    # The initial window size for each flow.

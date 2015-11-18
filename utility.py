@@ -9,6 +9,65 @@
 # utility functions are defined.
 #
 
+# Import network objects
+import packet as p
+import link as l
+import flow as f
+import router as r
+import host as h
+import event as e
+
+# Import simulator so we can access events, objects and time.
+import simulate as sim
+
+import constants as ct
+
+def network_type(actor_name):
+    '''
+    Returns the type of the network object (as a constant) given its name
+    '''
+    if actor_name.startswith("F"):
+        return ct.FLOW
+    elif actor_name.startswith("L"):
+        return ct.LINK
+    elif actor_name.startswith("R"):
+        return ct.ROUTER
+    elif actor_name.startswith("H"):
+        return ct.HOST
+    else:
+        return ct.PACKET
+
+def get_actor_and_function(actor_name, function_name):
+    '''
+    Returns the actor and function object given an actor_type (one of the 
+    network object constants from constants.py) and the function_name (a string)
+    '''
+    # Get whether its a Flow, Link, Host, Router, or Packet so that 
+    # you can call the correct function
+    actor_type = network_type(actor_name)
+    
+    # FLOW
+    if actor_type == ct.FLOW:
+        actor = sim.flows[actor_name]
+        event_function = getattr(f.Flow, function_name)
+    # LINK
+    elif actor_type == ct.LINK:
+        actor = sim.links[actor_name]
+        event_function = getattr(l.Link, function_name)
+    # PACKET
+    elif actor_type == ct.PACKET:
+        actor = sim.packets[actor_name]
+        event_function = getattr(p.Packet, function_name)
+        # ROUTER || HOST
+    else: # actor_type == ct.ROUTER or actor_type == ct.HOST
+        actor = sim.endpoints[actor_name]
+        if actor_type == ct.ROUTER:
+            event_function = getattr(r.Router, function_name)
+        else: # actor_type == ct.HOST
+            event_function = getattr(h.Host, function_name)
+
+    return actor, event_function
+
 def print_dict_keys(dict_name, dict):
     '''
     Prints the keys of a dictionary.

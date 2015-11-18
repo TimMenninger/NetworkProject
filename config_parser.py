@@ -39,6 +39,8 @@ import conversion as cv
 # Import the simulator so we have access to the global variables in it.
 import simulate as sim
 
+import utility as u
+
 
 ################################################################################
 #                                                                              #
@@ -178,6 +180,11 @@ def load_network_objects(network_file):
     # Create a dictionary for the packets.  Will be empty at first, but let's 
     # do it here so all of the dictionaries are created at once/in one place.
     sim.packets = {}
+
+    # For debugging purposes -- to ensure network topology was loaded correctly
+    u.print_dict_keys("Endpoints", sim.endpoints)
+    u.print_dict_keys("Links", sim.links)
+    u.print_dict_keys("Flows", sim.flows)
 
     # Return all the dictionaries
     return (sim.endpoints, sim.links, sim.flows, sim.packets)
