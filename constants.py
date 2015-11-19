@@ -32,7 +32,7 @@ TEST_CASE_2_FILENAME = "misc/test_configs/case_2.txt"
 TIME_BIT = .00001
 
 # How often to record the network status 
-RECORD_TIME = 100 # (ms)
+RECORD_TIME = 1 # (ms)
 
 # Network objects
 FLOW = 0
