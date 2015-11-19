@@ -14,6 +14,15 @@
 # Log output filename 
 OUTPUT_LOG_FILE = "misc/log/case_0.log"
 
+# Data output filenames
+TIMES_OUT = "misc/data/times.csv"
+LINK_RATE_OUT = "misc/data/link_rate.csv"
+BUFFER_OCC_OUT = 'misc/data/buffer_occupancy.csv'
+PACKET_LOSS_OUT = 'misc/data/packet_loss.csv'
+FLOW_RATE_OUT = 'misc/data/flow_rate.csv'
+WINDOW_SIZE_OUT = 'misc/data/window_size.csv'
+PACKET_DELAY_OUT = 'misc/data/packet_delay.csv'
+
 # Test case file names
 TEST_CASE_0_FILENAME = "misc/test_configs/case_0.txt"
 TEST_CASE_1_FILENAME = "misc/test_configs/case_1.txt"
@@ -21,6 +30,9 @@ TEST_CASE_2_FILENAME = "misc/test_configs/case_2.txt"
 
 # Smallest timestep we use
 TIME_BIT = .00001
+
+# How often to record the network status 
+RECORD_TIME = 100 # (ms)
 
 # Network objects
 FLOW = 0
