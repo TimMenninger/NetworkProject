@@ -87,6 +87,38 @@ class Router:
         Receives a configuration packet and updates the routing table if any new, useful
         information is learned from it.
         '''
+    
+
+#
+# send_packet
+#
+# Description:      This sends a packet from this router onto the argued link that is
+#                   attached to it.
+#
+# Arguments:        self (Host)
+#                   argument_list ([Packet, string]) - A list of arguments that
+#                       is unpacked by the function.  This is a list to
+#                       facilitate class definition.  The list should contain
+#                       the Packet being sent and the name of the link it will be
+#                       sent on.
+#
+# Return Values:    None.
+#
+# Shared Variables: self.router_name (READ) - This function uses the router name
+#                       so the link knows where the Packet came from.
+#
+# Global Variables: sim.links (READ) - The link name is used to index this and get
+#                       the Link.
+#
+# Limitations:      None.
+#
+# Known Bugs:       None.
+#
+# Revision History: 2015/10/22: Created function handle and docstring.
+#                   2015/10/29: Filled in.
+#                   2015/11/14: Now just puts packet on buffer.
+#                   2015/11/22: Copied from host and adapted for router.
+#
 
     def send_packet(self, arg_list):
         '''
@@ -104,7 +136,38 @@ class Router:
         # Give the packet to the link to handle.  Here, it will either be
         #   enqueued on a buffer or transmitted.
         link.put_packet_on_buffer(self.router_name, packet)
+ 
         
+#
+# receive_packet
+#
+# Description:      Receives a packet from the link and responds accordingly by
+#                   checking the destination and putting the packet on the link
+#                   that leads to that destination.
+#
+# Arguments:        self (Host)
+#                   argument_list ([string, int]) - A list of arguments that
+#                       is unpacked by the function.  This implementation is to
+#                       facilitate the event class.  The list should contain
+#                       the flow name and the packet ID.
+#
+# Return Values:    None.
+#
+# Shared Variables: None.
+#
+# Global Variables: sim.packets (READ) - This gets the packet instance from the
+#                       dictionary using the argued key.
+#
+# Limitations:      None.
+#
+# Known Bugs:       None.
+#
+# Revision History: 2015/10/22: Created function handle and docstring.
+#                   2015/10/29: Filled in function.
+#                   2015/11/13: Decremented Link 'num_on_link' attribute.
+#                   2015/11/14: Responds according to packet type and ID.
+#                   2015/11/22: Copied from host and adapted to router.
+#
 
     def receive_packet(self, arg_list):
         '''

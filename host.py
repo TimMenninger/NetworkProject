@@ -116,8 +116,7 @@ class Host:
 #
 # Limitations:      None.
 #
-# Known Bugs:       This is occasionally called with a packet that is not in
-#                       the dictionary.
+# Known Bugs:       None.
 #
 # Revision History: 2015/10/22: Created function handle and docstring.
 #                   2015/10/29: Filled in.
