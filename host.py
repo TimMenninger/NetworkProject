@@ -132,7 +132,8 @@ class Host:
         # The argument list is just the packet.
         [packet] = arg_list
         flow = sim.flows[packet.flow]
-        sim.log.write("[%.5f] %s: sent packet %d with data %d.\n" % 
+        #sim.log.write
+        print("[%.5f] %s: sent packet %d with data %d.\n" % 
             (sim.network_now(), self.host_name, packet.ID, packet.data))
         
         # First want to put the current time on the packet so we can calculate

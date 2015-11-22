@@ -29,10 +29,10 @@ TEST_CASE_1_FILENAME = "misc/test_configs/case_1.txt"
 TEST_CASE_2_FILENAME = "misc/test_configs/case_2.txt"
 
 # Smallest timestep we use
-TIME_BIT = .00001
+TIME_BIT = 0.00001
 
-# How often to record the network status 
-RECORD_TIME = 1 # (ms)
+# How often to record the network status in milliseconds
+RECORD_TIME = 1
 
 # Network objects
 FLOW = 0
@@ -74,4 +74,4 @@ ACK_TIMEOUT_FACTOR  = 3     # Number of milliseconds to wait for acknowledgement
                             # before timeout
 INITIAL_ASSUMED_RTT = 100   # Before we know the round trip time, we need to
                             #   define an initial one that we assume (in ms)
-INITIAL_WINDOW_SIZE = 16    # The initial window size for each flow.
+INITIAL_WINDOW_SIZE = 8     # The initial window size for each flow.

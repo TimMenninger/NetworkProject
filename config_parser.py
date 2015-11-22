@@ -163,11 +163,11 @@ def load_network_objects(network_file):
     
     # Iterate through flow specs, create Flows, and add them to the flows
     # dictionary.
-    while flow != '\n':
+    while flow != '\n' and flow != '':
         # Flow text encoding: (ID Src Dest Data Start_Time)
         # Get list storing: [ID, Src, Dest, Data]
         flow = flow.split()
-
+        
         # Create a flow and add it to the dictionary.
         sim.flows[flow[0]] = f.Flow(flow[0], flow[1], \
                   flow[2], int(flow[3]), 1000 * round(float(flow[4]), 0))

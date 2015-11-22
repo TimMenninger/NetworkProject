@@ -58,13 +58,13 @@ class Router:
         self.links = []
 
         # Python dictionary - contains destination hostnames as keys and Link
-        # names as values
-        self.routing_table_A = {}
-        self.routing_table_B = {}
-        self.using_table_A = True
+        #   names as values.  The table_using variable stores the index of the
+        #   routing table in use.
+        self.routing_tables = [ { 'H1' : 'L0', 'H2' : 'L1' }, {} ]
+        self.table_using = 0
         
         
-    def add_link(link_name):
+    def add_link(self, link_name):
         '''
         Adds a link to the router.
         '''
@@ -82,69 +82,45 @@ class Router:
         is understood as a configuration packet.
         '''
         
-        #
-        # Proposed pseudocode for this (bellman-ford):
-        #   In this, we are going to initiate the process here with a specially
-        # formatted packet that routers will understand as the "configuration" packet.
-        #
-        #   We will send a packet with the form [origin_router_name, distance_to] where
-        # origin_router is the router sending the first "configuration" packet and 
-        # distance_to is the total weight from the origin to this particular router.
-        # Clearly, when sending this first packet, we will have [self.router_name, 0].
-        # When receiving this packet, receive_packet should call parse_config_packet.  Refer
-        # to that function for the rest of the computation involved with configuring the
-        # routing tables.
-        #
-        #   For this to work, we want to keep track of the shortest distance to each
-        # router from this one.  Initialize all these values to be infinity.
-        #
-        
     def parse_config_packet():
         '''
         Receives a configuration packet and updates the routing table if any new, useful
         information is learned from it.
         '''
-        
-        #
-        # Proposed pseudocode (continuation of send_config_packet):
-        #
-        #   This will be called when the router receives a config packet, which is in
-        # the format [origin_router, distance_to].  The origin_router was the router which
-        # initially sent this packet, and distance_to is the distance from the origin router
-        # to this router using whatever path it used.
-        #
-        # Pseudocode:
-        #   receive packet
-        #   if distance_to < [previously thought shortest distance to origin router]:
-        #       update routing table for origin_router with router that sent packet
-        #       send [origin_router, distance_to] to all links besides one it came on
-        #
-        #
-        # All we need is some way of quantifying distance_to.  Maybe it's time, maybe not, I
-        # don't know yet...
-        #
-        # This will work because every router will do this.  If the routers 
-        # are all connected, then by relaying the messages whenever the distance is improved,
-        # all routers will get a packet to all other routers at least once.  We only need to
-        # continue propagation if it is improved because if not, then the time that the better
-        # packet came through, that was propagated.  Therefore, we know this process will
-        # terminate.
-        #
 
-    def send_packet():
+    def send_packet(self, arg_list):
         '''
         Sends a packet from this Router to a particular destination using a
         specific link connected to this Router.
         '''
+        # The argument list is just the packet.
+        [packet, link_name] = arg_list
+        link = sim.links[link_name]
+        
+        # First want to put the current time on the packet so we can calculate
+        #   RTT later.
+        packet.time = sim.network_now()
+        
+        # Give the packet to the link to handle.  Here, it will either be
+        #   enqueued on a buffer or transmitted.
+        link.put_packet_on_buffer(self.router_name, packet)
+        
 
-    def receive_packet():
+    def receive_packet(self, arg_list):
         '''
         Receives a packet from a link and parses it.
         '''
-
-    def print_contents():
-        '''
-        Prints attribute values for this Router.
-        '''
+        # Unpack the argument list.
+        [flow_name, packet_ID] = arg_list
+        packet = sim.packets[(flow_name, packet_ID)]
+        sim.log.write("[%.5f] %s: received packet %d with data %d.\n" % 
+            (sim.network_now(), self.router_name, packet.ID, packet.data))
+            
+        # Use the routing table and the packet destination to decide where to
+        #   send this packet.  If it is not in the list, then something went
+        #   wrong and this packet will go lost.
+        if packet.dest in self.routing_tables[self.table_using]:
+            # Send the packet on that link.
+            self.send_packet([packet, self.routing_tables[self.table_using][packet.dest]])
 
 
