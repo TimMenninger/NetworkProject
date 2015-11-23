@@ -270,10 +270,6 @@ class Host:
             if packet.data == flow.expecting:
                 # Increment what we are now expecting.
                 flow.expecting += 1
-            else:
-                # We need to define what happens here if we receive a data 
-                # packet out of order (where packet.data != flow.expecting)
-                pass
                 
         elif packet.type == ct.PACKET_ACK:
             # If this is acknowledgement, see if any packets were lost.
