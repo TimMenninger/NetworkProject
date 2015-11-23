@@ -61,6 +61,9 @@ class Flow:
         '''
         Initialize an instance of Flow by intitializing its attributes.
         '''
+        # Store the type so it can be easily identified as a router.
+        self.type = ct.TYPE_FLOW
+        
         # Name of the Flow, each ID is a unique string (i.e. "F1")
         self.flow_name = the_flow_name
 
@@ -171,8 +174,7 @@ class Flow:
         for i in range(1, num_packets + 1):
             # First, create a packet.
             new_pkt = p.Packet(self.create_packet_ID(), self.flow_name, 
-                               self.src, self.dest,
-                               ct.PACKET_DATA, ct.PACKET_DATA_SIZE)
+                               self.src, self.dest, ct.PACKET_DATA)
                                
             # Set the data of the packet to be its "chronological" number.
             new_pkt.set_data(i)
@@ -233,8 +235,7 @@ class Flow:
             
             # Create a new packet from it but with a new ID.
             new_pkt = p.Packet(self.create_packet_ID(), self.flow_name,
-                               old_pkt.src, old_pkt.dest, old_pkt.type,
-                               old_pkt.size)
+                               old_pkt.src, old_pkt.dest, old_pkt.type)
 
             # Make sure the new packet contains the same data (index)
             new_pkt.set_data(old_pkt.data)

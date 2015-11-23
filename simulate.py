@@ -191,8 +191,10 @@ def create_initial_events():
     '''
     This takes the set of flows and their descriptors and fills the event queue
     with events that signify the start of the respective flow.
-    '''
-
+    '''    
+    # Create the event that will record the network status.
+    enqueue_event(network_now(), e.Event(None, None, None))
+    
     # Create an event for each flow.
     for flow_name in flows:
         # If this is the routing flow, don't call start flow.  We will handle
@@ -206,9 +208,19 @@ def create_initial_events():
         
         # Enqueue the event in our heap queue.
         enqueue_event(flows[flow_name].start_time, flow_event)
-    
-    # Create the event that will record the network status.
-    enqueue_event(network_now(), e.Event(None, None, None))
+    return    
+    for ep_name in endpoints:
+        # Get the link from the dictionary.
+        ep = endpoints[ep_name]
+        
+        # Only want to create events for routers...
+        if ep.type != ct.TYPE_ROUTER:
+            continue
+        
+        # Create the first event for each router.
+        routing_time = network_now() + ct.CONFIG_PKT_TIME
+        routing_event = e.Event(ep.router_name, 'transmit_config_packet', [])
+        enqueue_event(routing_time, routing_event)
     
 
 #

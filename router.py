@@ -52,6 +52,9 @@ class Router:
         '''
         Initialize an instance of Router by intitializing its attributes.
         '''
+        # Store the type so it can be easily identified as a router.
+        self.type = ct.TYPE_ROUTER
+        
         # Name of the Router, each name is a unique string (i.e., "R1")
         self.router_name = the_router_name
 
@@ -101,11 +104,40 @@ class Router:
         Sets the routing table for this Router.
         '''
         
-    def create_config_packet():
+    def transmit_config_packet(self, empty_list):
         '''
-        Creates a special configuration packet that, when received by other routers,
-        is understood as a configuration packet.
+        Creates and sends a special configuration packet that, when received by
+        other routers, is understood as a configuration packet.
         '''
+        # Get a unique packet ID for the routing flow.
+        pkt_ID = sim.flows[ct.ROUTING_FLOW].create_packet_ID()
+        
+        # Create the packet that we are going to send.  It doesn't need to have
+        #   a destination because its destination is everywhere.
+        routing_pkt = p.Packet(pkt_ID, ct.ROUTING_FLOW, self.router_name,
+                                None, ct.PACKET_ROUTING)
+                                
+        # TODO: PUT MEANINGFUL DATA ON THIS PACKET
+        routing_pkt.data = 0
+        
+        # Record the time of transmission for this packet so others can update
+        #   their routing table effectively.
+        routing_pkt.time = sim.network_now()
+        
+        # Put the packet in the global dictionary of packets.
+        sim.packets[(ct.ROUTING_FLOW, routing_pkt.ID)] = routing_pkt
+                                
+        # Send this packet onto each link on the router.
+        for link_name in self.links:
+            # Send this packet on the link.
+            self.send_packet([routing_pkt, link_name])
+            
+        # If there are still events, the network is not done yet, and we should
+        #   schedule the next routing send event.
+        if len(sim.event_queue) != 0:
+            routing_time = sim.network_now() + ct.CONFIG_PKT_TIME
+            routing_event = e.Event(self.router_name, 'transmit_config_packet', [])
+            sim.enqueue_event(routing_time, routing_event)
         
     def parse_config_packet(self, packet):
         '''
@@ -113,7 +145,8 @@ class Router:
         information is learned from it.
         '''
         # Make sure this wasn't called by mistake.
-        assert(packet.type == ct.PACKET_ROUTER)
+        assert(packet.type == ct.PACKET_ROUTING)
+        print ("routing packet %d received by %s from %s" %(packet.ID, self.router_name, packet.src))
     
 
 #
@@ -201,7 +234,6 @@ class Router:
         packet = sim.packets[(flow_name, packet_ID)]
         sim.log.write("[%.5f] %s: received packet %d with data %d.\n" % 
             (sim.network_now(), self.router_name, packet.ID, packet.data))
-            
             
         # If this is a routing packet, use it to update the routing table and
         #   then resend it so others can do the same.

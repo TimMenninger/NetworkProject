@@ -61,6 +61,9 @@ class Link:
         '''
         Initialize an instance of Link by intitializing its attributes.
         '''
+        # Store the type so it can be easily identified as a router.
+        self.type = ct.TYPE_LINK
+        
         # Name of the Link, each name is a unique string (i.e. "L1")
         self.link_name = the_link_name
         
@@ -86,7 +89,7 @@ class Link:
         # The packet buffers on either end of the half-duplex link (heapq's)
         self.buffers = [ [], [] ]
         
-        # The amount of data in the buffer in bits.
+        # The amount of data in the buffer in bytes.
         self.buffer_load = [ 0, 0 ]
         
         # The number of packets on the link from the indexed endpoint.  One of
@@ -152,7 +155,7 @@ class Link:
         #   The time we use for this will be now, because we are using first
         #   come first served priority on the links, but only if there is enough
         #   space.
-        if packet.size + self.buffer_load[ep] <= cv.KB_to_bits(self.buffer_size):
+        if packet.size + self.buffer_load[ep] <= cv.KB_to_bytes(self.buffer_size):
             # Add the packet identifier to the link buffer heap queue along 
             # with the time
             heapq.heappush(self.buffers[ep], 
@@ -356,14 +359,14 @@ class Link:
             #   packet is no longer on the buffer
             heapq.heappush(self.packets_on_link[next_pop],
                            (sim.network_now(), flow_name, packet_ID))
-            packet_size = sim.packets[(flow_name, packet_ID)].size # in bits
+            packet_size = sim.packets[(flow_name, packet_ID)].size # in bytes
             self.buffer_load[next_pop] -= packet_size
-            self.data_on_link += cv.bits_to_MB(packet_size)
+            self.data_on_link += cv.bytes_to_MB(packet_size)
             
             # Calculate the transmission time as the size of the packet divided
             #   by the link capacity (aka rate).
             packet_size = sim.packets[(flow_name, packet_ID)].size
-            transmission_time =  cv.bits_to_MB(packet_size) / self.rate
+            transmission_time =  cv.bytes_to_MB(packet_size) / self.rate
             
             # Create an event after this packet's transmission to reset the
             #   in_transmission flag.  Subtract a small amount of time to assure
@@ -431,9 +434,9 @@ class Link:
         # Take the packet off of the link by removing it from the queue.
         [time, flow_name, packet_ID] = \
                 heapq.heappop(self.packets_on_link[sender_index])
-        packet_size = sim.packets[(flow_name, packet_ID)].size # in bits
-        self.data_on_link -= cv.bits_to_MB(packet_size)
-                
+        packet_size = sim.packets[(flow_name, packet_ID)].size # in bytes
+        self.data_on_link -= cv.bytes_to_MB(packet_size)
+        
         # Use the sender index to figure out the receiver index.
         rcv_index = (sender_index + 1) % 2
         
