@@ -195,6 +195,11 @@ def create_initial_events():
 
     # Create an event for each flow.
     for flow_name in flows:
+        # If this is the routing flow, don't call start flow.  We will handle
+        #   the routing flow separately.
+        if flow_name == ct.ROUTING_FLOW:
+            continue
+            
         # Create the event for the flow starting.  There are no arguments, 
         # but the event class expects an argument list.
         flow_event = e.Event(flow_name, 'start_flow', [])

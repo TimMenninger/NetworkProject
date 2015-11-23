@@ -12,8 +12,8 @@ L1 10 10 64 R1 H2
 L2 10 10 64 R1 H3
 
 flowSpecs (ID Src Dest Data Start):
-F1 H1 H2 20 1.0
-F2 H1 H3 20 1.0
+F1 H1 H2 5 1.0
+F2 H1 H3 5 1.0
 
 
 

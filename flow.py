@@ -165,7 +165,7 @@ class Flow:
         send them.
         '''
         # Calculate the number of packets we need to send all of the data
-        num_packets = int(cv.MB_to_bits(self.size) / ct.PACKET_DATA_SIZE) + 1
+        num_packets = int(cv.MB_to_bytes(self.size) / ct.PACKET_DATA_SIZE) + 1
         
         # Create all of the packets.
         for i in range(1, num_packets + 1):

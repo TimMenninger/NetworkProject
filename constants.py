@@ -69,9 +69,12 @@ RECORDING_INTERVAL  = 10    # Number of milliseconds between each network
 MAX_SIMULATION_TIME = 1e6   # Maximum number of milliseconds the network should 
                             # run
 
-
+# Initial values
 ACK_TIMEOUT_FACTOR  = 3     # Number of milliseconds to wait for acknowledgement
                             # before timeout
 INITIAL_ASSUMED_RTT = 100   # Before we know the round trip time, we need to
                             #   define an initial one that we assume (in ms)
 INITIAL_WINDOW_SIZE = 8     # The initial window size for each flow.
+
+# The name of the flow used for inter-router communication
+ROUTING_FLOW        = 'routing_flow'

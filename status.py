@@ -575,9 +575,12 @@ def record_network_status():
         # files
         update_and_write_flow_data(flow)
 
-    # Create the event that will record the network status.
-    next_recording = sim.network_now() + ct.RECORD_TIME
-    sim.enqueue_event(next_recording, e.Event(None, None, None))
+    # Create the event that will record the network status, but only if there
+    #   is nothing else in the event queue.  Otherwise, this will keep the
+    #   network running indefinitely.
+    if len(sim.event_queue) != 0:
+        next_recording = sim.network_now() + ct.RECORD_TIME
+        sim.enqueue_event(next_recording, e.Event(None, None, None))
 
 
 

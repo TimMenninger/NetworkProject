@@ -178,6 +178,10 @@ def load_network_objects(network_file):
     # Close the file.
     network.close()
     
+    # Add a flow specifically for the routing tables to communicate with each
+    #   other.
+    sim.flows[ct.ROUTING_FLOW] = f.Flow(ct.ROUTING_FLOW, None, None, None, 0.0)
+    
     # Create a dictionary for the packets.  Will be empty at first, but let's 
     # do it here so all of the dictionaries are created at once/in one place.
     sim.packets = {}

@@ -23,6 +23,11 @@ def MB_to_bits(num_in_MB):
     '''
     return num_in_MB * (8 * (10 ** 6))
 
+def MB_to_bytes(num_in_MB):
+	'''
+	Converts the parameter to bytes and returns it.
+	'''
+	return num_in_MB * (10 ** 6)
 
 def bits_to_KB(num_in_bits):
     '''
