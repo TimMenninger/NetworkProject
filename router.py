@@ -36,7 +36,8 @@ import constants as ct
 import conversion as cv
 
 # Import simulator so we can access events, objects and time.
-import simulate as sim
+import sys
+sim = sys.modules['__main__']
 
 
 ################################################################################
@@ -60,7 +61,10 @@ class Router:
         # Python dictionary - contains destination hostnames as keys and Link
         #   names as values.  The table_using variable stores the index of the
         #   routing table in use.
-        self.routing_tables = [ { 'H1' : 'L0', 'H2' : 'L1', 'H3' : 'L2' }, {} ]
+        if self.router_name == 'R1':
+            self.routing_tables = [ { 'H1' : 'L0', 'H2' : 'L1'}, {} ]
+        else:
+            self.routing_tables = [ { 'H1' : 'L1', 'H2' : 'L2'}, {} ]
         self.table_using = 0
         
 #
@@ -151,10 +155,6 @@ class Router:
         # The argument list is just the packet.
         [packet, link_name] = arg_list
         link = sim.links[link_name]
-        
-        # First want to put the current time on the packet so we can calculate
-        #   RTT later.
-        packet.time = sim.network_now()
         
         # Give the packet to the link to handle.  Here, it will either be
         #   enqueued on a buffer or transmitted.
