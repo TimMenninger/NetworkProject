@@ -165,14 +165,14 @@ class Link:
             # storing an additional packet.size
             self.buffer_load[ep] += packet.size
         
-        # We now want to check if this should be sent right away.  The reason
-        #   this is done here is because it is the best way to "kickstart" the
-        #   link.  We want it to send right away if the buffer at the other end
-        #   is empty and nothing is being transmitted on the buffer at the end
-        #   it is on.  Being transmitted is defined as the time it takes to load
-        #   a packet from the buffer onto the link.
-        if len(self.buffers[other_ep]) == 0 and not self.in_transmission:
-            self.put_packet_on_link([])
+        # We now want to kickstart the putting packets on the link.  If there
+        #   is already a packet in transmission, then nothing will happen.
+        #   Otherwise, we are telling it the buffer is now nonempty.  However,
+        #   create an event some dt in the future so all the "current" events
+        #   can finish first.
+        link_time = sim.network_now() + ct.TIME_BIT
+        link_ev = e.Event(self.link_name, 'put_packet_on_link', [])
+        sim.enqueue_event(link_time, link_ev)
             
             
     #
@@ -245,9 +245,9 @@ class Link:
         '''
         # Find the direction of travel, which is the source of the data on the
         #   link.  If there is no source, then the data source is -1.
-        data_src = 0
-        if len(self.packets_on_link[0]) == 0 and len(self.packets_on_link[1]) == 0:
-            data_src = -1
+        data_src = -1
+        if len(self.packets_on_link[0]) > 0:
+            data_src = 0
         elif len(self.packets_on_link[1]) > 0:
             data_src = 1
         
@@ -278,7 +278,7 @@ class Link:
                 next_pop = data_src
             elif time1 < time0:
                 next_pop = 1
-
+        
         return data_src, next_pop
 
 
@@ -381,19 +381,19 @@ class Link:
             pkt1_event = e.Event(self.link_name, 'put_packet_on_link', [])
             sim.enqueue_event(pkt1_time, pkt1_event)
             
-            # If we are not sending another packet after transmission, we need
-            #   to also have an event that checks after propagation.  Because we
-            #   do not know yet, we must make the event no matter what.
-            pkt2_time = pkt1_time + self.delay
-            pkt2_event = e.Event(self.link_name, 'put_packet_on_link', [])
-            sim.enqueue_event(pkt2_time, pkt2_event)
-            
             # Enqueue the event for the opposite end to receive the packet.
             #   This occurs at the same time as the transmission plus delay
             #   event.
-            rcv_time = pkt2_time
+            rcv_time = pkt1_time + self.delay
             rcv_event = e.Event(self.link_name, 'handoff_packet', [next_pop])
             sim.enqueue_event(rcv_time, rcv_event)
+            
+            # If we are not sending another packet after transmission, we need
+            #   to also have an event that checks after propagation.  Because we
+            #   do not know yet, we must make the event no matter what.
+            pkt2_time = rcv_time
+            pkt2_event = e.Event(self.link_name, 'put_packet_on_link', [])
+            sim.enqueue_event(pkt2_time, pkt2_event)
             
             
     #

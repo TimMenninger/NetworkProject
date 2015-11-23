@@ -28,8 +28,9 @@ TEST_CASE_0_FILENAME = "misc/test_configs/case_0.txt"
 TEST_CASE_1_FILENAME = "misc/test_configs/case_1.txt"
 TEST_CASE_2_FILENAME = "misc/test_configs/case_2.txt"
 
-# Smallest timestep we use
-TIME_BIT = 0.00001
+# Smallest timestep we use.j  Needs to be ~0 because it is used to ensure one
+#   "simultaneous" event occurs before another.
+TIME_BIT = 0.000000000001
 
 # How often to record the network status in milliseconds
 RECORD_TIME = 1
