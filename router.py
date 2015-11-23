@@ -153,10 +153,11 @@ class Router:
         for link_name in self.links:
             # Send this packet on the link.
             self.send_packet([routing_pkt, link_name])
-
-        # If there are still events, the network is not done yet, and we should
-        #   schedule the next routing send event.
-        if len(sim.event_queue) != 0:
+        
+        # If there are still flows, the network is not done yet, and we should
+        #   schedule the next routing send event.  The one flow that does not
+        #   count here is the routing flow.
+        if len(sim.running_flows) > 1:
             routing_time = sim.network_now() + ct.CONFIG_PKT_TIME
             routing_event = e.Event(self.router_name, 'transmit_config_packet', [])
             sim.enqueue_event(routing_time, routing_event)
@@ -193,9 +194,6 @@ class Router:
         # Make sure this wasn't called by mistake.
         assert(packet.type == ct.PACKET_ROUTING)
         print ("routing packet %d received by %s from %s" %(packet.ID, self.router_name, packet.src))
-        print (sim.network_now())
-        if self.router_name == 'R2':
-            exit()
 
 
 #

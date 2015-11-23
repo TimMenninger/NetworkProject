@@ -290,6 +290,12 @@ class Flow:
         '''
         # If there are no packets to send, the flow is done.
         if len(self.packets_to_send) == 0:
+            # Remove it from our list ofrunning packets.  If it does not work,
+            #   we already deleted it, so continue normally.
+            try:
+                sim.running_flows.remove(self.flow_name)
+            except ValueError:
+                pass
             return
         
         sim.log.write("[%.5f] %s: in-flight / window size %d/%d\n" %

@@ -56,6 +56,8 @@ links       = {} # Links in the network
 endpoints   = {} # Hosts and routers in the network
 flows       = {} # Flows of data in the network
 
+running_flows = [] # Flows that have packets still to send.
+
 event_queue = [] # Heap queue containing (time, event) tuples
 
 # The time of the network in simulated milliseconds.
@@ -124,20 +126,13 @@ def run_network():
         #   status.
         if actor_name == None:
             s.record_network_status()
-
-            if len(event_queue) == 1:
-                # Simulation is over!
-                # Pop the next recording event and don't do anything with it
-                heapq.heappop(event_queue)
-
-            continue
         else:
             # Retrieve the actor and the function it will perform on the 
             # network
             actor, event = u.get_actor_and_function(actor_name, function_name)
 
-        # Call the event function with the correct actor and parameters
-        event(actor, event_parameters)
+            # Call the event function with the correct actor and parameters
+            event(actor, event_parameters)
 
 
 #
@@ -197,6 +192,9 @@ def create_initial_events():
     
     # Create an event for each flow.
     for flow_name in flows:
+        # Add the flow to our list of running flows.
+        running_flows.append(flow_name)
+        
         # If this is the routing flow, don't call start flow.  We will handle
         #   the routing flow separately.
         if flow_name == ct.ROUTING_FLOW:
@@ -208,7 +206,7 @@ def create_initial_events():
         
         # Enqueue the event in our heap queue.
         enqueue_event(flows[flow_name].start_time, flow_event)
-    return    
+        
     for ep_name in endpoints:
         # Get the link from the dictionary.
         ep = endpoints[ep_name]
