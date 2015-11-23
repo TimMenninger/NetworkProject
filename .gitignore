@@ -2,3 +2,4 @@
 log.txt
 *.log
 misc/data/*
+*.csv
