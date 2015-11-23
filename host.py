@@ -60,6 +60,9 @@ class Host:
         ''' 
         Initialize an instance of Host by intitializing its attributes.
         '''
+        # Store the type so it can be easily identified as a router.
+        self.type = ct.TYPE_HOST
+        
         # Name of the host, each hostname is unique string (i.e., "H1")
         self.host_name = the_host_name
         
@@ -116,8 +119,7 @@ class Host:
 #
 # Limitations:      None.
 #
-# Known Bugs:       This is occasionally called with a packet that is not in
-#                       the dictionary.
+# Known Bugs:       None.
 #
 # Revision History: 2015/10/22: Created function handle and docstring.
 #                   2015/10/29: Filled in.
@@ -132,7 +134,8 @@ class Host:
         # The argument list is just the packet.
         [packet] = arg_list
         flow = sim.flows[packet.flow]
-        sim.log.write("[%.5f] %s: sent packet %d with data %d.\n" % 
+        #sim.log.write
+        print("[%.5f] %s: sent packet %d with data %d.\n" % 
             (sim.network_now(), self.host_name, packet.ID, packet.data))
         
         # First want to put the current time on the packet so we can calculate
@@ -254,7 +257,7 @@ class Host:
             # This is what we want, create an ack packet and send it.
             ack_pkt = p.Packet(-1 * packet.ID, 
                                flow_name, self.host_name, packet.src, 
-                               ct.PACKET_ACK, ct.PACKET_ACK_SIZE)
+                               ct.PACKET_ACK)
                                
             # Set the data of the ack to be what we are expecting. The src will
             #   cross check this with what he sent and resend or not accordingly

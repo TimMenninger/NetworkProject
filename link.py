@@ -61,6 +61,9 @@ class Link:
         '''
         Initialize an instance of Link by intitializing its attributes.
         '''
+        # Store the type so it can be easily identified as a router.
+        self.type = ct.TYPE_LINK
+        
         # Name of the Link, each name is a unique string (i.e. "L1")
         self.link_name = the_link_name
         
@@ -86,7 +89,7 @@ class Link:
         # The packet buffers on either end of the half-duplex link (heapq's)
         self.buffers = [ [], [] ]
         
-        # The amount of data in the buffer in bits.
+        # The amount of data in the buffer in bytes.
         self.buffer_load = [ 0, 0 ]
         
         # The number of packets on the link from the indexed endpoint.  One of
@@ -152,7 +155,7 @@ class Link:
         #   The time we use for this will be now, because we are using first
         #   come first served priority on the links, but only if there is enough
         #   space.
-        if packet.size + self.buffer_load[ep] <= cv.KB_to_bits(self.buffer_size):
+        if packet.size + self.buffer_load[ep] <= cv.KB_to_bytes(self.buffer_size):
             # Add the packet identifier to the link buffer heap queue along 
             # with the time
             heapq.heappush(self.buffers[ep], 
@@ -162,14 +165,14 @@ class Link:
             # storing an additional packet.size
             self.buffer_load[ep] += packet.size
         
-        # We now want to check if this should be sent right away.  The reason
-        #   this is done here is because it is the best way to "kickstart" the
-        #   link.  We want it to send right away if the buffer at the other end
-        #   is empty and nothing is being transmitted on the buffer at the end
-        #   it is on.  Being transmitted is defined as the time it takes to load
-        #   a packet from the buffer onto the link.
-        if len(self.buffers[other_ep]) == 0 and not self.in_transmission:
-            self.put_packet_on_link([])
+        # We now want to kickstart the putting packets on the link.  If there
+        #   is already a packet in transmission, then nothing will happen.
+        #   Otherwise, we are telling it the buffer is now nonempty.  However,
+        #   create an event some dt in the future so all the "current" events
+        #   can finish first.
+        link_time = sim.network_now() + ct.TIME_BIT
+        link_ev = e.Event(self.link_name, 'put_packet_on_link', [])
+        sim.enqueue_event(link_time, link_ev)
             
             
     #
@@ -242,9 +245,9 @@ class Link:
         '''
         # Find the direction of travel, which is the source of the data on the
         #   link.  If there is no source, then the data source is -1.
-        data_src = 0
-        if len(self.packets_on_link[0]) == 0 and len(self.packets_on_link[1]) == 0:
-            data_src = -1
+        data_src = -1
+        if len(self.packets_on_link[0]) > 0:
+            data_src = 0
         elif len(self.packets_on_link[1]) > 0:
             data_src = 1
         
@@ -275,7 +278,7 @@ class Link:
                 next_pop = data_src
             elif time1 < time0:
                 next_pop = 1
-
+        
         return data_src, next_pop
 
 
@@ -356,14 +359,14 @@ class Link:
             #   packet is no longer on the buffer
             heapq.heappush(self.packets_on_link[next_pop],
                            (sim.network_now(), flow_name, packet_ID))
-            packet_size = sim.packets[(flow_name, packet_ID)].size # in bits
+            packet_size = sim.packets[(flow_name, packet_ID)].size # in bytes
             self.buffer_load[next_pop] -= packet_size
-            self.data_on_link += cv.bits_to_MB(packet_size)
+            self.data_on_link += cv.bytes_to_MB(packet_size)
             
             # Calculate the transmission time as the size of the packet divided
             #   by the link capacity (aka rate).
             packet_size = sim.packets[(flow_name, packet_ID)].size
-            transmission_time =  cv.bits_to_MB(packet_size) / self.rate
+            transmission_time =  cv.bytes_to_MB(packet_size) / self.rate
             
             # Create an event after this packet's transmission to reset the
             #   in_transmission flag.  Subtract a small amount of time to assure
@@ -378,19 +381,19 @@ class Link:
             pkt1_event = e.Event(self.link_name, 'put_packet_on_link', [])
             sim.enqueue_event(pkt1_time, pkt1_event)
             
-            # If we are not sending another packet after transmission, we need
-            #   to also have an event that checks after propagation.  Because we
-            #   do not know yet, we must make the event no matter what.
-            pkt2_time = pkt1_time + self.delay
-            pkt2_event = e.Event(self.link_name, 'put_packet_on_link', [])
-            sim.enqueue_event(pkt2_time, pkt2_event)
-            
             # Enqueue the event for the opposite end to receive the packet.
             #   This occurs at the same time as the transmission plus delay
             #   event.
-            rcv_time = pkt2_time
+            rcv_time = pkt1_time + self.delay
             rcv_event = e.Event(self.link_name, 'handoff_packet', [next_pop])
             sim.enqueue_event(rcv_time, rcv_event)
+            
+            # If we are not sending another packet after transmission, we need
+            #   to also have an event that checks after propagation.  Because we
+            #   do not know yet, we must make the event no matter what.
+            pkt2_time = rcv_time
+            pkt2_event = e.Event(self.link_name, 'put_packet_on_link', [])
+            sim.enqueue_event(pkt2_time, pkt2_event)
             
             
     #
@@ -431,9 +434,9 @@ class Link:
         # Take the packet off of the link by removing it from the queue.
         [time, flow_name, packet_ID] = \
                 heapq.heappop(self.packets_on_link[sender_index])
-        packet_size = sim.packets[(flow_name, packet_ID)].size # in bits
-        self.data_on_link -= cv.bits_to_MB(packet_size)
-                
+        packet_size = sim.packets[(flow_name, packet_ID)].size # in bytes
+        self.data_on_link -= cv.bytes_to_MB(packet_size)
+        
         # Use the sender index to figure out the receiver index.
         rcv_index = (sender_index + 1) % 2
         

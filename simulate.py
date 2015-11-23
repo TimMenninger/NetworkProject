@@ -68,7 +68,8 @@ ev_time_dict = {}
 # A file to log output
 log = open(ct.OUTPUT_LOG_FILE, 'w')
 
-    
+network_recordings = 0    
+
 #
 # run_network
 #
@@ -93,6 +94,8 @@ log = open(ct.OUTPUT_LOG_FILE, 'w')
 # Revision History: 2015/10/22: Created as main()
 #                   2015/10/29: Changed to run_network and filled in more than
 #                                   print functions.
+#                   2015/11/17: Restyled and neatened it up
+#                   2015/11/18: Adding halting condition for network 
 #
 
 def run_network():
@@ -105,7 +108,7 @@ def run_network():
     
     # Create the initial events, which is the start of each flow.
     create_initial_events()
-    
+
     # Iterate through the event queue until it is empty.
     while len(event_queue) > 0:
         # Pop the next event.
@@ -121,6 +124,12 @@ def run_network():
         #   status.
         if actor_name == None:
             s.record_network_status()
+
+            if len(event_queue) == 1:
+                # Simulation is over!
+                # Pop the next recording event and don't do anything with it
+                heapq.heappop(event_queue)
+
             continue
         else:
             # Retrieve the actor and the function it will perform on the 
@@ -182,19 +191,36 @@ def create_initial_events():
     '''
     This takes the set of flows and their descriptors and fills the event queue
     with events that signify the start of the respective flow.
-    '''
-
+    '''    
+    # Create the event that will record the network status.
+    enqueue_event(network_now(), e.Event(None, None, None))
+    
     # Create an event for each flow.
     for flow_name in flows:
+        # If this is the routing flow, don't call start flow.  We will handle
+        #   the routing flow separately.
+        if flow_name == ct.ROUTING_FLOW:
+            continue
+            
         # Create the event for the flow starting.  There are no arguments, 
         # but the event class expects an argument list.
         flow_event = e.Event(flow_name, 'start_flow', [])
         
         # Enqueue the event in our heap queue.
         enqueue_event(flows[flow_name].start_time, flow_event)
-    
-    # Create the event that will record the network status.
-    enqueue_event(network_now(), e.Event(None, None, None))
+    return    
+    for ep_name in endpoints:
+        # Get the link from the dictionary.
+        ep = endpoints[ep_name]
+        
+        # Only want to create events for routers...
+        if ep.type != ct.TYPE_ROUTER:
+            continue
+        
+        # Create the first event for each router.
+        routing_time = network_now() + ct.CONFIG_PKT_TIME
+        routing_event = e.Event(ep.router_name, 'transmit_config_packet', [])
+        enqueue_event(routing_time, routing_event)
     
 
 #
@@ -258,9 +284,12 @@ if __name__ == "__main__":
     # Run the network simulation loop
     status = run_network()
 
-    # End the timer
+    # End the timer because the simulation is over
     end = time.time()
-    
-    print("\n[SUCCESS]: Network simulation completed.") 
-    print("    [Elapsed Network Time]: %.3f seconds." % (network_now() / 1000))
-    print("    [Elapsed Real Time]:    %.3f seconds.\n" % (end - start))
+    print("\n[SUCCESS]: NETWORK SIMULATION COMPLETE.") 
+    print("    [ELAPSED NETWORK TIME]: %.3f seconds" % (network_now() / 1000))
+    print("    [ELAPSED REAL TIME]:    %.3f seconds" % (end - start))
+    print("    [NETWORK RECORDINGS]:   %d\n" % network_recordings)
+
+    # Construct and desplay the plots
+    s.construct_plots()
