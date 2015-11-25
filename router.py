@@ -70,6 +70,7 @@ class Router:
             self.routing_tables = [ { 'H1' : 'L1', 'H2' : 'L2'}, {} ]
         self.table_using = 0
 
+
 #
 # add_link
 #
@@ -97,12 +98,6 @@ class Router:
         Adds a link to the router.
         '''
         self.links.append(link_name)
-
-
-    def set_routing_table():
-        '''
-        Sets the routing table for this Router.
-        '''
         
     #
     # transmit_config_packet
@@ -139,7 +134,7 @@ class Router:
         routing_pkt = p.Packet(pkt_ID, ct.ROUTING_FLOW, self.router_name,
                                 None, ct.PACKET_ROUTING)
 
-        # TODO: PUT MEANINGFUL DATA ON THIS PACKET
+        # TODO: GIVE RELEVANT DATA TO ROUTING PACKETS
         routing_pkt.data = 0
 
         # Record the time of transmission for this packet so others can update
@@ -193,6 +188,9 @@ class Router:
         '''
         # Make sure this wasn't called by mistake.
         assert(packet.type == ct.PACKET_ROUTING)
+        
+        # If this is the first packet received on this link, add it to the
+        #   dictionary.
         print ("routing packet %d received by %s from %s" %(packet.ID, self.router_name, packet.src))
 
 
