@@ -69,27 +69,27 @@ class Host:
         # The link_name representing the Link to this Host
         self.link = None
         
-#
-# add_link
-#
-# Description:      This sets the link the host is connected to.
-#
-# Arguments:        self (Host)
-#                   link_name (string) - The name of the link that is associated
-#                       with this host.
-#
-# Return Values:    None.
-#
-# Shared Variables: self.link (WRITE) - This sets the link attribute.
-#
-# Global Variables: None.
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/10/29: Created
-#
+    #
+    # add_link
+    #
+    # Description:      This sets the link the host is connected to.
+    #
+    # Arguments:        self (Host)
+    #                   link_name (string) - The name of the link that is associated
+    #                       with this host.
+    #
+    # Return Values:    None.
+    #
+    # Shared Variables: self.link (WRITE) - This sets the link attribute.
+    #
+    # Global Variables: None.
+    #
+    # Limitations:      None.
+    #
+    # Known Bugs:       None.
+    #
+    # Revision History: 2015/10/29: Created
+    #
         
     def add_link(self, link_name):
         '''
@@ -98,33 +98,33 @@ class Host:
         self.link = link_name
     
 
-#
-# send_packet
-#
-# Description:      This sends a packet from this host onto the link that is
-#                   attached to it.
-#
-# Arguments:        self (Host)
-#                   argument_list ([string, string]) - A list of arguments that
-#                       is unpacked by the function.  This is a list to
-#                       facilitate class definition.  The list should contain
-#                       the flow name and the packet name.
-#
-# Return Values:    None.
-#
-# Shared Variables: self.link (READ) - This function uses the link name to send
-#                       a packet to it.
-#
-# Global Variables: None.
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/10/22: Created function handle and docstring.
-#                   2015/10/29: Filled in.
-#                   2015/11/14: Now just puts packet on buffer.
-#
+    #
+    # send_packet
+    #
+    # Description:      This sends a packet from this host onto the link that is
+    #                   attached to it.
+    #
+    # Arguments:        self (Host)
+    #                   argument_list ([string, string]) - A list of arguments that
+    #                       is unpacked by the function.  This is a list to
+    #                       facilitate class definition.  The list should contain
+    #                       the flow name and the packet name.
+    #
+    # Return Values:    None.
+    #
+    # Shared Variables: self.link (READ) - This function uses the link name to send
+    #                       a packet to it.
+    #
+    # Global Variables: None.
+    #
+    # Limitations:      None.
+    #
+    # Known Bugs:       None.
+    #
+    # Revision History: 2015/10/22: Created function handle and docstring.
+    #                   2015/10/29: Filled in.
+    #                   2015/11/14: Now just puts packet on buffer.
+    #
 
     def send_packet(self, arg_list):
         '''
@@ -136,6 +136,7 @@ class Host:
         flow = sim.flows[packet.flow]
         #print("[%.5f] %s: sent packet %d with data %d.\n" % 
         #    (sim.network_now(), self.host_name, packet.ID, packet.data))
+        #print(flow.to_complete, flow.expecting)
         
         # First want to put the current time on the packet so we can calculate
         #   RTT later.
@@ -215,35 +216,35 @@ class Host:
             flow.last_RTT *= ct.ACK_TIMEOUT_FACTOR
  
         
-#
-# receive_packet
-#
-# Description:      Receives a packet from the link and responds accordingly by
-#                   enqueuing an event.  This event may be sending an ack packet
-#                   or otherwise.
-#
-# Arguments:        self (Host)
-#                   argument_list ([string, string]) - A list of arguments that
-#                       is unpacked by the function.  This implementation is to
-#                       facilitate the event class.  The list should contain
-#                       the flow name and the packet name.
-#
-# Return Values:    None.
-#
-# Shared Variables: None.
-#
-# Global Variables: sim.packets (READ) - This gets the packet instance from the
-#                       dictionary using the argued key.
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/10/22: Created function handle and docstring.
-#                   2015/10/29: Filled in function.
-#                   2015/11/13: Decremented Link 'num_on_link' attribute.
-#                   2015/11/14: Responds according to packet type and ID.
-#
+    #
+    # receive_packet
+    #
+    # Description:      Receives a packet from the link and responds accordingly by
+    #                   enqueuing an event.  This event may be sending an ack packet
+    #                   or otherwise.
+    #
+    # Arguments:        self (Host)
+    #                   argument_list ([string, string]) - A list of arguments that
+    #                       is unpacked by the function.  This implementation is to
+    #                       facilitate the event class.  The list should contain
+    #                       the flow name and the packet name.
+    #
+    # Return Values:    None.
+    #
+    # Shared Variables: None.
+    #
+    # Global Variables: sim.packets (READ) - This gets the packet instance from the
+    #                       dictionary using the argued key.
+    #
+    # Limitations:      None.
+    #
+    # Known Bugs:       None.
+    #
+    # Revision History: 2015/10/22: Created function handle and docstring.
+    #                   2015/10/29: Filled in function.
+    #                   2015/11/13: Decremented Link 'num_on_link' attribute.
+    #                   2015/11/14: Responds according to packet type and ID.
+    #
 
     def receive_packet(self, arg_list):
         '''
@@ -257,6 +258,7 @@ class Host:
         if 0:#packet.type != ct.PACKET_ROUTING:
             print("[%.5f] %s: received packet %d with data %d.\n" % 
                 (sim.network_now(), self.host_name, packet.ID, packet.data))
+            print(flow.to_complete, flow.expecting)
 
         # If this is a data packet, create an ack packet and send it back.
         if packet.type == ct.PACKET_DATA:

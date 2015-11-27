@@ -141,34 +141,8 @@ class Router:
             if other_ep.type != ct.TYPE_HOST:
                 continue
                 
-            # Otherwise, get the amount of data in the queue for this link
-            #   so we can estimate the time it takes to send something here.
-            (data, num_pkts) = link.get_buffer_info(self.router_name)
-            
-            # We will now guess the "distance" to this router in units of time.
-            #   This time is the propagation delay plus the queuing delay.  The
-            #   prop delay is known but the queuing delay is calculated as such:
-            #       - Take the amount of data and number of packets in this
-            #           buffer
-            #       - Assume the buffer on the other end is identical to this
-            #           one.  This many packets must be sent before the next
-            #           packet.
-            #       - Packets are loaded onto the link in FIFO order, so assume
-            #           that cv.CONSEC_PKTS are sent on one link before the next
-            #           chronological packet is on the other buffer.  In this
-            #           scenario, propagation delay must be waited.
-            #       - We now have 2d data to be transmitted, which takes
-            #           2d / rate time.  We also have 2n packets to be sent,
-            #           with a "switch" in direction every cv.CONSEC_PKTS
-            #           packets, for a total of (2n / ct.CONSEC_PKTS) * delay
-            #           time.  Then, the next packet can be sent (this time is
-            #           not taken into account because it would be the same next
-            #           packet for every host).
-            data *= 2
-            num_pkts *= 2
-            queuing_delay = data / link.rate
-            prop_delay = (num_pkts / ct.CONSEC_PKTS) * link.delay
-            total_delay = queuing_delay + prop_delay
+            # Get the delay associated with sending packets along this link.
+            total_delay = self.get_distance(link_name)
             
             # Add this "distance" to the distance dictionary
             self.distances[other_ep_name] = total_delay
@@ -334,6 +308,17 @@ class Router:
         Receives a configuration packet and updates the routing table if any new,
         useful information is learned from it.
         '''
+        print (sim.network_now())
+        print (self.routing_table)
+        print (self.updating_table)
+        print (packet.data)
+        # Before doing anything else, if this contains information about a host
+        #   that is not in the routing table, put it in right away.  We don't
+        #   want to lose more packets to that host than we already have...
+        for host_name in packet.data:
+            if host_name not in self.routing_table:
+                self.routing_table[host_name] = packet.src
+                
         # Ignore the packet if we are not currently configuring.
         if not self.configuring:
             return
@@ -344,6 +329,10 @@ class Router:
         # We want to iterate through the data on the packet to see what can
         #   be updated on our updating routing table.
         for host_name in packet.data:
+            # Get the distance from what sent this packet and add it to the
+            #   data.
+            packet.data[host_name] += self.get_distance(packet.src)
+            
             # If it is not in our table yet, it is clearly an update.  If it
             #   is in our table and is an improvement, there must also be an
             #   update.
@@ -362,7 +351,7 @@ class Router:
             # Otherwise, this did nothing for us.  Update the number of no
             #   improves for this link
             elif packet.src not in self.no_improves:
-                self.no_improves[packet.src] = 0
+                self.no_improves[packet.src] = 1
             else:
                 self.no_improves[packet.src] += 1
                 
@@ -395,8 +384,48 @@ class Router:
         if switch_tables:
             self.switch_routing_tables([])
         
-        # If this is the first packet received on this link, add it to the
-        #   dictionary.
+        print(self.updating_table)
+        print('\n')
+        
+        
+    def get_distance(self, link_name):
+        '''
+        Gets the "distance" (time) to send a packet from this router to
+        the other end of the argued link.
+        '''
+        # Get the link so we can retrieve information from it.
+        link = sim.links[link_name]
+                
+        # Otherwise, get the amount of data in the queue for this link
+        #   so we can estimate the time it takes to send something here.
+        (data, num_pkts) = link.get_buffer_info(self.router_name)
+        
+        # We will now guess the "distance" to this router in units of time.
+        #   This time is the propagation delay plus the queuing delay.  The
+        #   prop delay is known but the queuing delay is calculated as such:
+        #       - Take the amount of data and number of packets in this
+        #           buffer
+        #       - Assume the buffer on the other end is identical to this
+        #           one.  This many packets must be sent before the next
+        #           packet.
+        #       - Packets are loaded onto the link in FIFO order, so assume
+        #           that cv.CONSEC_PKTS are sent on one link before the next
+        #           chronological packet is on the other buffer.  In this
+        #           scenario, propagation delay must be waited.
+        #       - We now have 2d data to be transmitted, which takes
+        #           2d / rate time.  We also have 2n packets to be sent,
+        #           with a "switch" in direction every cv.CONSEC_PKTS
+        #           packets, for a total of (2n / ct.CONSEC_PKTS) * delay
+        #           time.  Then, the next packet can be sent (this time is
+        #           not taken into account because it would be the same next
+        #           packet for every host).
+        data *= 2
+        num_pkts *= 2
+        queuing_delay = data / link.rate
+        prop_delay = (num_pkts / ct.CONSEC_PKTS) * link.delay
+        total_delay = queuing_delay + prop_delay
+        
+        return total_delay
         
         
     #
@@ -545,20 +574,14 @@ class Router:
         #   send this packet.  If it is not in the list, then something went
         #   wrong and this packet will go lost.
         elif packet.dest in self.routing_table:
-            # If we have no routing table yet, kickstart everything by switching
-            #   to our current updating table.  Then set the configuration flag
-            #   so it can finish.
-            if len(self.routing_table.keys()) == 0:
-                self.switch_routing_tables()
-                self.configuring = True
-            
             # Send the packet on that link.
             send_time = sim.network_now() + ct.TIME_BIT
             send_ev = e.Event(self.router_name, 'send_packet',
                                 [packet, self.routing_table[packet.dest]])
             sim.enqueue_event(send_time, send_ev)
             
-            #print("[%.5f] %s: received packet %d with data %d.\n" % 
-            #    (sim.network_now(), self.router_name, packet.ID, packet.data))
+            #print("[%.5f] %s: received packet %d containing %d going to %s.  Sending on link %s\n" % 
+            #    (sim.network_now(), self.router_name, packet.ID, packet.data, packet.dest, self.routing_table[packet.dest]))
+            #print(self.routing_table)
 
 
