@@ -134,9 +134,9 @@ class Host:
         # The argument list is just the packet.
         [packet] = arg_list
         flow = sim.flows[packet.flow]
-        #print("[%.5f] %s: sent packet %d with data %d.\n" % 
-        #    (sim.network_now(), self.host_name, packet.ID, packet.data))
-        #print(flow.to_complete, flow.expecting)
+        print("[%.5f] %s: sent packet %d with data %d.\n" % 
+            (sim.network_now(), self.host_name, packet.ID, packet.data))
+        print(flow.to_complete, flow.expecting)
         
         # First want to put the current time on the packet so we can calculate
         #   RTT later.

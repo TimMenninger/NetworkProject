@@ -150,6 +150,10 @@ class Router:
             # Add this host and link pair to our routing table.
             self.updating_table[other_ep_name] = link_name
             
+            # Add this link to the routing table, as there will never be an
+            #   update for this host as there is only one route.
+            self.routing_table[other_ep_name] = link_name
+            
             # There will be no routing packets on this link, so make its
             #   no improvements number the maximum.
             self.no_improves[link_name] = ct.MAX_NO_IMPROVES
@@ -254,7 +258,7 @@ class Router:
 
             # The data that will be parsed is the table of current known
             #   time-distances to each host
-            routing_pkt.data = self.distances
+            routing_pkt.data = copy.deepcopy(self.distances)
 
             # Record the time of transmission for this packet so others can update
             #   their routing table effectively.
@@ -272,6 +276,7 @@ class Router:
         timeout_time = sim.network_now() + ct.ROUTING_TIMEOUT
         timeout_ev = e.Event(self.router_name, 'switch_routing_tables', [])
         sim.enqueue_event(timeout_time, timeout_ev)
+        
     
     #
     # parse_config_packet
@@ -308,16 +313,12 @@ class Router:
         Receives a configuration packet and updates the routing table if any new,
         useful information is learned from it.
         '''
-        print (sim.network_now())
-        print (self.routing_table)
-        print (self.updating_table)
-        print (packet.data)
         # Before doing anything else, if this contains information about a host
         #   that is not in the routing table, put it in right away.  We don't
         #   want to lose more packets to that host than we already have...
         for host_name in packet.data:
             if host_name not in self.routing_table:
-                self.routing_table[host_name] = packet.src
+                self.routing_table[host_name] = copy.deepcopy(packet.src)
                 
         # Ignore the packet if we are not currently configuring.
         if not self.configuring:
@@ -339,10 +340,10 @@ class Router:
             if host_name not in self.updating_table or \
                packet.data[host_name] < self.distances[host_name]:
                 # Have the table reflect the link this packet came from
-                self.updating_table[host_name] = packet.src
+                self.updating_table[host_name] = copy.deepcopy(packet.src)
                 
                 # Update the distance known to that host.
-                self.distances[host_name] = packet.data[host_name]
+                self.distances[host_name] = copy.deepcopy(packet.data[host_name])
                 
                 # There have now been zero consecutive non-improvements on
                 #   this link.
@@ -367,7 +368,7 @@ class Router:
                 updated_pkt.src = link_name
                 
                 # Update the data.
-                updated_pkt.data = self.distances
+                updated_pkt.data = copy.deepcopy(self.distances)
                 
                 # Send the packet.
                 self.send_packet([updated_pkt, link_name])
@@ -383,9 +384,6 @@ class Router:
         #   packets to switch routing tables.
         if switch_tables:
             self.switch_routing_tables([])
-        
-        print(self.updating_table)
-        print('\n')
         
         
     def get_distance(self, link_name):
@@ -423,7 +421,7 @@ class Router:
         num_pkts *= 2
         queuing_delay = data / link.rate
         prop_delay = (num_pkts / ct.CONSEC_PKTS) * link.delay
-        total_delay = queuing_delay + prop_delay
+        total_delay = queuing_delay + prop_delay + link.delay
         
         return total_delay
         
@@ -462,7 +460,7 @@ class Router:
         # If the new routing table is empty, do nothing.
         if not self.configuring:
             return
-            
+              
         # Fill any host entry in the routing table that is not in the updating
         #   table.
         for host_name in self.routing_table:
@@ -520,7 +518,7 @@ class Router:
         #   enqueued on a buffer or transmitted.
         link.put_packet_on_buffer(self.router_name, packet)
         
-        if 0:#packet.type != ct.PACKET_ROUTING:
+        if packet.type != ct.PACKET_ROUTING:
             print("[%.5f] %s: sent packet %d with data %d to %s.\n" % 
                 (sim.network_now(), self.router_name, packet.ID, packet.data, packet.dest))
             print(self.routing_table)
@@ -580,8 +578,8 @@ class Router:
                                 [packet, self.routing_table[packet.dest]])
             sim.enqueue_event(send_time, send_ev)
             
-            #print("[%.5f] %s: received packet %d containing %d going to %s.  Sending on link %s\n" % 
-            #    (sim.network_now(), self.router_name, packet.ID, packet.data, packet.dest, self.routing_table[packet.dest]))
-            #print(self.routing_table)
+            print("[%.5f] %s: received packet %d containing %d going to %s.  Sending on link %s\n" % 
+                (sim.network_now(), self.router_name, packet.ID, packet.data, packet.dest, self.routing_table[packet.dest]))
+            print(self.routing_table)
 
 
