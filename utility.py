@@ -18,7 +18,8 @@ import host as h
 import event as e
 
 # Import simulator so we can access events, objects and time.
-import simulate as sim
+import sys
+sim = sys.modules['__main__']
 
 import constants as ct
 
@@ -26,16 +27,14 @@ def network_type(actor_name):
     '''
     Returns the type of the network object (as a constant) given its name
     '''
-    if actor_name.startswith("F"):
-        return ct.FLOW
-    elif actor_name.startswith("L"):
-        return ct.LINK
-    elif actor_name.startswith("R"):
-        return ct.ROUTER
-    elif actor_name.startswith("H"):
-        return ct.HOST
+    if actor_name in sim.flows:
+        return ct.TYPE_FLOW
+    elif actor_name in sim.links:
+        return ct.TYPE_LINK
+    elif actor_name in sim.endpoints:
+        return sim.endpoints[actor_name].type
     else:
-        return ct.PACKET
+        return ct.TYPE_PACKET
 
 def get_actor_and_function(actor_name, function_name):
     '''
@@ -47,23 +46,23 @@ def get_actor_and_function(actor_name, function_name):
     actor_type = network_type(actor_name)
     
     # FLOW
-    if actor_type == ct.FLOW:
+    if actor_type == ct.TYPE_FLOW:
         actor = sim.flows[actor_name]
         event_function = getattr(f.Flow, function_name)
     # LINK
-    elif actor_type == ct.LINK:
+    elif actor_type == ct.TYPE_LINK:
         actor = sim.links[actor_name]
         event_function = getattr(l.Link, function_name)
     # PACKET
-    elif actor_type == ct.PACKET:
+    elif actor_type == ct.TYPE_PACKET:
         actor = sim.packets[actor_name]
         event_function = getattr(p.Packet, function_name)
-        # ROUTER || HOST
-    else: # actor_type == ct.ROUTER or actor_type == ct.HOST
+        # TYPE_ROUTER || TYPE_HOST
+    else: # actor_type == ct.TYPE_ROUTER or actor_type == ct.TYPE_HOST
         actor = sim.endpoints[actor_name]
-        if actor_type == ct.ROUTER:
+        if actor_type == ct.TYPE_ROUTER:
             event_function = getattr(r.Router, function_name)
-        else: # actor_type == ct.HOST
+        else: # actor_type == ct.TYPE_HOST
             event_function = getattr(h.Host, function_name)
 
     return actor, event_function

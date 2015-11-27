@@ -17,5 +17,5 @@ L4 10 10 64 R3 R4
 L5 12.5 10 64 R4 H2
 
 flowSpecs (ID Src Dest Data Start_Time):
-F1 H1 H2 20 0.5
+F1 H1 H2 5 0.5
 
