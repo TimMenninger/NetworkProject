@@ -386,6 +386,35 @@ class Router:
             self.switch_routing_tables([])
         
         
+    #
+    # get_distance
+    #
+    # Description:      This takes the argued link and estimates the time it
+    #                   would take to send a packet down this link using the
+    #                   queue on this side of the link, the link capacity and
+    #                   the link propagation delay.
+    #
+    # Arguments:        self (Router)
+    #                   link_name (string) - A string representing the name of
+    #                       the link we are interested in.  This is used to
+    #                       index the global dictionary of links.
+    #
+    # Return Values:    (int) - The time it would take to send a packet along
+    #                       the argued link.
+    #
+    # Shared Variables: None.
+    #
+    # Global Variables: sim.links (READ) - The argued link name is used to get
+    #                       a link object from this dictionary.
+    #
+    # Limitations:      This uses the link buffer on this side of the link to
+    #                   estimate the link buffer on the other side of the link.
+    #
+    # Known Bugs:       None.
+    #
+    # Revision History: 11/27/15: Created
+    #
+        
     def get_distance(self, link_name):
         '''
         Gets the "distance" (time) to send a packet from this router to

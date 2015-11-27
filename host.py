@@ -204,7 +204,7 @@ class Host:
         #   Otherwise, we will end up thinking we lost way more packets
         #   than we actually did.
         if len(flow.packets_in_flight) > 0 and \
-           packet.ID > (flow.packets_in_flight[0][1].ID):
+           abs(packet.ID) > (flow.packets_in_flight[0][1].ID):
             flow.resend_inflight_packets()
         
         # Next, because we want to check if the time we waited for timeout is
@@ -301,13 +301,13 @@ class Host:
                 # flight)
                 flow.update_flow()
                 
-            else:#if packet.data > flow.to_complete:
+            else:# packet.data <= flow.to_complete:
                 # Packets were lost.  Resend any and all that were in flight,
                 #   but only do this if this is one of the packets in flight.
                 #   Otherwise, we will end up thinking we lost way more packets
                 #   than we actually did.
                 if len(flow.packets_in_flight) > 0 and \
-                   packet.ID > (flow.packets_in_flight[0][1].ID):
+                   abs(packet.ID) > (flow.packets_in_flight[0][1].ID):
                     flow.resend_inflight_packets()
             
             # else the packet has already been received
