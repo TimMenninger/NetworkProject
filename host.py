@@ -197,7 +197,6 @@ class Host:
         #   disregard, we are done here.
         if packet.data < flow.to_complete:
             return
-        print(packet.data, packet.ID, flow.packets_in_flight[0][1].ID)
         
         # If not, we want to first resend all packets in flight,
         #   but only do this if this is one of the packets in flight.

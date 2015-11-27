@@ -263,8 +263,8 @@ class Router:
             
         # If there are no hosts, don't waste anybody's time by sending routing
         #   packets--nobody will have anything to learn from an empty table.
-        #if len(self.updating_table.keys()) == 0:
-        #    return
+        if len(self.updating_table.keys()) == 0:
+            return
         
         # Send this packet onto each link on the router.
         for link_name in self.links:
@@ -490,7 +490,7 @@ class Router:
         # Give the packet to the link to handle.  Here, it will either be
         #   enqueued on a buffer or transmitted.
         link.put_packet_on_buffer(self.router_name, packet)
-        print (sim.flows[packet.flow].to_complete, sim.flows[packet.flow].expecting)
+        
         if 0:#packet.type != ct.PACKET_ROUTING:
             print("[%.5f] %s: sent packet %d with data %d to %s.\n" % 
                 (sim.network_now(), self.router_name, packet.ID, packet.data, packet.dest))
