@@ -38,7 +38,7 @@ import constants as ct
 import conversion as cv
 
 # Import the simulator so we have access to the global variables in it.
-import simulate as sim
+sim = sys.modules['__main__']
 
 import utility as u
 
@@ -170,7 +170,7 @@ def load_network_objects(network_file):
         
         # Create a flow and add it to the dictionary.
         sim.flows[flow[0]] = f.Flow(flow[0], flow[1], \
-                  flow[2], int(flow[3]), 1000 * round(float(flow[4]), 0))
+                  flow[2], int(flow[3]), 1000 * float(flow[4]))
         
         # Read the next line.
         flow = network.readline()

@@ -18,7 +18,8 @@ import host as h
 import event as e
 
 # Import simulator so we can access events, objects and time.
-import simulate as sim
+import sys
+sim = sys.modules['__main__']
 
 import constants as ct
 
@@ -33,7 +34,7 @@ def network_type(actor_name):
     elif actor_name in sim.endpoints:
         return sim.endpoints[actor_name].type
     else:
-        return ct.PACKET
+        return ct.TYPE_PACKET
 
 def get_actor_and_function(actor_name, function_name):
     '''

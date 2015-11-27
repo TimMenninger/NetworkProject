@@ -21,6 +21,10 @@ import event as e
 import constants as ct
 import conversion as cv
 
+# Import the simulate module.
+import sys
+sim = sys.modules['__main__']
+
 class Packet:
 
     def __init__(self, the_ID, the_flow, the_src, the_dest, the_type):
@@ -29,6 +33,7 @@ class Packet:
         '''
         # Store the type so we can easily identify the object.
         self.type = ct.TYPE_PACKET
+        
         # ID of the Link, each ID is a unique string (i.e. "P1")
         self.ID = the_ID
 
@@ -60,6 +65,23 @@ class Packet:
         # The data is usually a marker so we have some sense of chronology of
         #   packets
         self.data = None
+        
+        
+    def copy_packet(self):
+        '''
+        Returns a copy of the argued packet.
+        '''
+        copy_pkt = Packet(sim.flows[self.flow].create_packet_ID(), self.flow,
+                            self.src, self.dest, self.type)
+                            
+        # Copy the other data over.
+        copy_pkt.time = self.time
+        copy_pkt.set_data(self.data)
+        
+        # Add it to the global dictionary of packets.
+        sim.packets[(copy_pkt.flow, copy_pkt.ID)] = copy_pkt
+        
+        return copy_pkt
         
         
     #

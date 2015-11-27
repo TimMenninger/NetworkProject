@@ -104,7 +104,82 @@ class Link:
         self.in_transmission = False   
         
         # Keep track of the number of packets lost
-        self.num_packets_lost = 0    
+        self.num_packets_lost = 0  
+        
+        
+    #
+    # get_buffer_info
+    #
+    # Description:      This returns the amount of data and number of packets
+    #                   on the buffer at the argued endpoint.  This can then
+    #                   be used to guesstimate RTTs.
+    #
+    # Arguments:        self (Link)
+    #                   ep_name (string) - The name of the endpoint that is
+    #                       requesting its buffer information.
+    #
+    # Return Values:    (int) - The amount of data in bytes on the buffer.
+    #                   (int) - The number of packets in the buffer.
+    #
+    # Shared Variables: self.end_points (READ) - Used to get the index that
+    #                       corresponds to the argued endpoint name.
+    #                   self.buffer_load (READ) - Value at endpoint index
+    #                       is returned.
+    #                   self.buffers (READ) - Length (i.e. num packets) is
+    #                       returned for endpoint index.
+    #
+    # Global Variables: None.
+    #
+    # Revision History: 11/26/15: Created
+    #
+        
+    def get_buffer_info(self, ep_name):
+        '''
+        Returns the amount of data and number of packets in the buffer on the 
+        side of the link corresponding to the argued endpoint name.
+        '''
+        ep_index = self.end_points[ep_name]
+        
+        # Return the amount of data in the buffer and the number of packets
+        #   (which is necessary because not all packets are the same size)
+        return self.buffer_load[ep_index], len(self.buffers[ep_index])
+        
+    
+    #
+    # get_other_ep
+    #
+    # Description:      This is called by a particular endpoint (whose name is
+    #                   argued) and returns the name of the other endpoint on
+    #                   the link.
+    #
+    # Arguments:        self (Link)
+    #                   ep_name (string) - The name of the endpoint calling the
+    #                       function.
+    #
+    # Return Values:    (string) - A string representing the name of the other
+    #                       endpoint
+    #
+    # Shared Variables: self.ep_names (READ) - Read to get the name of the other
+    #                       other endpoint.
+    #
+    # Global Variables: None.
+    #
+    # Limitations:      This always returns an endpoint name.  If the argued
+    #                   name is unknown, it will always return what is at index
+    #                   1 in the endpoint dictionary.
+    #
+    # Revision History: 11/26/15: Created
+    #
+        
+    def get_other_ep(self, ep_name):
+        '''
+        Returns the name/identity of the endpoint to this link that did not
+        call the function.
+        '''
+        if self.ep_names[0] == ep_name:
+            return self.ep_names[1]
+        return self.ep_names[0]
+          
         
     #
     # put_packet_on_buffer
@@ -295,7 +370,7 @@ class Link:
     #                   other end to receive the packet.
     #
     # Arguments:        self (Link)
-    #                   arg_list (List) - Unused.
+    #                   arg_list ([]) - Unused.
     #
     # Return Values:    None.
     #
@@ -440,7 +515,7 @@ class Link:
         # Use the sender index to figure out the receiver index.
         rcv_index = (sender_index + 1) % 2
         
-        # Now "hand off" the packet to the host.
+        # Now "hand off" the packet to the host/router.
         ep = sim.endpoints[self.ep_names[rcv_index]]
         ep.receive_packet([flow_name, packet_ID])
         

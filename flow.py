@@ -23,6 +23,9 @@
 # So we can use command line arguments.
 import sys
 
+# So we can copy heapqueues.
+import copy
+
 # Import network objects
 import packet as p
 import link as l
@@ -220,8 +223,9 @@ class Flow:
         '''
         This remakes and resends all packets that are currently in flight.
         '''
+        
         # Create a new queue of packets in flight
-        old_flight = self.packets_in_flight[:]
+        old_flight = copy.deepcopy(self.packets_in_flight)
         self.packets_in_flight = []
         
         # Remove all of the packets in flight, make a new packet out of them
@@ -288,21 +292,22 @@ class Flow:
         Updates the window size according to congestion and the packets in
         flight according to window size.
         '''
-        # If there are no packets to send, the flow is done.
-        if len(self.packets_to_send) == 0:
-            # Remove it from our list ofrunning packets.  If it does not work,
-            #   we already deleted it, so continue normally.
-            try:
-                sim.running_flows.remove(self.flow_name)
-            except ValueError:
-                pass
-            return
         
         sim.log.write("[%.5f] %s: in-flight / window size %d/%d\n" %
             (sim.network_now(), self.flow_name, len(self.packets_in_flight), 
                 self.window_size))
 
         while len(self.packets_in_flight) < self.window_size:
+            # If there are no packets to send, the flow is done.
+            if len(self.packets_to_send) == 0:
+                # Remove it from our list ofrunning packets.  If it does not work,
+                #   we already deleted it, so continue normally.
+                try:
+                    sim.running_flows.remove(self.flow_name)
+                except ValueError:
+                    pass
+                return
+                
             # Get a packet from the list of packets to send.
             (pkt_num, pkt) = heapq.heappop(self.packets_to_send)
 

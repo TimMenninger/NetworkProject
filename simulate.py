@@ -199,7 +199,7 @@ def create_initial_events():
         #   the routing flow separately.
         if flow_name == ct.ROUTING_FLOW:
             continue
-            
+         
         # Create the event for the flow starting.  There are no arguments, 
         # but the event class expects an argument list.
         flow_event = e.Event(flow_name, 'start_flow', [])
@@ -216,7 +216,7 @@ def create_initial_events():
             continue
         
         # Create the first event for each router.
-        routing_time = network_now() + ct.CONFIG_PKT_TIME
+        routing_time = network_now() + ct.TIME_BIT
         routing_event = e.Event(ep.router_name, 'transmit_config_packet', [])
         enqueue_event(routing_time, routing_event)
     

@@ -36,7 +36,11 @@ TIME_BIT = 0.000000000001
 RECORD_TIME = 1
 
 # How often to send routing packets to configure routing tables (in ms)
-CONFIG_PKT_TIME = 50
+CONFIG_PKT_TIME = 5000
+
+# The number of milliseconds before routers assume they are receiving no more
+#	useful packets to update routing tables.
+ROUTING_TIMEOUT		= 1000
 
 # Network objects
 TYPE_FLOW = 0
@@ -72,13 +76,23 @@ RECORDING_INTERVAL  = 10    # Number of milliseconds between each network
                             # status recording
 MAX_SIMULATION_TIME = 1e6   # Maximum number of milliseconds the network should 
                             # run
-
+                            
 # Initial values
 ACK_TIMEOUT_FACTOR  = 3     # Number of milliseconds to wait for acknowledgement
                             # before timeout
-INITIAL_ASSUMED_RTT = 100   # Before we know the round trip time, we need to
+INITIAL_ASSUMED_RTT = 500   # Before we know the round trip time, we need to
                             #   define an initial one that we assume (in ms)
-INITIAL_WINDOW_SIZE = 4     # The initial window size for each flow.
+INITIAL_WINDOW_SIZE = 10    # The initial window size for each flow.
 
 # The name of the flow used for inter-router communication
 ROUTING_FLOW        = 'routing_flow'
+
+# The guessed number of consecutive packets that are sent (on average) on a
+#	link before transmission must stop to reverse direction of data travel
+#	on the half-duplex links.
+CONSEC_PKTS			= 10
+
+# The number of consecutive epochs with no routing table update before deciding
+#	the router has nothing more to learn from routing packets and can start
+#	using the new routing table
+MAX_NO_IMPROVES		= 2
