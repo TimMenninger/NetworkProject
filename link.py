@@ -61,6 +61,9 @@ class Link:
         '''
         Initialize an instance of Link by intitializing its attributes.
         '''
+        # Store the type so it can be easily identified as a router.
+        self.type = ct.TYPE_LINK
+        
         # Name of the Link, each name is a unique string (i.e. "L1")
         self.link_name = the_link_name
         
@@ -86,7 +89,7 @@ class Link:
         # The packet buffers on either end of the half-duplex link (heapq's)
         self.buffers = [ [], [] ]
         
-        # The amount of data in the buffer in bits.
+        # The amount of data in the buffer in bytes.
         self.buffer_load = [ 0, 0 ]
         
         # The number of packets on the link from the indexed endpoint.  One of
@@ -101,7 +104,82 @@ class Link:
         self.in_transmission = False   
         
         # Keep track of the number of packets lost
-        self.num_packets_lost = 0    
+        self.num_packets_lost = 0  
+        
+        
+    #
+    # get_buffer_info
+    #
+    # Description:      This returns the amount of data and number of packets
+    #                   on the buffer at the argued endpoint.  This can then
+    #                   be used to guesstimate RTTs.
+    #
+    # Arguments:        self (Link)
+    #                   ep_name (string) - The name of the endpoint that is
+    #                       requesting its buffer information.
+    #
+    # Return Values:    (int) - The amount of data in bytes on the buffer.
+    #                   (int) - The number of packets in the buffer.
+    #
+    # Shared Variables: self.end_points (READ) - Used to get the index that
+    #                       corresponds to the argued endpoint name.
+    #                   self.buffer_load (READ) - Value at endpoint index
+    #                       is returned.
+    #                   self.buffers (READ) - Length (i.e. num packets) is
+    #                       returned for endpoint index.
+    #
+    # Global Variables: None.
+    #
+    # Revision History: 11/26/15: Created
+    #
+        
+    def get_buffer_info(self, ep_name):
+        '''
+        Returns the amount of data and number of packets in the buffer on the 
+        side of the link corresponding to the argued endpoint name.
+        '''
+        ep_index = self.end_points[ep_name]
+        
+        # Return the amount of data in the buffer and the number of packets
+        #   (which is necessary because not all packets are the same size)
+        return self.buffer_load[ep_index], len(self.buffers[ep_index])
+        
+    
+    #
+    # get_other_ep
+    #
+    # Description:      This is called by a particular endpoint (whose name is
+    #                   argued) and returns the name of the other endpoint on
+    #                   the link.
+    #
+    # Arguments:        self (Link)
+    #                   ep_name (string) - The name of the endpoint calling the
+    #                       function.
+    #
+    # Return Values:    (string) - A string representing the name of the other
+    #                       endpoint
+    #
+    # Shared Variables: self.ep_names (READ) - Read to get the name of the other
+    #                       other endpoint.
+    #
+    # Global Variables: None.
+    #
+    # Limitations:      This always returns an endpoint name.  If the argued
+    #                   name is unknown, it will always return what is at index
+    #                   1 in the endpoint dictionary.
+    #
+    # Revision History: 11/26/15: Created
+    #
+        
+    def get_other_ep(self, ep_name):
+        '''
+        Returns the name/identity of the endpoint to this link that did not
+        call the function.
+        '''
+        if self.ep_names[0] == ep_name:
+            return self.ep_names[1]
+        return self.ep_names[0]
+          
         
     #
     # put_packet_on_buffer
@@ -152,7 +230,7 @@ class Link:
         #   The time we use for this will be now, because we are using first
         #   come first served priority on the links, but only if there is enough
         #   space.
-        if packet.size + self.buffer_load[ep] <= cv.KB_to_bits(self.buffer_size):
+        if packet.size + self.buffer_load[ep] <= cv.KB_to_bytes(self.buffer_size):
             # Add the packet identifier to the link buffer heap queue along 
             # with the time
             heapq.heappush(self.buffers[ep], 
@@ -162,14 +240,14 @@ class Link:
             # storing an additional packet.size
             self.buffer_load[ep] += packet.size
         
-        # We now want to check if this should be sent right away.  The reason
-        #   this is done here is because it is the best way to "kickstart" the
-        #   link.  We want it to send right away if the buffer at the other end
-        #   is empty and nothing is being transmitted on the buffer at the end
-        #   it is on.  Being transmitted is defined as the time it takes to load
-        #   a packet from the buffer onto the link.
-        if len(self.buffers[other_ep]) == 0 and not self.in_transmission:
-            self.put_packet_on_link([])
+        # We now want to kickstart the putting packets on the link.  If there
+        #   is already a packet in transmission, then nothing will happen.
+        #   Otherwise, we are telling it the buffer is now nonempty.  However,
+        #   create an event some dt in the future so all the "current" events
+        #   can finish first.
+        link_time = sim.network_now() + ct.TIME_BIT
+        link_ev = e.Event(self.link_name, 'put_packet_on_link', [])
+        sim.enqueue_event(link_time, link_ev)
             
             
     #
@@ -242,9 +320,9 @@ class Link:
         '''
         # Find the direction of travel, which is the source of the data on the
         #   link.  If there is no source, then the data source is -1.
-        data_src = 0
-        if len(self.packets_on_link[0]) == 0 and len(self.packets_on_link[1]) == 0:
-            data_src = -1
+        data_src = -1
+        if len(self.packets_on_link[0]) > 0:
+            data_src = 0
         elif len(self.packets_on_link[1]) > 0:
             data_src = 1
         
@@ -275,7 +353,7 @@ class Link:
                 next_pop = data_src
             elif time1 < time0:
                 next_pop = 1
-
+        
         return data_src, next_pop
 
 
@@ -292,7 +370,7 @@ class Link:
     #                   other end to receive the packet.
     #
     # Arguments:        self (Link)
-    #                   arg_list (List) - Unused.
+    #                   arg_list ([]) - Unused.
     #
     # Return Values:    None.
     #
@@ -356,14 +434,14 @@ class Link:
             #   packet is no longer on the buffer
             heapq.heappush(self.packets_on_link[next_pop],
                            (sim.network_now(), flow_name, packet_ID))
-            packet_size = sim.packets[(flow_name, packet_ID)].size # in bits
+            packet_size = sim.packets[(flow_name, packet_ID)].size # in bytes
             self.buffer_load[next_pop] -= packet_size
-            self.data_on_link += cv.bits_to_MB(packet_size)
+            self.data_on_link += cv.bytes_to_MB(packet_size)
             
             # Calculate the transmission time as the size of the packet divided
             #   by the link capacity (aka rate).
             packet_size = sim.packets[(flow_name, packet_ID)].size
-            transmission_time =  cv.bits_to_MB(packet_size) / self.rate
+            transmission_time =  cv.bytes_to_MB(packet_size) / self.rate
             
             # Create an event after this packet's transmission to reset the
             #   in_transmission flag.  Subtract a small amount of time to assure
@@ -378,19 +456,19 @@ class Link:
             pkt1_event = e.Event(self.link_name, 'put_packet_on_link', [])
             sim.enqueue_event(pkt1_time, pkt1_event)
             
-            # If we are not sending another packet after transmission, we need
-            #   to also have an event that checks after propagation.  Because we
-            #   do not know yet, we must make the event no matter what.
-            pkt2_time = pkt1_time + self.delay
-            pkt2_event = e.Event(self.link_name, 'put_packet_on_link', [])
-            sim.enqueue_event(pkt2_time, pkt2_event)
-            
             # Enqueue the event for the opposite end to receive the packet.
             #   This occurs at the same time as the transmission plus delay
             #   event.
-            rcv_time = pkt2_time
+            rcv_time = pkt1_time + self.delay
             rcv_event = e.Event(self.link_name, 'handoff_packet', [next_pop])
             sim.enqueue_event(rcv_time, rcv_event)
+            
+            # If we are not sending another packet after transmission, we need
+            #   to also have an event that checks after propagation.  Because we
+            #   do not know yet, we must make the event no matter what.
+            pkt2_time = rcv_time
+            pkt2_event = e.Event(self.link_name, 'put_packet_on_link', [])
+            sim.enqueue_event(pkt2_time, pkt2_event)
             
             
     #
@@ -431,13 +509,13 @@ class Link:
         # Take the packet off of the link by removing it from the queue.
         [time, flow_name, packet_ID] = \
                 heapq.heappop(self.packets_on_link[sender_index])
-        packet_size = sim.packets[(flow_name, packet_ID)].size # in bits
-        self.data_on_link -= cv.bits_to_MB(packet_size)
-                
+        packet_size = sim.packets[(flow_name, packet_ID)].size # in bytes
+        self.data_on_link -= cv.bytes_to_MB(packet_size)
+        
         # Use the sender index to figure out the receiver index.
         rcv_index = (sender_index + 1) % 2
         
-        # Now "hand off" the packet to the host.
+        # Now "hand off" the packet to the host/router.
         ep = sim.endpoints[self.ep_names[rcv_index]]
         ep.receive_packet([flow_name, packet_ID])
         

@@ -23,6 +23,9 @@
 # So we can use command line arguments.
 import sys
 
+# So we can copy heapqueues.
+import copy
+
 # Import network objects
 import packet as p
 import link as l
@@ -61,6 +64,9 @@ class Flow:
         '''
         Initialize an instance of Flow by intitializing its attributes.
         '''
+        # Store the type so it can be easily identified as a router.
+        self.type = ct.TYPE_FLOW
+        
         # Name of the Flow, each ID is a unique string (i.e. "F1")
         self.flow_name = the_flow_name
 
@@ -165,14 +171,13 @@ class Flow:
         send them.
         '''
         # Calculate the number of packets we need to send all of the data
-        num_packets = int(cv.MB_to_bits(self.size) / ct.PACKET_DATA_SIZE) + 1
+        num_packets = int(cv.MB_to_bytes(self.size) / ct.PACKET_DATA_SIZE) + 1
         
         # Create all of the packets.
         for i in range(1, num_packets + 1):
             # First, create a packet.
             new_pkt = p.Packet(self.create_packet_ID(), self.flow_name, 
-                               self.src, self.dest,
-                               ct.PACKET_DATA, ct.PACKET_DATA_SIZE)
+                               self.src, self.dest, ct.PACKET_DATA)
                                
             # Set the data of the packet to be its "chronological" number.
             new_pkt.set_data(i)
@@ -218,8 +223,9 @@ class Flow:
         '''
         This remakes and resends all packets that are currently in flight.
         '''
+        
         # Create a new queue of packets in flight
-        old_flight = self.packets_in_flight[:]
+        old_flight = copy.deepcopy(self.packets_in_flight)
         self.packets_in_flight = []
         
         # Remove all of the packets in flight, make a new packet out of them
@@ -233,8 +239,7 @@ class Flow:
             
             # Create a new packet from it but with a new ID.
             new_pkt = p.Packet(self.create_packet_ID(), self.flow_name,
-                               old_pkt.src, old_pkt.dest, old_pkt.type,
-                               old_pkt.size)
+                               old_pkt.src, old_pkt.dest, old_pkt.type)
 
             # Make sure the new packet contains the same data (index)
             new_pkt.set_data(old_pkt.data)
@@ -287,15 +292,22 @@ class Flow:
         Updates the window size according to congestion and the packets in
         flight according to window size.
         '''
-        # If there are no packets to send, the flow is done.
-        if len(self.packets_to_send) == 0:
-            return
         
         sim.log.write("[%.5f] %s: in-flight / window size %d/%d\n" %
             (sim.network_now(), self.flow_name, len(self.packets_in_flight), 
                 self.window_size))
 
         while len(self.packets_in_flight) < self.window_size:
+            # If there are no packets to send, the flow is done.
+            if len(self.packets_to_send) == 0:
+                # Remove it from our list ofrunning packets.  If it does not work,
+                #   we already deleted it, so continue normally.
+                try:
+                    sim.running_flows.remove(self.flow_name)
+                except ValueError:
+                    pass
+                return
+                
             # Get a packet from the list of packets to send.
             (pkt_num, pkt) = heapq.heappop(self.packets_to_send)
 

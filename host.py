@@ -60,33 +60,36 @@ class Host:
         ''' 
         Initialize an instance of Host by intitializing its attributes.
         '''
+        # Store the type so it can be easily identified as a router.
+        self.type = ct.TYPE_HOST
+        
         # Name of the host, each hostname is unique string (i.e., "H1")
         self.host_name = the_host_name
         
         # The link_name representing the Link to this Host
         self.link = None
         
-#
-# add_link
-#
-# Description:      This sets the link the host is connected to.
-#
-# Arguments:        self (Host)
-#                   link_name (string) - The name of the link that is associated
-#                       with this host.
-#
-# Return Values:    None.
-#
-# Shared Variables: self.link (WRITE) - This sets the link attribute.
-#
-# Global Variables: None.
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/10/29: Created
-#
+    #
+    # add_link
+    #
+    # Description:      This sets the link the host is connected to.
+    #
+    # Arguments:        self (Host)
+    #                   link_name (string) - The name of the link that is associated
+    #                       with this host.
+    #
+    # Return Values:    None.
+    #
+    # Shared Variables: self.link (WRITE) - This sets the link attribute.
+    #
+    # Global Variables: None.
+    #
+    # Limitations:      None.
+    #
+    # Known Bugs:       None.
+    #
+    # Revision History: 2015/10/29: Created
+    #
         
     def add_link(self, link_name):
         '''
@@ -95,34 +98,33 @@ class Host:
         self.link = link_name
     
 
-#
-# send_packet
-#
-# Description:      This sends a packet from this host onto the link that is
-#                   attached to it.
-#
-# Arguments:        self (Host)
-#                   argument_list ([string, string]) - A list of arguments that
-#                       is unpacked by the function.  This is a list to
-#                       facilitate class definition.  The list should contain
-#                       the flow name and the packet name.
-#
-# Return Values:    None.
-#
-# Shared Variables: self.link (READ) - This function uses the link name to send
-#                       a packet to it.
-#
-# Global Variables: None.
-#
-# Limitations:      None.
-#
-# Known Bugs:       This is occasionally called with a packet that is not in
-#                       the dictionary.
-#
-# Revision History: 2015/10/22: Created function handle and docstring.
-#                   2015/10/29: Filled in.
-#                   2015/11/14: Now just puts packet on buffer.
-#
+    #
+    # send_packet
+    #
+    # Description:      This sends a packet from this host onto the link that is
+    #                   attached to it.
+    #
+    # Arguments:        self (Host)
+    #                   argument_list ([string, string]) - A list of arguments that
+    #                       is unpacked by the function.  This is a list to
+    #                       facilitate class definition.  The list should contain
+    #                       the flow name and the packet name.
+    #
+    # Return Values:    None.
+    #
+    # Shared Variables: self.link (READ) - This function uses the link name to send
+    #                       a packet to it.
+    #
+    # Global Variables: None.
+    #
+    # Limitations:      None.
+    #
+    # Known Bugs:       None.
+    #
+    # Revision History: 2015/10/22: Created function handle and docstring.
+    #                   2015/10/29: Filled in.
+    #                   2015/11/14: Now just puts packet on buffer.
+    #
 
     def send_packet(self, arg_list):
         '''
@@ -132,8 +134,9 @@ class Host:
         # The argument list is just the packet.
         [packet] = arg_list
         flow = sim.flows[packet.flow]
-        sim.log.write("[%.5f] %s: sent packet %d with data %d.\n" % 
-            (sim.network_now(), self.host_name, packet.ID, packet.data))
+        #print("[%.5f] %s: sent packet %d with data %d.\n" % 
+        #    (sim.network_now(), self.host_name, packet.ID, packet.data))
+        #print(flow.to_complete, flow.expecting)
         
         # First want to put the current time on the packet so we can calculate
         #   RTT later.
@@ -147,10 +150,12 @@ class Host:
         link.put_packet_on_buffer(self.host_name, packet)
         
         # Create an event that will search for acknowledgement after some amount
-        #   of time.  If ack was not received, it will resend the packets.
-        tmout_time = sim.network_now() + ct.ACK_TIMEOUT_FACTOR * flow.last_RTT
-        tmout_event = e.Event(self.host_name, 'check_ack_timeout', [packet])
-        sim.enqueue_event(tmout_time, tmout_event)
+        #   of time.  If ack was not received, it will resend the packets.  This
+        #   only applies to data packets.
+        if packet.type == ct.PACKET_DATA:
+            tmout_time = sim.network_now() + ct.ACK_TIMEOUT_FACTOR * flow.last_RTT
+            tmout_event = e.Event(self.host_name, 'check_ack_timeout', [packet])
+            sim.enqueue_event(tmout_time, tmout_event)
         
         
     #
@@ -194,47 +199,52 @@ class Host:
         if packet.data < flow.to_complete:
             return
         
-        # If not, we want to first resend all packets in flight.
-        flow.resend_inflight_packets()
+        # If not, we want to first resend all packets in flight,
+        #   but only do this if this is one of the packets in flight.
+        #   Otherwise, we will end up thinking we lost way more packets
+        #   than we actually did.
+        if len(flow.packets_in_flight) > 0 and \
+           packet.ID > (flow.packets_in_flight[0][1].ID):
+            flow.resend_inflight_packets()
         
         # Next, because we want to check if the time we waited for timeout is
         #   sufficient.  If we have not received any acknowledgements yet, it
         #   is possible that we simply aren't waiting long enough for ack.
         #   Therefore, if there have been no acks received at all, increase
         #   the waiting time.
-        if flow.to_complete == 0:
+        if flow.to_complete == 1:
             flow.last_RTT *= ct.ACK_TIMEOUT_FACTOR
  
         
-#
-# receive_packet
-#
-# Description:      Receives a packet from the link and responds accordingly by
-#                   enqueuing an event.  This event may be sending an ack packet
-#                   or otherwise.
-#
-# Arguments:        self (Host)
-#                   argument_list ([string, string]) - A list of arguments that
-#                       is unpacked by the function.  This implementation is to
-#                       facilitate the event class.  The list should contain
-#                       the flow name and the packet name.
-#
-# Return Values:    None.
-#
-# Shared Variables: None.
-#
-# Global Variables: sim.packets (READ) - This gets the packet instance from the
-#                       dictionary using the argued key.
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/10/22: Created function handle and docstring.
-#                   2015/10/29: Filled in function.
-#                   2015/11/13: Decremented Link 'num_on_link' attribute.
-#                   2015/11/14: Responds according to packet type and ID.
-#
+    #
+    # receive_packet
+    #
+    # Description:      Receives a packet from the link and responds accordingly by
+    #                   enqueuing an event.  This event may be sending an ack packet
+    #                   or otherwise.
+    #
+    # Arguments:        self (Host)
+    #                   argument_list ([string, string]) - A list of arguments that
+    #                       is unpacked by the function.  This implementation is to
+    #                       facilitate the event class.  The list should contain
+    #                       the flow name and the packet name.
+    #
+    # Return Values:    None.
+    #
+    # Shared Variables: None.
+    #
+    # Global Variables: sim.packets (READ) - This gets the packet instance from the
+    #                       dictionary using the argued key.
+    #
+    # Limitations:      None.
+    #
+    # Known Bugs:       None.
+    #
+    # Revision History: 2015/10/22: Created function handle and docstring.
+    #                   2015/10/29: Filled in function.
+    #                   2015/11/13: Decremented Link 'num_on_link' attribute.
+    #                   2015/11/14: Responds according to packet type and ID.
+    #
 
     def receive_packet(self, arg_list):
         '''
@@ -245,56 +255,63 @@ class Host:
         [flow_name, packet_ID] = arg_list
         packet = sim.packets[(flow_name, packet_ID)]
         flow = sim.flows[flow_name]
-        sim.log.write("[%.5f] %s: received packet %d with data %d.\n" % 
-            (sim.network_now(), self.host_name, packet.ID, packet.data))
+        if 0:#packet.type != ct.PACKET_ROUTING:
+            print("[%.5f] %s: received packet %d with data %d.\n" % 
+                (sim.network_now(), self.host_name, packet.ID, packet.data))
+            print(flow.to_complete, flow.expecting)
 
         # If this is a data packet, create an ack packet and send it back.
-        if packet.type == ct.PACKET_DATA:   
-
+        if packet.type == ct.PACKET_DATA:
+            # Check if it is the one that this dest is expecting.
+            if packet.data == flow.expecting:
+                # Increment what we are now expecting.
+                flow.expecting += 1
+                
             # This is what we want, create an ack packet and send it.
             ack_pkt = p.Packet(-1 * packet.ID, 
                                flow_name, self.host_name, packet.src, 
-                               ct.PACKET_ACK, ct.PACKET_ACK_SIZE)
+                               ct.PACKET_ACK)
                                
             # Set the data of the ack to be what we are expecting. The src will
             #   cross check this with what he sent and resend or not accordingly
-            ack_pkt.set_data(packet.data)
+            ack_pkt.set_data(flow.expecting)
             
             # Add the packet to our dictionary of packets.
             sim.packets[(flow_name, ack_pkt.ID)] = ack_pkt
             
             # Send the packet!
             self.send_packet([ack_pkt])
-            
-            # Check if it is the one that this dest is expecting.
-            if packet.data == flow.expecting:
-                # Increment what we are now expecting.
-                flow.expecting += 1
-            else:
-                # We need to define what happens here if we receive a data 
-                # packet out of order (where packet.data != flow.expecting)
-                pass
                 
         elif packet.type == ct.PACKET_ACK:
             # If this is acknowledgement, see if any packets were lost.
-            if packet.data == flow.to_complete:
-                # This is what we were waiting for.  We now have one more
-                #   complete
-                flow.to_complete += 1
-                heapq.heappop(flow.packets_in_flight)
+            if packet.data > flow.to_complete:
+                # The dest has received packets <to_complete> through
+                #   <packet.data> - 1, so we want to pop as many packets as
+                #   there is separation between these two parameters.
+                for i in range(packet.data - flow.to_complete):
+                    flow.to_complete += 1
+                    heapq.heappop(flow.packets_in_flight)
+                assert (packet.data == flow.to_complete)
                 
-                # Compute the most recent RTT
+                # Compute the most recent RTT, which can be used for congestion
+                #   control
                 flow.last_RTT = sim.network_now() - packet.time
                 
                 # See if the flow can be updated (i.e., more packets put in 
                 # flight)
                 flow.update_flow()
                 
-            elif packet.data > flow.to_complete:
-                # Packets were lost.  Resend any and all that were in flight.
-                flow.resend_inflight_packets()
+            else:#if packet.data > flow.to_complete:
+                # Packets were lost.  Resend any and all that were in flight,
+                #   but only do this if this is one of the packets in flight.
+                #   Otherwise, we will end up thinking we lost way more packets
+                #   than we actually did.
+                if len(flow.packets_in_flight) > 0 and \
+                   packet.ID > (flow.packets_in_flight[0][1].ID):
+                    flow.resend_inflight_packets()
             
             # else the packet has already been received
+        # else the packet is a routing packet and can be ignored.
         
         
         

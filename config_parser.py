@@ -38,7 +38,7 @@ import constants as ct
 import conversion as cv
 
 # Import the simulator so we have access to the global variables in it.
-import simulate as sim
+sim = sys.modules['__main__']
 
 import utility as u
 
@@ -163,20 +163,24 @@ def load_network_objects(network_file):
     
     # Iterate through flow specs, create Flows, and add them to the flows
     # dictionary.
-    while flow != '\n':
+    while flow != '\n' and flow != '':
         # Flow text encoding: (ID Src Dest Data Start_Time)
         # Get list storing: [ID, Src, Dest, Data]
         flow = flow.split()
-
+        
         # Create a flow and add it to the dictionary.
         sim.flows[flow[0]] = f.Flow(flow[0], flow[1], \
-                  flow[2], int(flow[3]), 1000 * round(float(flow[4]), 0))
+                  flow[2], int(flow[3]), 1000 * float(flow[4]))
         
         # Read the next line.
         flow = network.readline()
 
     # Close the file.
     network.close()
+    
+    # Add a flow specifically for the routing tables to communicate with each
+    #   other.
+    sim.flows[ct.ROUTING_FLOW] = f.Flow(ct.ROUTING_FLOW, None, None, None, 0.0)
     
     # Create a dictionary for the packets.  Will be empty at first, but let's 
     # do it here so all of the dictionaries are created at once/in one place.
