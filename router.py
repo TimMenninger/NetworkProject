@@ -1,4 +1,4 @@
-################################################################################
+############################################################################
 #
 # Ricky Galliani, Tim Menninger, Rush Joshi, Schaeffer Reed
 # Network Simulator Project
@@ -10,18 +10,14 @@
 # routers in the network.  It also contains methods which periodically run
 # a Bellman-Ford algorithm to build its own routing table.
 #
-################################################################################
+############################################################################
 
 
-
-
-
-
-################################################################################
-#                                                                              #
-#                               Imported Modules                               #
-#                                                                              #
-################################################################################
+############################################################################
+#                                                                          #
+#                               Imported Modules                           #
+#                                                                          #
+############################################################################
 
 # Import network objects
 import packet as p
@@ -43,23 +39,36 @@ sim = sys.modules['__main__']
 import copy
 
 
-################################################################################
-#                                                                              #
-#                                  Router Class                                #
-#                                                                              #
-################################################################################
+############################################################################
+#                                                                          #
+#                                  Router Class                            #
+#                                                                          #
+############################################################################
 
 class Router:
 
-    def __init__(self, the_router_name):
+    def __init__(self, in_router_name):
         '''
-        Initialize an instance of Router by intitializing its attributes.
+        Description:        Initialize an instance of Router by intitializing 
+                            its attributes.
+
+        Arguments:          in_router_name (string)
+
+        Shared Variables:   self.in_router_name (WRITE)
+
+        Global Variables:   None.
+ 
+        Limitations:        None.
+
+        Known Bugs:         None.
+
+        Revision History:   10/20/15: Created
         '''
         # Store the type so it can be easily identified as a router.
         self.type = ct.TYPE_ROUTER
 
         # Name of the Router, each name is a unique string (i.e., "R1")
-        self.router_name = the_router_name
+        self.router_name = in_router_name
 
         # Dictionary indexed by link names whose values are the identity of
         #   the endpoint on the other side.
@@ -71,15 +80,15 @@ class Router:
         self.updating_table = {}
         
         # Dictionary where keys are hosts and values are pairs of distance to
-        #   that host (in average time) and the link one should send a packet on
-        #   to send to that host with that time.  A distance of -1 implies that
-        #   it is unknown what the distance to that host is, but the existance
-        #   of the host is known.
+        #   that host (in average time) and the link one should send a packet 
+        #   on to send to that host with that time.  A distance of -1 implies 
+        #   that it is unknown what the distance to that host is, but the 
+        #   existance of the host is known.
         self.distances = {}
         
         # Dictionary where keys are link names and values are the number of
-        #   consecutive routing packets from that link where no new information
-        #   was learned.
+        #   consecutive routing packets from that link where no new 
+        #   information was learned.
         self.no_improves = {}
         
         # This is true if the table is currently configuring/waiting for
@@ -87,45 +96,49 @@ class Router:
         self.configuring = False
         
         
-    #
-    # get_host_distances
-    #
-    # Description:      This populates the updating routing table with distances
-    #                   (in time) to each host connected directly to this
-    #                   router.
-    #
-    # Arguments:        self (Router)
-    #
-    # Return Values:    None.
-    #
-    # Shared Variables: self.links (READ) - Iterated over to find connected
-    #                       hosts.
-    #                   self.router_name (READ) - Used to get information
-    #                       that the link "knows" about this router
-    #                   self.distances (WRITE) - The distance to each connected
-    #                       host is written in this dictionary.
-    #                   self.no_improves (WRITE) - This is set to the maximum
-    #                       for links connecting hosts to this router because
-    #                       hosts will never send a routing packet.
-    #                   self.updating_table (WRITE) - The link used to get to
-    #                       each host is added to this table.
-    #
-    # Global Variables: sim.endpoints (READ) - Used to get the endpoint at the
-    #                       other end of a link.
-    #                   sim.links (READ) - Used to get the link object from its
-    #                       name.
-    #
-    # Limitations:      None.
-    #
-    # Known Bugs:       None.
-    #
-    # Revision History: 11/26/15: Created
-    #
-        
     def get_host_distances(self):
         '''
-        Populates the update routing table with distances (in calculated time)
-        to each host connected directly to this router.
+        Description:        This populates the updating routing table with 
+                            distances (in time) to each host connected directly 
+                            to this Router.
+        
+        Arguments:          self (Router)
+        
+        Return Values:      None.
+        
+        Shared Variables:   self.links (READ) 
+                                - Iterated over to find connected Host objects.
+                          
+                            self.router_name (READ) 
+                                - Used to get information that the Link "knows" 
+                                about this Router
+                            
+                            self.distances (WRITE) 
+                                - The distance to each connected Host is 
+                                written in this dictionary.
+                          
+                            self.no_improves (WRITE) 
+                                - This is set to the maximum for Link objects
+                                connecting Host objects to this Router because
+                                Host will never send a routing packet.
+                          
+                            self.updating_table (WRITE) 
+                                - The link used to get to each host is added 
+                                to this table.
+        
+        Global Variables: 
+                            sim.endpoints (READ) 
+                                - Used to get the endpoint at the other end of 
+                                a Link.
+                          
+                            sim.links (READ) 
+                                - Used to get the Link object from its name.
+        
+        Limitations:      None.
+        
+        Known Bugs:       None.
+        
+        Revision History: 11/26/15: Created
         '''
         # Iterate over all of the links' other endpoints to get distances.
         for link_name in self.links:
@@ -159,70 +172,66 @@ class Router:
             self.no_improves[link_name] = ct.MAX_NO_IMPROVES
 
 
-    #
-    # add_link
-    #
-    # Description:      This sets the link the router is connected to.
-    #
-    # Arguments:        self (Host)
-    #                   link_name (string) - The name of the link that is associated
-    #                       with this router.
-    #
-    # Return Values:    None.
-    #
-    # Shared Variables: self.link (WRITE) - This sets the link attribute.
-    #
-    # Global Variables: sim.links (READ) - Used to get the name of what is connected
-    #                       to this router by this link.
-    #
-    # Limitations:      None.
-    #
-    # Known Bugs:       None.
-    #
-    # Revision History: 2015/10/29: Created
-    #
-
     def add_link(self, link_name):
         '''
-        Adds a link to the router.
+        Description:        This sets the Link the Router is connected to.
+        
+        Arguments:          link_name (string) 
+                                - The name of the Link that is associated
+                                with this Router.
+        
+        Return Values:      None.
+        
+        Shared Variables:   self.link (WRITE) 
+                                - This sets the link attribute.
+        
+        Global Variables:   sim.links (READ) 
+                                - Used to get the name of what is connected to 
+                                this Router by this Link.
+        
+        Limitations:        None.
+        
+        Known Bugs:         None.
+        
+        Revision History:   2015/10/29: Created
         '''
         # Add the link and other endpoint to the dictionary of links
-        self.links[link_name] = sim.links[link_name].get_other_ep(self.router_name)
+        self.links[link_name] = sim.links[link_name].get_other_ep(
+                                                            self.router_name)
         
         # There have obviously been no consecutive routing packets on this link
         #   yet.
         self.no_improves[link_name] = 0
         
-    #
-    # transmit_config_packet
-    #
-    # Description:      This creates a configuration packet and broadcasts it
-    #                   to the network.  These configuration packets are to be
-    #                   used by routers to populate their routing tables.
-    #
-    # Arguments:        self (Router)
-    #                   empty_list ([]) - Unused.
-    #
-    # Return Values:    None.
-    #
-    # Shared Variables: self.router_name (READ) - Used for identification.
-    #                   self.updating_table (READ) - If empty, process is
-    #                       suspended.  If not, table is sent as data.
-    #
-    # Global Variables: sim.flows (READ) - Used to get the link we are putting
-    #                       packets on.
-    #
-    # Limitations:      None.
-    #
-    # Known Bugs:       None.
-    #
-    # Revision History: 11/23/15: Created
-    #
 
     def transmit_config_packet(self, empty_list):
         '''
-        Creates and sends a special configuration packet that, when received by
-        other routers, is understood as a configuration packet.
+        Description:        This creates a configuration packet and broadcasts 
+                            it to the network.  These configuration packets 
+                            are to be used by routers to populate their 
+                            routing tables.
+        
+        Arguments:          empty_list ([]) 
+                                - Unused.
+        
+        Return Values:      None.
+        
+        Shared Variables:   self.router_name (READ) 
+                                - Used for identification.
+
+                            self.updating_table (READ) 
+                                - If empty, process is suspended.  If not, 
+                                table is sent as data.
+        
+        Global Variables:   sim.flows (READ) 
+                                - Used to get the link we are putting Packet 
+                                on.
+        
+        Limitations:        None.
+        
+        Known Bugs:         None.
+        
+        Revision History:   11/23/15: Created
         '''
         # This marks the start of configuration.
         self.configuring = True
@@ -232,11 +241,12 @@ class Router:
         #   count here (why we use > 1) is the routing flow.
         if len(sim.running_flows) > 1:
             routing_time = sim.network_now() + ct.CONFIG_PKT_TIME
-            routing_event = e.Event(self.router_name, 'transmit_config_packet', [])
+            routing_event = e.Event(self.router_name, 
+                                    'transmit_config_packet', [])
             sim.enqueue_event(routing_time, routing_event)
             
-        # Calculate the time distances to each host connected to this router so
-        #   we can broadcast the information
+        # Calculate the time distances to each host connected to this router 
+        #   so we can broadcast the information
         self.get_host_distances()
             
         # If there are no hosts, don't waste anybody's time by sending routing
@@ -250,9 +260,9 @@ class Router:
             # Get a unique packet ID for the routing flow.
             pkt_ID = sim.flows[ct.ROUTING_FLOW].create_packet_ID()
 
-            # Create the packet that we are going to send.  It doesn't need to have
-            #   a destination because its destination is everywhere.  The source
-            #   is the link name for ease when parsing it.
+            # Create the packet that we are going to send.  It doesn't need to 
+            #   have a destination because its destination is everywhere.  
+            #   The source is the link name for ease when parsing it.
             routing_pkt = p.Packet(pkt_ID, ct.ROUTING_FLOW, link_name,
                                     None, ct.PACKET_ROUTING)
 
@@ -260,8 +270,8 @@ class Router:
             #   time-distances to each host
             routing_pkt.data = copy.deepcopy(self.distances)
 
-            # Record the time of transmission for this packet so others can update
-            #   their routing table effectively.
+            # Record the time of transmission for this packet so others can 
+            #   update their routing table effectively.
             routing_pkt.time = sim.network_now()
 
             # Put the packet in the global dictionary of packets.
@@ -270,52 +280,50 @@ class Router:
             # Send this packet on the link.
             self.send_packet([routing_pkt, link_name])
             
-        # After a certain amount of time, we will assume all routing packets not
-        #   received have been lost, and we should just switch routing tables
-        #   as is.
+        # After a certain amount of time, we will assume all routing packets 
+        #   not received have been lost, and we should just switch routing 
+        #   tables as is.
         timeout_time = sim.network_now() + ct.ROUTING_TIMEOUT
         timeout_ev = e.Event(self.router_name, 'switch_routing_tables', [])
         sim.enqueue_event(timeout_time, timeout_ev)
         
-    
-    #
-    # parse_config_packet
-    #
-    # Description:      Upon reception of a configuration packet, this is
-    #                   called to parse it and update the routing table if
-    #                   necessary.
-    #
-    # Arguments:        self (Router)
-    #                   packet (Packet) - The packet that is to be parsed
-    #                       to update the routing table.
-    #
-    # Return Values:    None.
-    #
-    # Shared Variables: self.routing_tables (WRITE) - Updates the routing table
-    #                       not in use to reflect new information.
-    #                   self.no_improves (WRITE) - If nothing in the routing
-    #                       table is improved for a particular host, the entry
-    #                       for that host is incremented.
-    #                   self.distances (WRITE) - Updated to keep track of the
-    #                       closest distance to a particular host.
-    #
-    # Global Variables: None.
-    #
-    # Limitations:      None.
-    #
-    # Known Bugs:       None.
-    #
-    # Revision History: 11/24/15: Created
-    #
 
     def parse_config_packet(self, packet):
         '''
-        Receives a configuration packet and updates the routing table if any new,
-        useful information is learned from it.
+        Description:        Upon reception of a configuration packet, this is
+                            called to parse it and update the routing table if
+                            necessary.
+        
+        Arguments:          packet (Packet) 
+                                - The packet that is to be parsed to update 
+                                the routing table.
+        
+        Return Values:      None.
+        
+        Shared Variables:   self.routing_tables (WRITE) 
+                                - Updates the routing table not in use to 
+                                reflect new information.
+
+                            self.no_improves (WRITE) 
+                                - If nothing in the routing table is improved 
+                                for a particular Host, the entry for that host 
+                                is incremented.
+
+                            self.distances (WRITE) 
+                                - Updated to keep track of the closest distance 
+                                to a particular host.
+        
+        Global Variables:   None.
+        
+        Limitations:        None.
+        
+        Known Bugs:         None.
+        
+        Revision History:   11/24/15: Created
         '''
         # Before doing anything else, if this contains information about a host
         #   that is not in the routing table, put it in right away.  We don't
-        #   want to lose more packets to that host than we already have...
+        #   want to lose more packets to that host than we already have.
         for host_name in packet.data:
             if host_name not in self.routing_table:
                 self.routing_table[host_name] = copy.deepcopy(packet.src)
@@ -343,7 +351,8 @@ class Router:
                 self.updating_table[host_name] = copy.deepcopy(packet.src)
                 
                 # Update the distance known to that host.
-                self.distances[host_name] = copy.deepcopy(packet.data[host_name])
+                self.distances[host_name] = copy.deepcopy(
+                                                    packet.data[host_name])
                 
                 # There have now been zero consecutive non-improvements on
                 #   this link.
@@ -357,8 +366,8 @@ class Router:
                 self.no_improves[packet.src] += 1
                 
         # If we received this without improvement, only send it if the num
-        #   improves is less than the max.  Otherwise, we can assume the system
-        #   is in equilibrium
+        #   improves is less than the max.  Otherwise, we can assume the 
+        #   system is in equilibrium
         if self.no_improves[packet.src] < ct.MAX_NO_IMPROVES:
             for link_name in self.links:
                 # Copy the packet
@@ -386,39 +395,35 @@ class Router:
             self.switch_routing_tables([])
         
         
-    #
-    # get_distance
-    #
-    # Description:      This takes the argued link and estimates the time it
-    #                   would take to send a packet down this link using the
-    #                   queue on this side of the link, the link capacity and
-    #                   the link propagation delay.
-    #
-    # Arguments:        self (Router)
-    #                   link_name (string) - A string representing the name of
-    #                       the link we are interested in.  This is used to
-    #                       index the global dictionary of links.
-    #
-    # Return Values:    (int) - The time it would take to send a packet along
-    #                       the argued link.
-    #
-    # Shared Variables: None.
-    #
-    # Global Variables: sim.links (READ) - The argued link name is used to get
-    #                       a link object from this dictionary.
-    #
-    # Limitations:      This uses the link buffer on this side of the link to
-    #                   estimate the link buffer on the other side of the link.
-    #
-    # Known Bugs:       None.
-    #
-    # Revision History: 11/27/15: Created
-    #
-        
     def get_distance(self, link_name):
         '''
-        Gets the "distance" (time) to send a packet from this router to
-        the other end of the argued link.
+        Description:        This takes the argued Link and estimates the time 
+                            it would take to send a Packet down this Link using 
+                            the queue on this side of the Link, the Link 
+                            capacity and the Link propagation delay.
+        
+        Arguments:          link_name (string) 
+                                - A string representing the name of the Link 
+                                we are interested in.  This is used to index 
+                                the global dictionary of Link.
+        
+        Return Values:      (int) 
+                                - The time it would take to send a packet along
+                                the argued Link.
+        
+        Shared Variables:   None.
+        
+        Global Variables:   sim.links (READ) 
+                                - The argued Link name is used to get a Link 
+                                object from this dictionary.
+        
+        Limitations:        This uses the link buffer on this side of the 
+                            Link to estimate the link buffer on the other side 
+                            of the Link.
+        
+        Known Bugs:         None.
+        
+        Revision History:   11/27/15: Created
         '''
         # Get the link so we can retrieve information from it.
         link = sim.links[link_name]
@@ -430,61 +435,60 @@ class Router:
         # We will now guess the "distance" to this router in units of time.
         #   This time is the propagation delay plus the queuing delay.  The
         #   prop delay is known but the queuing delay is calculated as such:
-        #       - Take the amount of data and number of packets in this
+        #       - Take the amount of data and number of Packet objects in this
         #           buffer
         #       - Assume the buffer on the other end is identical to this
         #           one.  This many packets must be sent before the next
-        #           packet.
-        #       - Packets are loaded onto the link in FIFO order, so assume
-        #           that cv.CONSEC_PKTS are sent on one link before the next
-        #           chronological packet is on the other buffer.  In this
+        #           Packet.
+        #       - Packet are loaded onto the link in FIFO order, so assume
+        #           that ct.CONSEC_PKTS are sent on one Link before the next
+        #           chronological Packet is on the other buffer.  In this
         #           scenario, propagation delay must be waited.
         #       - We now have 2d data to be transmitted, which takes
-        #           2d / rate time.  We also have 2n packets to be sent,
+        #           2d / rate milliseconds.  We also have 2n Packet to be sent,
         #           with a "switch" in direction every cv.CONSEC_PKTS
-        #           packets, for a total of (2n / ct.CONSEC_PKTS) * delay
-        #           time.  Then, the next packet can be sent (this time is
+        #           Packet, for a total of (2n / ct.CONSEC_PKTS) * delay
+        #           time.  Then, the next Packet can be sent (this time is
         #           not taken into account because it would be the same next
-        #           packet for every host).
+        #           Packet for every host).
         data *= 2
         num_pkts *= 2
         queuing_delay = data / link.rate
         prop_delay = (num_pkts / ct.CONSEC_PKTS) * link.delay
-        total_delay = queuing_delay + prop_delay + link.delay
+        return queuing_delay + prop_delay
+
+        # total_delay = queuing_delay + prop_delay + link.delay
+        #return total_delay
         
-        return total_delay
-        
-        
-    #
-    # switch_routing_tables
-    #
-    # Description:      This updates the routing table so that the one that has
-    #                   been configuring becomes the one in use.
-    #
-    # Arguments:        self (Router)
-    #                   empty_list ([]) - Unused
-    #
-    # Return Values:    None.
-    #
-    # Shared Variables: self.configuring (READ) - If this is called but the
-    #                       router is not in configuration, then nothing
-    #                       happens.
-    #                   self.updating_table (WRITE) - Reset to empty.
-    #                   self.routing_table (WRITE) - Set to match the new
-    #                       updated routing table (before it is cleared)
-    #
-    # Global Variables: None.
-    #
-    # Limitations:      None.
-    #
-    # Known Bugs:       None.
-    #
-    # Revision History: 11/26/15: Created
-    #
         
     def switch_routing_tables(self, empty_list):
         '''
-        Switches routing tables to the one that has been updating.
+        Description:        This updates the routing table so that the one that 
+                            has been configuring becomes the one in use.
+        
+        Arguments:          empty_list ([]) 
+                                - Unused
+        
+        Return Values:      None.
+        
+        Shared Variables:   self.configuring (READ) 
+                                - If this is called but the Router is not in 
+                                configuration, then nothing happens.
+                          
+                            self.updating_table (WRITE) 
+                                - Reset to empty.
+                          
+                            self.routing_table (WRITE) 
+                                - Set to match the new updated routing table 
+                                (before it is cleared).
+        
+        Global Variables:   None.
+        
+        Limitations:        None.
+        
+        Known Bugs:         None.
+        
+        Revision History:   11/26/15: Created
         '''
         # If the new routing table is empty, do nothing.
         if not self.configuring:
@@ -503,41 +507,37 @@ class Router:
         self.configuring = False
 
 
-    #
-    # send_packet
-    #
-    # Description:      This sends a packet from this router onto the argued link that is
-    #                   attached to it.
-    #
-    # Arguments:        self (Host)
-    #                   argument_list ([Packet, string]) - A list of arguments that
-    #                       is unpacked by the function.  This is a list to
-    #                       facilitate class definition.  The list should contain
-    #                       the Packet being sent and the name of the link it will be
-    #                       sent on.
-    #
-    # Return Values:    None.
-    #
-    # Shared Variables: self.router_name (READ) - This function uses the router name
-    #                       so the link knows where the Packet came from.
-    #
-    # Global Variables: sim.links (READ) - The link name is used to index this and get
-    #                       the Link.
-    #
-    # Limitations:      None.
-    #
-    # Known Bugs:       None.
-    #
-    # Revision History: 2015/10/22: Created function handle and docstring.
-    #                   2015/10/29: Filled in.
-    #                   2015/11/14: Now just puts packet on buffer.
-    #                   2015/11/22: Copied from host and adapted for router.
-    #
-
     def send_packet(self, arg_list):
         '''
-        Sends a packet from this Router to a particular destination using a
-        specific link connected to this Router.
+        Description:        This sends a Packet from this Router onto the 
+                            argued Link that is attached to it.
+        
+        Arguments:          argument_list ([Packet, string]) 
+                                - A list of arguments that is unpacked by the 
+                                function.  This is a list to facilitate class 
+                                definition.  The list should contain the 
+                                Packet being sent and the name of the Link it 
+                                will be sent on.
+        
+        Return Values:      None.
+        
+        Shared Variables:   self.router_name (READ) 
+                                - This function uses the Router name so the 
+                                Link knows where the Packet came from.
+        
+        Global Variables:   sim.links (READ) 
+                                - The link name is used to index this and get
+                                the Link.
+        
+        Limitations:        None.
+        
+        Known Bugs:         None.
+        
+        Revision History:   2015/10/22: Created function handle and docstring.
+                            2015/10/29: Filled in.
+                            2015/11/14: Now just puts Packet on buffer.
+                            2015/11/22: Copied from Host and adapted for 
+                            Router.
         '''
         # The argument list is just the packet.
         [packet, link_name] = arg_list
@@ -549,44 +549,43 @@ class Router:
         
         if packet.type != ct.PACKET_ROUTING:
             print("[%.5f] %s: sent packet %d with data %d to %s.\n" % 
-                (sim.network_now(), self.router_name, packet.ID, packet.data, packet.dest))
+                (sim.network_now(), self.router_name, packet.ID, packet.data, 
+                 packet.dest))
             print(self.routing_table)
 
 
-    #
-    # receive_packet
-    #
-    # Description:      Receives a packet from the link and responds accordingly by
-    #                   checking the destination and putting the packet on the link
-    #                   that leads to that destination.
-    #
-    # Arguments:        self (Host)
-    #                   arg_list ([string, int]) - A list of arguments that
-    #                       is unpacked by the function.  This implementation is to
-    #                       facilitate the event class.  The list should contain
-    #                       the flow name and the packet ID.
-    #
-    # Return Values:    None.
-    #
-    # Shared Variables: None.
-    #
-    # Global Variables: sim.packets (READ) - This gets the packet instance from the
-    #                       dictionary using the argued key.
-    #
-    # Limitations:      None.
-    #
-    # Known Bugs:       None.
-    #
-    # Revision History: 2015/10/22: Created function handle and docstring.
-    #                   2015/10/29: Filled in function.
-    #                   2015/11/13: Decremented Link 'num_on_link' attribute.
-    #                   2015/11/14: Responds according to packet type and ID.
-    #                   2015/11/22: Copied from host and adapted to router.
-    #
-
     def receive_packet(self, arg_list):
         '''
-        Receives a packet from a link and parses it.
+        Description:        Receives a Packet from the Link and responds 
+                            accordingly by checking the destination and 
+                            putting the Packet on the Link that leads to that 
+                            destination.
+        
+        Arguments:          arg_list ([string, int]) 
+                                - A list of arguments that is unpacked by the 
+                                function.  This implementation is to 
+                                facilitate the event class.  The list should 
+                                contain the flow name and the packet ID.
+        
+        Return Values:      None.
+        
+        Shared Variables:   None.
+        
+        Global Variables:   sim.packets (READ) 
+                                - This gets the packet instance from the 
+                                dictionary using the argued key.
+        
+        Limitations:        None.
+        
+        Known Bugs:         None.
+        
+        Revision History:   2015/10/22: Created function handle and docstring.
+                            2015/10/29: Filled in function.
+                            2015/11/13: Decremented Link 'num_on_link' 
+                                        attribute.
+                            2015/11/14: Responds according to packet type and 
+                                        ID.
+                            2015/11/22: Copied from Host and adapted to Router.
         '''
         # Unpack the argument list.
         [flow_name, packet_ID] = arg_list
@@ -607,8 +606,10 @@ class Router:
                                 [packet, self.routing_table[packet.dest]])
             sim.enqueue_event(send_time, send_ev)
             
-            print("[%.5f] %s: received packet %d containing %d going to %s.  Sending on link %s\n" % 
-                (sim.network_now(), self.router_name, packet.ID, packet.data, packet.dest, self.routing_table[packet.dest]))
+            print("[%.5f] %s: received packet %d containing %d going to %s" + \
+                  ".  Sending on link %s\n" % 
+                (sim.network_now(), self.router_name, packet.ID, packet.data, 
+                    packet.dest, self.routing_table[packet.dest]))
             print(self.routing_table)
 
 

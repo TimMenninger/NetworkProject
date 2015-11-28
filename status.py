@@ -1,4 +1,4 @@
-################################################################################
+############################################################################
 #
 # Ricky Galliani, Tim Menninger, Rush Joshi, Schaeffer Reed
 # Network Simulator Project
@@ -12,14 +12,14 @@
 # collected from the network to a set of output files from which plots 
 # that report network metrics can be generated.
 #
-################################################################################
+############################################################################
 
 
-################################################################################
-#                                                                              #
-#                               Imported Modules                               #
-#                                                                              #
-################################################################################
+############################################################################
+#                                                                          #
+#                               Imported Modules                           #
+#                                                                          #
+############################################################################
 
 # So we can use command line arguments.
 import sys
@@ -64,41 +64,44 @@ packet_delay_readings = { } # Indexed by flow name, stores packet delays (RTT)
 window_size_readings  = { } # Indexed by flow name, stores window sizes
 
 
-#
-# open_data_files
-#
-# Description:      This file opens file instances for each of the six metrics
-#                   that must be plotted (as per the project specifications).  
-#                   Thus, it enables us to write data collected from the 
-#                   network to output files (one file for each metric).        
-#
-# Arguments:        None
-#
-# Return Values:    None.
-#
-# Global Variables:  All the file instances (global to the status module)
-#                    - times
-#                    - link_rates
-#                    - buffer_occs
-#                    - packet_loss
-#                    - flow_rates
-#                    - window_sizes
-#                    - packet_delays
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/11/19: Created and filled in.
-#
+############################################################################
+#                                                                          #
+#                             Status Functions                             #
+#                                                                          #
+############################################################################
+
 
 def open_data_files():
     '''
-    Opens all of the data files that are written to throughout the network
-    simulation for data collection.  Additionally, this function writes the 
-    'header' line on the first line of each file essentially assigning the 
-    attributes for each of the tables.  After the simulation, the data within 
-    these files is loaded into pandas DataFrames for easy aggregating/plotting.
+    Description:        This function opens file instances for each of the six 
+                        metrics that must be plotted (as per the project 
+                        specifications). Thus, it enables us to write data 
+                        collected from the network to output files (one file 
+                        for each metric).        
+
+    Arguments:          None
+
+    Return Values:      None.
+
+    Global Variables:   ct.TIMES_OUT (WRITE)
+
+                        ct.LINK_RATE_OUT (WRITE)
+
+                        ct.BUFFER_OCC_OUT (WRITE)
+
+                        ct.PACKET_LOSS_OUT (WRITE)
+
+                        ct.FLOW_RATE_OUT (WRITE)
+
+                        ct.WINDOW_SIZE_OUT (WRITE)
+
+                        ct.PACKET_DELAY_OUT (WRITE)
+
+    Limitations:        None.
+
+    Known Bugs:         None.
+
+    Revision History:   2015/11/19: Created and filled in.
     '''
     t = open(ct.TIMES_OUT, 'w')                 # times recordings 
     t.write("time\n")
@@ -123,6 +126,7 @@ def open_data_files():
 
     return (t, lr, bo, pl, fr, ws, p)
 
+
 # Open the 7 different data files 
 (times, 
  link_rates, 
@@ -133,39 +137,39 @@ def open_data_files():
  packet_delays) = open_data_files()
 
 
-#
-# close_data_files
-#
-# Description:      This function closes all of the data files that were 
-#                   written to throughout the network simulation. It is 
-#                   essential that the files are 'closed' in order for pandas
-#                   to be able to easily load the data into DataFrames.      
-#
-# Arguments:        None
-#
-# Return Values:    None.
-#
-# Global Variables:  All the file instances (global to the status module)
-#                    - times
-#                    - link_rates
-#                    - buffer_occs
-#                    - packet_loss
-#                    - flow_rates
-#                    - window_sizes
-#                    - packet_delays
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/11/19: Created and filled in.
-#
-
 def close_data_files():
     '''
-    Closes all of the data files that are written to throughout the network
-    simulation.  This function exists because if the files are not closed 
-    then pandas cannot load the data within them into pandas DataFrames.
+    Description:        This function closes all of the data files that were 
+                        written to throughout the network simulation. It is 
+                        essential that the files are 'closed' in order for 
+                        pandas to be able to easily load the data into 
+                        DataFrames.      
+
+    Arguments:          None
+
+    Return Values:      None.
+
+    Shared Variables:   times (WRITE)
+
+                        link_rates (WRITE)
+
+                        buffer_occs (WRITE) 
+
+                        packet_loss (WRITE)
+
+                        flow_rates (WRITE)
+
+                        window_sizes (WRITE)
+
+                        packet_delays (WRITE)
+
+    Global Variables:   All the file instances (global to the status module)
+                    
+    Limitations:        None.
+
+    Known Bugs:         None.
+
+    Revision History:   2015/11/19: Created and filled in.
     '''
     # Officially stop writing to all the files
     times.close()
@@ -176,35 +180,35 @@ def close_data_files():
     window_sizes.close()
     packet_delays.close()
 
-#
-# plot_per_link_metrics
-#
-# Description:      Uses the matplotlib module to build the three per-link
-#                   plots; it is called from construct_plots() where the plots  
-#                   are rendered for the user.  The three plots produced are:  
-#                       - link rate vs. time           
-#                       - buffer occupancy vs. time        
-#                       - packet loss vs. time       
-#
-# Arguments:        None
-#
-# Return Values:    None.
-#
-# Global Variables: None
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/11/19: Created and filled in.
-#
 
 def plot_per_link_metrics(tms, time_max):
     '''
-    Builds the three per-link plots: 
-        1. link rate vs. time
-        2. buffer occupancy vs. time
-        3. packet loss vs. time
+    Description:        Uses the matplotlib module to build the three per-link
+                        plots; it is called from construct_plots() where the 
+                        plots are rendered for the user.  The three plots 
+                        produced are:  
+                          - link rate vs. time           
+                          - buffer occupancy vs. time        
+                          - packet loss vs. time       
+
+    Arguments:          time_max (integer)
+                            - Used as the maximum x-coordinate on the plots.
+
+    Return Values:      None.
+
+    Global Variables:   sim.links (READ)
+
+                        ct.LINK_RATE_OUT (READ)
+
+                        ct.BUFFER_OCC_OUT (READ)
+
+                        ct.PACKET_LOSS_OUT (READ)
+
+    Limitations:        None.
+
+    Known Bugs:         None.
+
+    Revision History:   2015/11/19: Created and filled in.
     '''
     # Create a matplotlib figure to display all of the per-link metrics
     fig_link, ax_link = plt.subplots(3, 1, figsize=(12, 7))
@@ -259,35 +263,35 @@ def plot_per_link_metrics(tms, time_max):
         ax_link[2].set_ylabel('Packet Loss (pkts)') 
         ax_link[2].legend()
 
-#
-# plot_per_flow_metrics
-#
-# Description:      Uses the matplotlib module to build the three per-flow
-#                   plots; it is called from construct_plots() where the plots 
-#                   are rendered for the user.  The three plots produced are 
-#                       - flow rate vs. time           
-#                       - packet delay vs. time        
-#                       - window size vs. time       
-#
-# Arguments:        None
-#
-# Return Values:    None.
-#
-# Global Variables: None
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/11/19: Created and filled in.
-#
 
 def plot_per_flow_metrics(tms, time_max):
     '''
-    Builds the three per-flow plots: 
-        1. flow rate vs. time
-        2. packet delay vs. time
-        3. window size vs. time
+    Description:        Uses the matplotlib module to build the three per-flow
+                        plots; it is called from construct_plots() where the 
+                        plots are rendered for the user.  The three plots 
+                        produced are: 
+                            - flow rate vs. time           
+                            - packet delay vs. time        
+                            - window size vs. time       
+
+    Arguments:          time_max (integer)
+                            - Used as the maximum x-coordinate on the plots.
+
+    Return Values:      None.
+
+    Global Variables:   sim.flows (READ)
+
+                        ct.FLOW_RATE_OUT (READ)
+
+                        ct.WINDOW_SIZE_OUT (READ)
+
+                        ct.PACKET_DELAY_OUT (READ)
+
+    Limitations:        None.
+
+    Known Bugs:         None.
+
+    Revision History:   2015/11/19: Created and filled in.
     ''' 
     # Create a matplotlib figure to display all of the per-flow metrics
     fig_flow, ax_flow = plt.subplots(3, 1, figsize=(12, 7))
@@ -340,36 +344,32 @@ def plot_per_flow_metrics(tms, time_max):
         ax_flow[2].set_ylabel('Packet Delay (ms)')  
         ax_flow[2].legend()
 
-#
-# construct_plots
-#
-# Description:      Constructs the six required plots to satisfy the project
-#                   specfications.  This includes a plot for the 3 per-link
-#                   metrics and a plot for the 3 per-flow metrics. 
-#
-# Arguments:        None
-#
-# Return Values:    None.
-#
-# Global Variables: None
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/11/19: Created and filled in.
-#
 
 def construct_plots():
     '''
-    Constructs (via plot_per_link_metrics() and plot_per_flow_metrics())
-    and displays the six required plots:
-    1. link rate vs. time            (per link) 
-    2. buffer occupancy vs. time     (per link, per buffer) 
-    3. packet loss vs. time          (per link)
-    4. flow rate vs. time            (per flow) 
-    5. packet delay vs. time         (per flow)) 
-    6. window size vs. time          (per flow)
+    Description:        Constructs the six required plots to satisfy the 
+                        project specfications.  This includes a plot for the 
+                        3 per-link metrics and a plot for the 3 per-flow 
+                        metrics. 
+
+                        1. link rate vs. time            (per link) 
+                        2. buffer occupancy vs. time     (per link, per buffer) 
+                        3. packet loss vs. time          (per link)
+                        4. flow rate vs. time            (per flow) 
+                        5. packet delay vs. time         (per flow)) 
+                        6. window size vs. time          (per flow)
+
+    Arguments:          None
+
+    Return Values:      None.
+
+    Global Variables:   None
+
+    Limitations:        None.
+
+    Known Bugs:         None.
+
+    Revision History:   2015/11/19: Created and filled in.
     '''
     # Stop writing to all of the output files so that we can pull data from
     # them and load them into pandas DataFrames.
@@ -388,149 +388,167 @@ def construct_plots():
 
     # Render the plots.
     plt.show()
-
-
-#
-# update_and_write_link_data
-#
-# Description:      This function updates the link data structures given the new 
-#                   data that has been collected within the network.  
-#                   Additionally, it writes the data to the three link output
-#                   files.  
-#
-# Arguments:        link (Link) 
-#
-# Return Values:    None.
-#
-# Global Variables: 
-#                    - link_rate_readings (WRITE)
-#                    - buffer_occ_readings (WRITE)
-#                    - packet_loss_readings (WRITE)
-#                    - link_rates (WRITE)
-#                    - buffer_occs (WRITE)
-#                    - packet_loss (WRITE)
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/11/19: Created and filled in.
-#    
+ 
 
 def update_and_write_link_data(link):
     '''
-    Given a link, this function updates the global data structures that track
-    the status of the link's various attributes and writes output data to the
-    output files. 
+    Description:        This function updates the link data structures given 
+                        the new  data that has been collected within the 
+                        network. Additionally, it writes the data to the 
+                        three link output files.  
+
+    Arguments:          link (Link) 
+
+    Return Values:      None.
+
+    Global Variables:   link_rate_readings (WRITE)
+                       
+                        buffer_occ_readings (WRITE)
+                       
+                        packet_loss_readings (WRITE)
+                       
+                        link_rates (WRITE)
+                       
+                        buffer_occs (WRITE)
+                       
+                        packet_loss (WRITE)
+
+    Limitations:        None.
+
+    Known Bugs:         None.
+
+    Revision History:   2015/11/19: Created and filled in.
     '''
     link_name = link.link_name
     # --- UPDATE STATUS DATA STRUCTURES --- 
+    
     # Link rate readings
     link_rate_readings[link_name].append(link.data_on_link)
+    
     # Buffer occupancy recordings (two buffers for each link)
     buffer_occ_1 = link.buffer_load[0] / link.buffer_size
     buffer_occ_2 = link.buffer_load[1] / link.buffer_size
     buffer_oc_readings[link.link_name].append((buffer_occ_1, buffer_occ_2))
+    
     # Packet loss readings
     packet_loss_readings[link_name].append(link.num_packets_lost)
     
     # --- WRITE TO DATA FILES ---
+    
     # Link rate readings
+    
     link_rates.write(str(link_name) + "," + str(link.data_on_link) + "\n")
+    
     # Buffer occupancy readings (two buffers for each link)
-    buf_row = str(link_name) + "," + str(buffer_occ_1) + "," + str(buffer_occ_2)
+    buf_row = str(link_name) + "," + str(buffer_occ_1) + "," + \
+              str(buffer_occ_2)
     buffer_occs.write(buf_row + "\n")
+    
     # Packet loss readings
-    packet_loss.write(str(link_name) + ',' + str(link.num_packets_lost) + "\n")
+    pack_row = str(link_name) + ',' + str(link.num_packets_lost) + "\n"
+    packet_loss.write(pack_row)
 
-
-#
-# update_and_write_flow_data
-#
-# Description:      This function updates the link data structures given the new 
-#                   data that has been collected within the network.  
-#                   Additionally, it writes the data to the three flow output
-#                   files.  
-#
-# Arguments:        flow (Flow) 
-#
-# Return Values:    None.
-#
-# Global Variables: 
-#                    - flow_rate_readings (WRITE)
-#                    - packet_delay_readings (WRITE)
-#                    - window_size_readings (WRITE)
-#                    - flow_rates (WRITE)
-#                    - packet_delays (WRITE)
-#                    - window_sizes (WRITE)
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/11/19: Created and filled in.
-#  
 
 def update_and_write_flow_data(flow):
     '''
-    Given a flow, this function updates the global data structures that track
-    the status of the link's various attributes and writes output data to the
-    output files. 
+    Description:        This function updates the link data structures given 
+                        the new data that has been collected within the 
+                        network. Additionally, it writes the data to the three 
+                        flow output files.  
+
+    Arguments:          flow (Flow) 
+
+    Return Values:      None.
+
+    Global Variables:   flow_rate_readings (WRITE)
+                       
+                        packet_delay_readings (WRITE)
+                       
+                        window_size_readings (WRITE)
+                       
+                        low_rates (WRITE)
+                       
+                        packet_delays (WRITE)
+                       
+                        window_sizes (WRITE)
+
+    Limitations:        None.
+
+    Known Bugs:         None.
+
+    Revision History:   2015/11/19: Created and filled in.
     '''
     flow_name = flow.flow_name
+    
     # --- UPDATE STATUS DATA STRUCTURES --- 
+    
     # Flow rate readings
     flow_rate_readings[flow_name] = 0 # TODO: Get flow rate
+    
     # Packet delay readings
     packet_delay_readings[flow_name] = flow.last_RTT
+    
     # Window size readings
     window_size_readings[flow_name] = flow.window_size
 
     # --- WRITE TO DATA FILES ---
+    
     # Flow rate readings
     flow_rates.write(str(flow_name) + "," + str(0) + "\n")
+    
     # Packet delay readings
     packet_delays.write(str(flow_name) + "," + str(flow.last_RTT) + "\n")
+    
     # Window size readings
     window_sizes.write(str(flow_name) + "," + str(flow.window_size) + "\n")
 
-
-#
-# record_network_status
-#
-# Description:      Records the status of the network at the current time.  It
-#                   then creates a new event for the next network recording.
-#                   Before doing this, however, it checks if there are events
-#                   in the queue. 
-#
-# Arguments:        unused_list (List) - Done in this way so we can enqueue this
-#                       as an event in our event queue heapqueue.  Defaults to
-#                       None so it can be called without arguments.
-#
-# Return Values:    None.
-#
-# Global Variables: network_time (READ) - Used as the independent variable when
-#                       creating graphs.
-#                   times (WRITE) - Time appended
-#                   link_rate_readings (WRITE) - Link rate appended
-#                   buffer_oc_readings (WRITE) - Buffer occupancy appended
-#                   packet_loss_readings (WRITE) - Packet loss appended
-#                   flow_rate_readings (WRITE) - Flow rate appended
-#                   packet_delay_readings (WRITE) - Packet Delay appended
-#                   window_size_readings (WRITE) - Window size recorded
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/11/02: Created function handle and docstring.
-#                   2015/11/16: Filled in global arrays.
-#                   2015/11/18: Enqueued next network_recording event
-#
     
 def record_network_status():
     '''
-    Records the network status and displays it.
+    Description:        Records the status of the network at the current time.  It
+                        then creates a new event for the next network recording.
+                        Before doing this, however, it checks if there are events
+                        in the queue. 
+
+    Arguments:          unused_list (List) 
+                            - Done in this way so we can enqueue this as an 
+                            event in our event queue heapqueue.  Defaults to 
+                            None so it can be called without arguments.
+
+    Return Values:      None.
+
+    Global Variables:   network_time (READ) 
+                            - Used as the independent variable when creating 
+                            graphs.
+                      
+                        times (WRITE) 
+                            - Time appended.
+                      
+                        link_rate_readings (WRITE) 
+                            - Link rate appended.
+
+                        buffer_oc_readings (WRITE) 
+                            - Buffer occupancy appended.
+
+                        packet_loss_readings (WRITE) 
+                            - Packet loss appended.
+                      
+                        flow_rate_readings (WRITE) 
+                            - Flow rate appended.
+                      
+                        packet_delay_readings (WRITE) 
+                            - Packet Delay appended.
+                        
+                        window_size_readings (WRITE) 
+                            - Window size recorded.
+
+    Limitations:        None.
+
+    Known Bugs:         None.
+
+    Revision History:   2015/11/02: Created function handle and docstring.
+                        2015/11/16: Filled in global arrays.
+                        2015/11/18: Enqueued next network_recording event.
     '''
 
     # Increment the number of recordings of the network
@@ -582,7 +600,5 @@ def record_network_status():
     if len(sim.running_flows) > 1:
         next_recording = sim.network_now() + ct.RECORD_TIME
         sim.enqueue_event(next_recording, e.Event(None, None, None))
-
-
 
 

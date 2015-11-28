@@ -1,4 +1,4 @@
-################################################################################
+############################################################################
 #
 # Ricky Galliani, Tim Menninger, Rush Joshi, Schaeffer Reed
 # Network Simulator Project
@@ -11,14 +11,14 @@
 # Congestion control algorithms determine when and how many packets are sent 
 # at any given time during the simulation.
 #
-################################################################################
+############################################################################
 
 
-################################################################################
-#                                                                              #
-#                               Imported Modules                               #
-#                                                                              #
-################################################################################
+############################################################################
+#                                                                          #
+#                               Imported Modules                           #
+#                                                                          #
+############################################################################
 
 # So we can use command line arguments.
 import sys
@@ -52,38 +52,111 @@ import queue
 # Import heapq library so we can use it for our events.
 import heapq 
 
-################################################################################
-#                                                                              #
-#                                   Flow Class                                 #
-#                                                                              #
-################################################################################
+
+############################################################################
+#                                                                          #
+#                                   Flow Class                             #
+#                                                                          #
+############################################################################
+
 
 class Flow:
 
-    def __init__(self, the_flow_name, the_src, the_dest, the_size, the_start_time):
+    def __init__(self, in_flow_name, in_src, in_dest, in_size, in_start_time):
         '''
-        Initialize an instance of Flow by intitializing its attributes.
+        Description:        Initialize an instance of Flow by intitializing 
+                            its attributes.
+
+        Arguments:          in_flow_name (string)
+                                - A string indicating the name of this Flow 
+                                instance (i.e., "F1").
+
+                            in_src (string)
+                                - A string indicating the host name of the Host
+                                that is sending the data for this particular 
+                                Flow instance (i.e., "H3")
+
+                            in_dest (string)
+                                - A string indicating the host name of the Host
+                                that is receiving the data for this particular 
+                                Flow instance (i.e., "H2")
+
+                            in_size (int)
+                                - An int indicating how much data is being 
+                                sent for this particular Flow object (in MB, 
+                                i.e., 20).
+
+                            in_start_time (float)
+                                - A float indicating the start time of this 
+                                Flow instance (i.e., 4.567)
+
+        Shared Variables:   self.type (WRITE)              (not init argument)
+                                - Initialized
+                            
+                            self.flow_name (WRITE) 
+                                - Initialized
+                            
+                            self.src (WRITE) 
+                                - Initialized
+
+                            self.dest (WRITE) 
+                                - Initialized
+
+                            self.size (WRITE)
+                                - Initialized
+
+                            self.window_size (WRITE)       (not init argument)
+                                - Initialized
+
+                            self.start_time (WRITE)
+                                - Initialized
+
+                            self.packets_to_send (WRITE)   (not init argument)    
+                                - Initialized
+
+                            self.packets_in_flight (WRITE) (not init argument) 
+                                - Initialized 
+
+                            self.next_available_ID (WRITE) (not init argument)
+                                - Initialized 
+
+                            self.expecting (WRITE)         (not init argument)
+                                - Initialized
+
+                            self.to_complete (WRITE)       (not init argument)
+                                - Initialized
+
+                            self.last_RTT (WRITE)          (not init argument)
+                                - Initialized
+
+        Global Variables:   None.
+
+        Limitations:        None.
+
+        Known Bugs:         None.
+
+        Revision History:   10/06/15: Created
         '''
         # Store the type so it can be easily identified as a router.
         self.type = ct.TYPE_FLOW
         
         # Name of the Flow, each ID is a unique string (i.e. "F1")
-        self.flow_name = the_flow_name
+        self.flow_name = in_flow_name
 
         # host_name of source Host, a string
-        self.src = the_src
+        self.src = in_src
 
         # host_name of destination Host, a string
-        self.dest = the_dest
+        self.dest = in_dest
 
         # Amount of data being sent, an int (in bytes)
-        self.size = the_size
+        self.size = in_size
 
         # Window size as computed.
         self.window_size = ct.INITIAL_WINDOW_SIZE
         
         # The time the flow is starting.
-        self.start_time = the_start_time
+        self.start_time = in_start_time
         
         # The packets that must be sent.
         self.packets_to_send = []
@@ -108,73 +181,66 @@ class Flow:
         self.last_RTT = ct.INITIAL_ASSUMED_RTT
         
         
-    #
-    # create_packet_ID
-    #
-    # Description:      This creates a unique ID for a packet in this flow.
-    #
-    # Arguments:        self (Flow)
-    #
-    # Return Values:    (integer) - The unique ID that can be used for a new packet.
-    #
-    # Shared Variables: self.next_packet_ID (WRITE) - This is incremented so we know
-    #                       what the next unused packet ID is next time an ID is
-    #                       requested.
-    #
-    # Global Variables: None.
-    #
-    # Limitations:      Once a packet is destroyed, this has no way of knowing that
-    #                       the associated ID has freed up.  Therefore, this always
-    #                       returns the lowest never-used ID, not necessarily the
-    #                       lowest unused ID.
-    #
-    # Known Bugs:       None.
-    #
-    # Revision History: 2015/10/29: Created
-    #
-        
     def create_packet_ID(self):
         '''
-        Returns an ID that is not currently in use by any other packet.
+        Description:        This creates a unique ID for a packet in this flow.
+        
+        Arguments:          self (Flow)
+        
+        Return Values:      (integer) 
+                                - The unique ID that can be used for a new 
+                                packet.
+        
+        Shared Variables:   self.next_packet_ID (WRITE) 
+                                - This is incremented so we know what the next 
+                                unused packet ID is next time an ID is 
+                                requested.
+        
+        Global Variables:   None.
+        
+        Limitations:        Once a packet is destroyed, this has no way of 
+                            knowing that the associated ID has freed up.  
+                            Therefore, this always returns the lowest 
+                            never-used ID, not necessarily the lowest unused 
+                            ID.  Fixing this limitation is not a high-priority
+                            at the moment.
+        
+        Known Bugs:         None.
+        
+        Revision History:   2015/10/29: Created
         '''
         self.next_available_ID += 1
         return self.next_available_ID - 1
         
-        
-    #
-    # start_flow
-    #
-    # Description:      This starts the flow by creating all of the packets in 
-    #                   the flow and then starting to send them.
-    #
-    # Arguments:        self (Flow)
-    #                   unused_list (List) - Unused
-    #
-    # Return Values:    None.
-    #
-    # Shared Variables: self.size (READ) - Used to determine how many packets to
-    #                       create.
-    #
-    # Global Variables: sim.packets (WRITE) - New packets are written to the
-    #                       global dictionary.
-    #
-    # Limitations:      None.
-    #
-    # Known Variables:  None.
-    #
-    # Revision History: 11/16/15: Created
-    #
-        
+ 
     def start_flow(self, unused_list):
         '''
-        Starts the flow by creating all of the packets to send then starting to
-        send them.
+        Description:        This starts the flow by creating all of the packets 
+                            in the flow and then starting to send them.
+        
+        Arguments:          unused_list (List) 
+                                - Unused.
+        
+        Return Values:      None.
+        
+        Shared Variables:   self.size (READ) 
+                                - Used to determine how many packets to create.
+        
+        Global Variables:   sim.packets (WRITE) 
+                                - New packets are written to the global 
+                                dictionary.
+        
+        Limitations:        None.
+        
+        Known Variables:    None.
+        
+        Revision History:   11/16/15: Created
         '''
         # Calculate the number of packets we need to send all of the data
         num_packets = int(cv.MB_to_bytes(self.size) / ct.PACKET_DATA_SIZE) + 1
         
         # Create all of the packets.
-        for i in range(1, num_packets + 1):
+        for i in range(1, num_packets):
             # First, create a packet.
             new_pkt = p.Packet(self.create_packet_ID(), self.flow_name, 
                                self.src, self.dest, ct.PACKET_DATA)
@@ -192,36 +258,34 @@ class Flow:
         self.update_flow()
         
         
-    #
-    # resend_inflight_packets
-    #
-    # Description:      Creates copies of all of the in flight packets and
-    #                   resends them all.  The reason we create new packets
-    #                   is so we don't get confused when old packets that
-    #                   we thought were lost arrive.
-    #
-    # Arguments:        self (Flow)
-    #
-    # Return Values:    None.
-    #
-    # Shared Variables: packets_in_flight (WRITE) - This is overwritten
-    #                       to contain all of the new packets.
-    #                   flow_name (READ) - Used to index packets in the
-    #                       global dictionary.
-    #
-    # Global Variables: sim.packets (WRITE) - The new packets are written
-    #                       to this dictionary.
-    #
-    # Limitations:      None.
-    #
-    # Known Bugs:       None.
-    #
-    # Revision History: 11/16/15: Created
-    #
-        
     def resend_inflight_packets(self):
         '''
-        This remakes and resends all packets that are currently in flight.
+        Description:        Creates copies of all of the in flight packets and
+                            resends them all.  The reason we create new packets
+                            is so we don't get confused when old packets that
+                            we thought were lost arrive.
+        
+        Arguments:          None.
+        
+        Return Values:      None.
+        
+        Shared Variables:   packets_in_flight (WRITE) 
+                                - This is overwritten to contain all of the 
+                                new packets.
+                          
+                            flow_name (READ) 
+                                - Used to index packets in the global 
+                                dictionary.
+        
+        Global Variables:   sim.packets (WRITE) 
+                                - The new packets are written to this 
+                                dictionary.
+        
+        Limitations:        None.
+        
+        Known Bugs:         None.
+        
+        Revision History:   11/16/15: Created
         '''
         
         # Create a new queue of packets in flight
@@ -253,44 +317,46 @@ class Flow:
             # Create an event to send this packet.
             send_event = e.Event(new_pkt.src, 'send_packet', [new_pkt])
             sim.enqueue_event(sim.network_now(), send_event)
-        
-        
-    #
-    # update_flow
-    #
-    # Description:      This checks the status of the flow by comparing the number
-    #                   of packets in flight to the window size.  If there are
-    #                   fewer packets in flight than the window size, then this
-    #                   enqueues events to put more packets in flight.  If there
-    #                   are more packets in flight than the window size, this 
-    #                   throws an assertion error.
-    #
-    # Arguments:        self (Flow)
-    #
-    # Return Values:    None.
-    #
-    # Shared Variables: packets_in_flight (READ/WRITE) - Read to check if any new
-    #                       packets should be sent, written if new packets are sent.
-    #                   window_size (READ) - Read to determine if packets should be
-    #                       sent.
-    #                   packets_to_send (WRITE) - Packets that are to be sent are
-    #                       popped from this queue.
-    #                   flow_name (READ) - Used for identification purposes
-    #
-    # Global Variables: sim.event_queue (WRITE) - An event is added to this queue
-    #                       whenever a packet needs to be put in flight.
-    #
-    # Limitations:      None.
-    #
-    # Known Bugs:       None.
-    #
-    # Revision History: 11/13/15: Created
-    #   
+
             
     def update_flow(self):
         '''
-        Updates the window size according to congestion and the packets in
-        flight according to window size.
+        Description:            This checks the status of the flow by comparing 
+                                the number of packets in flight to the window 
+                                size. If there are fewer packets in flight 
+                                than the window size, then this enqueues 
+                                events to put more packets in flight.  
+                                If there are more packets in flight than the 
+                                window size, this throws an assertion error.
+        
+        Arguments:              None.
+        
+        Return Values:          None.
+        
+        Shared Variables:       packets_in_flight (READ/WRITE) 
+                                    - Read to check if any new packets should 
+                                    be sent, written if new packets are sent.
+
+                                window_size (READ) 
+                                    - Read to determine if packets should be 
+                                    sent.
+
+                                packets_to_send (WRITE) 
+                                    - Packets that are to be sent are popped 
+                                    from this queue.
+
+                                flow_name (READ) 
+                                    - Used for identification purposes.
+        
+        Global Variables:       sim.event_queue (WRITE) 
+                                    - An event is added to this queue whenever 
+                                    a packet needs to be put in flight.
+        
+        Limitations:            None.
+        
+        Known Bugs:             None.
+        
+        Revision History:       11/13/15: Created
         '''
         
         sim.log.write("[%.5f] %s: in-flight / window size %d/%d\n" %
@@ -300,8 +366,8 @@ class Flow:
         while len(self.packets_in_flight) < self.window_size:
             # If there are no packets to send, the flow is done.
             if len(self.packets_to_send) == 0:
-                # Remove it from our list ofrunning packets.  If it does not work,
-                #   we already deleted it, so continue normally.
+                # Remove it from our list ofrunning packets.  If it does not 
+                #   work, we already deleted it, so continue normally.
                 try:
                     sim.running_flows.remove(self.flow_name)
                 except ValueError:
@@ -322,4 +388,6 @@ class Flow:
         sim.log.write("[%.5f] %s: in-flight / window size %d/%d\n" %
             (sim.network_now(), self.flow_name, len(self.packets_in_flight), 
                 self.window_size))
+        
+
         
