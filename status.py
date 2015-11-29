@@ -53,16 +53,7 @@ import matplotlib.animation as animation
 import numpy as np
 import pandas as pd
 import time
-
-# Data structures that store the data for network metrics
-time_recordings       = np.empty(1)
-link_rate_readings    = { } # Indexed by link name, stores link rates
-buffer_oc_readings    = { } # Indexed by link name, stores buffer occupancies
-packet_loss_readings  = { } # Indexed by link name, stores packet loss
-flow_rate_readings    = { } # Indexed by flow name, stores flow rates
-packet_delay_readings = { } # Indexed by flow name, stores packet delays (RTT)
-window_size_readings  = { } # Indexed by flow name, stores window sizes
-
+import warnings
 
 ############################################################################
 #                                                                          #
@@ -210,11 +201,27 @@ def plot_per_link_metrics(tms, time_max):
 
     Revision History:   2015/11/19: Created and filled in.
     '''
-    # Create a matplotlib figure to display all of the per-link metrics
-    fig_link, ax_link = plt.subplots(3, 1, figsize=(12, 7))
-    
-    # Have matplotlib manage the layout of the plots
-    fig_link.tight_layout()
+    # Get the names of all the links in the system.
+    all_links = list(sim.links.keys())
+
+    # Create a matplotlib figure to display link rate metrics for each link
+    fig_link_rate, ax_link_rate = plt.subplots(len(all_links), 1, 
+                                            figsize=(ct.FIG_WID, ct.FIG_LEN))
+
+    # Create a matplotlib figure to display buffer occupancy metrics for each 
+    # link
+    fig_buf_occ, ax_buf_occ = plt.subplots(len(all_links), 1, 
+                                        figsize=(ct.FIG_WID, ct.FIG_LEN))
+
+    # Create a matplotlib figure to display packet loss metrics for each 
+    # link
+    fig_pack_loss, ax_pack_loss = plt.subplots(len(all_links), 1, 
+                                        figsize=(ct.FIG_WID, ct.FIG_LEN))
+
+    # Let matplotlip straighten out/properly-size figures
+    fig_link_rate.tight_layout()
+    fig_buf_occ.tight_layout()
+    fig_pack_loss.tight_layout()
 
     # Pull in the link_rate, packet_loss, buffer_occupancy and recordings
     lr = pd.read_csv(ct.LINK_RATE_OUT, 
@@ -225,43 +232,116 @@ def plot_per_link_metrics(tms, time_max):
     pl = pd.read_csv(ct.PACKET_LOSS_OUT, 
                      dtype={'link_name': str, 'packet_loss': np.int32})
 
-    # Get the names of all the links in the system.
-    all_links = sim.links.keys()
+    if len(all_links) > 1:
+        for i, link_name in enumerate(all_links):
 
-    for link_name in all_links:
-        lr_link = lr[lr['link_name'] == link_name]
-        bf_link = bf[bf['link_name'] == link_name]
-        pl_link = pl[pl['link_name'] == link_name]
+            lr_link = lr[lr['link_name'] == link_name]
+            bf_link = bf[bf['link_name'] == link_name]
+            pl_link = pl[pl['link_name'] == link_name]
+
+            # --- PLOT LINK RATE ---
+            # Plot link rate per link versus time
+            plot_metric(ax_link_rate[i],                     # Plot
+                        tms['time'],                         # X
+                        lr_link['link_rate'],                # Y
+                        "Link Rate (" + link_name + ")",     # Title
+                        "seconds",                           # X-axis
+                        "Mbps",                              # Y-axis
+                        None,                                # Line label
+                        time_max,                            # Max-X
+                        False)                               # No legend
+
+            # --- PLOT BUFFER OCCUPANCY ---
+            # Plot buffer occupancy per link for buffers 1 and 2 versus time
+
+            # First, buffer 1
+            plot_metric(ax_buf_occ[i],                          # Plot
+                        tms['time'],                            # X
+                        bf_link['buffer_occ_1'],                # Y
+                        "Buffer Occupancy (" + link_name + ")", # Title
+                        "seconds",                              # X-axis
+                        "pkts",                                 # Y-axis
+                        "buffer 1",                             # Line label
+                        time_max,                               # Max-X
+                        True)                                   # Yes legend
+
+
+            # Next, buffer 2
+            plot_metric(ax_buf_occ[i],                          # Plot
+                        tms['time'],                            # X
+                        bf_link['buffer_occ_2'],                # Y
+                        "Buffer Occupancy (" + link_name + ")", # Title
+                        "seconds",                              # X-axis
+                        "pkts",                                 # Y-axis
+                        "buffer 2",                             # Line label
+                        time_max,                               # Max-X
+                        True)                                   # Yes legend
+
+
+            # --- PLOT PACKET LOSS ---
+            # Plot packet loss per link versus time
+            plot_metric(ax_pack_loss[i],                        # Plot
+                        tms['time'],                            # X
+                        pl_link['packet_loss'],                 # Y
+                        "Packet Loss (" + link_name + ")",      # Title
+                        "seconds",                              # X-axis
+                        "pkts",                                 # Y-axis
+                        None,                                   # Line label
+                        time_max,                               # Max-X
+                        False)                                  # Yes legend
+
+    else: # Only 1 link 
+        link_name = all_links[0]
 
         # --- PLOT LINK RATE ---
         # Plot link rate per link  versus time
-        ax_link[0].plot(tms['time'], lr['link_rate'], label=link_name)
-        ax_link[0].set_title("Link Rate")
-        ax_link[0].set_xlim((0, time_max))
-        ax_link[0].set_xlabel('Time (ms)')
-        ax_link[0].set_ylabel('Link Late (Mbps)')
-        ax_link[0].legend()
+        plot_metric(ax_link_rate,                        # Plot
+                    tms['time'],                         # X
+                    lr['link_rate'],                     # Y
+                    "Link Rate (" + link_name + ")",     # Title
+                    "seconds",                           # X-axis
+                    "Mbps",                              # Y-axis
+                    None,                                # Line label
+                    time_max,                            # Max-X
+                    False)                               # No legend
 
         # --- PLOT BUFFER OCCUPANCY ---
         # Plot buffer occupancy per link for buffers 1 and 2  versus time
-        ax_link[1].plot(tms['time'], bf_link['buffer_occ_1'], 
-                                                label=link_name + ", buffer 1")
-        ax_link[1].plot(tms['time'], bf_link['buffer_occ_2'], 
-                                                label=link_name + ", buffer 2")
-        ax_link[1].set_xlim((0, time_max))
-        ax_link[1].set_title("Buffer Occupancy")
-        ax_link[1].set_xlabel('Time (ms)')
-        ax_link[1].set_ylabel('Buffer Occupancy (pkts)') 
-        ax_link[1].legend()   
+        
+        # First, buffer 1
+        plot_metric(ax_buf_occ,                             # Plot
+                    tms['time'],                            # X
+                    bf['buffer_occ_1'],                     # Y
+                    "Buffer Occupancy (" + link_name + ")", # Title
+                    "seconds",                              # X-axis
+                    "pkts",                                 # Y-axis
+                    "buffer 1",                             # Line label
+                    time_max,                               # Max-X
+                    True)                                   # Yes legend
+
+
+        # Next, buffer 2
+        plot_metric(ax_buf_occ,                             # Plot
+                    tms['time'],                            # X
+                    bf['buffer_occ_2'],                     # Y
+                    "Buffer Occupancy (" + link_name + ")", # Title
+                    "seconds",                              # X-axis
+                    "pkts",                                 # Y-axis
+                    "buffer 2",                             # Line label
+                    time_max,                               # Max-X
+                    True)                                   # Yes legend
 
         # --- PLOT PACKET LOSS ---
-        # Plot packet loss per link versus time
-        ax_link[2].plot(tms['time'], pl['packet_loss'], label=link_name)
-        ax_link[2].set_xlim((0, time_max))
-        ax_link[2].set_title("Packet Loss")
-        ax_link[2].set_xlabel('Time (ms)')
-        ax_link[2].set_ylabel('Packet Loss (pkts)') 
-        ax_link[2].legend()
+        # Plot packet loss per link versus time 
+        plot_metric(ax_pack_loss,                           # Plot
+                    tms['time'],                            # X
+                    pl['packet_loss'],                      # Y
+                    "Packet Loss (" + link_name + ")",      # Title
+                    "seconds",                              # X-axis
+                    "pkts",                                 # Y-axis
+                    None,                                   # Line label
+                    time_max,                               # Max-X
+                    False)                                  # Yes legend
 
 
 def plot_per_flow_metrics(tms, time_max):
@@ -293,11 +373,24 @@ def plot_per_flow_metrics(tms, time_max):
 
     Revision History:   2015/11/19: Created and filled in.
     ''' 
-    # Create a matplotlib figure to display all of the per-flow metrics
-    fig_flow, ax_flow = plt.subplots(3, 1, figsize=(12, 7))
+    # Get all the names of the flows except the routing flow, which we don't
+    # need to plot metrics for
+    all_flows = [x for x in list(sim.flows.keys()) if x != ct.ROUTING_FLOW]
 
-    # Have matplotlib manage the layout of the plots
-    fig_flow.tight_layout()
+    # Create a matplotlib figure to display flow rate metrics for each flow
+    fig_flow_rate, ax_flow_rate = plt.subplots(len(all_flows), 1, 
+                                            figsize=(ct.FIG_WID, ct.FIG_LEN))
+
+    fig_win_size, ax_win_size = plt.subplots(len(all_flows), 1, 
+                                            figsize=(ct.FIG_WID, ct.FIG_LEN))
+
+    fig_pack_del, ax_pack_del = plt.subplots(len(all_flows), 1, 
+                                            figsize=(ct.FIG_WID, ct.FIG_LEN))
+
+    # Let matplotlip straighten out/properly-size figures
+    fig_flow_rate.tight_layout()
+    fig_win_size.tight_layout()
+    fig_pack_del.tight_layout()
 
     # Pull in the flow_rate recordings, window_size, packet_delay recordings
     fr = pd.read_csv(ct.FLOW_RATE_OUT, 
@@ -307,42 +400,143 @@ def plot_per_flow_metrics(tms, time_max):
     py = pd.read_csv(ct.PACKET_DELAY_OUT, 
                      dtype={'flow_name': str, 'packet_delay': np.float64})
 
-    # Get the names of all the flows in the system.
-    all_flows = sim.flows.keys()
+    if len(all_flows) > 1:
+        for i, flow_name in enumerate(all_flows):
+            # Pull out the rows of the DataFrames containing data for this flow 
+            fr_flow = fr[fr['flow_name'] == flow_name]
+            ws_flow = ws[ws['flow_name'] == flow_name]
+            py_flow = py[py['flow_name'] == flow_name]
 
-    for flow_name in all_flows:
-        # Pull out the rows of the DataFrames containing data for this flow 
-        fr_flow = fr[fr['flow_name'] == flow_name]
-        ws_flow = ws[ws['flow_name'] == flow_name]
-        py_flow = py[py['flow_name'] == flow_name]
+            # --- PLOT FLOW RATE ----
+            # Plot the flow_rate recordings versus time for this link
+            plot_metric(ax_flow_rate[i],                        # Plot
+                        tms['time'],                            # X
+                        fr_flow['flow_rate'],                   # Y
+                        "Flow Rate (" + flow_name + ")",        # Title
+                        "seconds",                              # X-axis
+                        "Mbps",                                 # Y-axis
+                        None,                                   # Line label
+                        time_max,                               # Max-X
+                        False)                                  # No legend
+
+            # --- PLOT WINDOW SIZE ---
+            # Plot the window_size recordings versus time for this flow
+            plot_metric(ax_win_size[i],                         # Plot
+                        tms['time'],                            # X
+                        ws_flow['window_size'],                 # Y
+                        "Window Size (" + flow_name + ")",      # Title
+                        "seconds",                              # X-axis
+                        "pkts",                                 # Y-axis
+                        None,                                   # Line label
+                        time_max,                               # Max-X
+                        False)                                  # No legend
+
+            # --- PLOT PACKET DELAY --- 
+            # Plot the packet_delay recordings  versus time for this flow
+            plot_metric(ax_pack_del[i],                         # Plot
+                        tms['time'],                            # X
+                        py_flow['packet_delay'],                # Y
+                        "Packet Delay (" + flow_name + ")",     # Title
+                        "seconds",                              # X-axis
+                        "milliseconds",                         # Y-axis
+                        None,                                   # Line label
+                        time_max,                               # Max-X
+                        False)                                  # No legend
+
+    else: # only 1 Flow! 
+        flow_name = all_flows[0]
 
         # --- PLOT FLOW RATE ----
-        # Plot the flow_rate recordings versus time for this link
-        ax_flow[0].plot(tms['time'], fr_flow['flow_rate'], label=flow_name)
-        ax_flow[0].set_xlim((0, time_max))
-        ax_flow[0].set_title("Flow Rate")
-        ax_flow[0].set_xlabel('Time (ms)')
-        ax_flow[0].set_ylabel('Flow Rate (Mbps)') 
-        ax_flow[0].legend()
+        # Plot the flow_rate recordings versus time 
+        plot_metric(ax_flow_rate,                           # Plot
+                    tms['time'],                            # X
+                    fr['flow_rate'],                        # Y
+                    "Flow Rate (" + flow_name + ")",        # Title
+                    "seconds",                              # X-axis
+                    "Mbps",                                 # Y-axis
+                    None,                                   # Line label
+                    time_max,                               # Max-X
+                    False)                                  # Yes legend
 
         # --- PLOT WINDOW SIZE ---
         # Plot the window_size recordings versus time for this flow
-        ax_flow[1].plot(tms['time'], ws_flow['window_size'], label=flow_name)
-        ax_flow[1].set_xlim((0, time_max))
-        ax_flow[1].set_title("Window Size")
-        ax_flow[1].set_xlabel('Time (ms)')
-        ax_flow[1].set_ylabel('Window Size (pkts)') 
-        ax_flow[1].legend()
+        plot_metric(ax_win_size,                            # Plot
+                    tms['time'],                            # X
+                    ws['window_size'],                      # Y
+                    "Window Size (" + flow_name + ")",      # Title
+                    "seconds",                              # X-axis
+                    "pkts",                                 # Y-axis
+                    None,                                   # Line label
+                    time_max,                               # Max-X
+                    False)                                  # No legend
 
         # --- PLOT PACKET DELAY --- 
-        # Plot the packet_delay recordings  versus time for this flow
-        ax_flow[2].plot(tms['time'], py_flow['packet_delay'], label=flow_name)
-        ax_flow[2].set_xlim((0, time_max))
-        ax_flow[2].set_ylim((0, py['packet_delay'].max() + 10))
-        ax_flow[2].set_title("Packet Delay")
-        ax_flow[2].set_xlabel('Time (ms)')
-        ax_flow[2].set_ylabel('Packet Delay (ms)')  
-        ax_flow[2].legend()
+        # Plot the packet_delay recordings versus time 
+        plot_metric(ax_pack_del,                            # Plot
+                    tms['time'],                            # X
+                    py['packet_delay'],                     # Y
+                    "Packet Delay (" + flow_name + ")",     # Title
+                    "seconds",                              # X-axis
+                    "milliseconds",                         # Y-axis
+                    None,                                   # Line label
+                    time_max,                               # Max-X
+                    False)                                  # No legend
+
+
+def plot_metric(p, x, y, title, x_label, y_label, in_label, time_max, legend):
+    '''
+    Description:        Adds a line to a plot with the given curve parameters.
+
+    Arguments:          p (matplotlib plot)
+                            - The plot to add the metric curve to.
+
+                        x (pandas DataFrame)
+                            - The x-values.
+
+                        y (pandas DataFrame)
+                            - The y-values.
+
+                        title (string)
+                            - Title of the metric plot.
+
+                        x_label (string)
+                            - Label of the x-axis.
+
+                        y_label (string)
+                            - Label of the y-axis.
+
+                        in_label (string)
+                            - Label of the curve itself (can be None).
+
+                        time_max (float/int)
+                            - Maximum value of the x-axis.
+
+                        legend (boolean)
+                            - Whether or not to plot a legend on the plot.
+
+    Return Values:      None.
+
+    Global Variables:   None.
+
+    Limitations:        None.
+
+    Known Bugs:         None.
+
+    Revision History:   2015/11/29: Created and filled in.
+    '''
+    # Plot the values
+    if in_label == None:
+        p.plot(x, y)
+    else: # There is a label, plot it as well!
+        p.plot(x, y, label=in_label)
+    
+    p.set_title(title)              # Title
+    p.set_xlim((0, time_max))       # Scale the x-axis
+    p.set_xlabel(x_label)           # Set the x-axis label
+    p.set_ylabel(y_label)           # Set the y-axis label
+        
+    if legend:
+        p.legend()
 
 
 def construct_plots():
@@ -363,7 +557,7 @@ def construct_plots():
 
     Return Values:      None.
 
-    Global Variables:   None
+    Global Variables:   None.
 
     Limitations:        None.
 
@@ -377,14 +571,17 @@ def construct_plots():
 
     # Pull in the time recordings which are used for both the per-link and
     # per-flow metrics.
-    tms = pd.read_csv(ct.TIMES_OUT, dtype={'time': np.int32})
+    tms = pd.read_csv(ct.TIMES_OUT, dtype={'time': np.float64})
     time_max = tms['time'].max()
 
-    # Plot the per-link metrics.
-    plot_per_link_metrics(tms, time_max)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    # Plot the per-flow metrics.
-    plot_per_flow_metrics(tms, time_max) 
+        # Plot the per-link metrics.
+        plot_per_link_metrics(tms, time_max)
+
+        # Plot the per-flow metrics.
+        plot_per_flow_metrics(tms, time_max) 
 
     # Render the plots.
     plt.show()
@@ -401,17 +598,7 @@ def update_and_write_link_data(link):
 
     Return Values:      None.
 
-    Global Variables:   link_rate_readings (WRITE)
-                       
-                        buffer_occ_readings (WRITE)
-                       
-                        packet_loss_readings (WRITE)
-                       
-                        link_rates (WRITE)
-                       
-                        buffer_occs (WRITE)
-                       
-                        packet_loss (WRITE)
+    Global Variables:   None.
 
     Limitations:        None.
 
@@ -420,25 +607,15 @@ def update_and_write_link_data(link):
     Revision History:   2015/11/19: Created and filled in.
     '''
     link_name = link.link_name
-    # --- UPDATE STATUS DATA STRUCTURES --- 
+    # --- WRITE TO DATA FILES ---
     
     # Link rate readings
-    link_rate_readings[link_name].append(link.data_on_link)
+    link_rates.write(str(link_name) + "," + str(link.data_on_link) + "\n")
     
     # Buffer occupancy recordings (two buffers for each link)
     buffer_occ_1 = link.buffer_load[0] / link.buffer_size
     buffer_occ_2 = link.buffer_load[1] / link.buffer_size
-    buffer_oc_readings[link.link_name].append((buffer_occ_1, buffer_occ_2))
-    
-    # Packet loss readings
-    packet_loss_readings[link_name].append(link.num_packets_lost)
-    
-    # --- WRITE TO DATA FILES ---
-    
-    # Link rate readings
-    
-    link_rates.write(str(link_name) + "," + str(link.data_on_link) + "\n")
-    
+
     # Buffer occupancy readings (two buffers for each link)
     buf_row = str(link_name) + "," + str(buffer_occ_1) + "," + \
               str(buffer_occ_2)
@@ -460,17 +637,7 @@ def update_and_write_flow_data(flow):
 
     Return Values:      None.
 
-    Global Variables:   flow_rate_readings (WRITE)
-                       
-                        packet_delay_readings (WRITE)
-                       
-                        window_size_readings (WRITE)
-                       
-                        low_rates (WRITE)
-                       
-                        packet_delays (WRITE)
-                       
-                        window_sizes (WRITE)
+    Global Variables:   None.
 
     Limitations:        None.
 
@@ -479,17 +646,6 @@ def update_and_write_flow_data(flow):
     Revision History:   2015/11/19: Created and filled in.
     '''
     flow_name = flow.flow_name
-    
-    # --- UPDATE STATUS DATA STRUCTURES --- 
-    
-    # Flow rate readings
-    flow_rate_readings[flow_name] = 0 # TODO: Get flow rate
-    
-    # Packet delay readings
-    packet_delay_readings[flow_name] = flow.last_RTT
-    
-    # Window size readings
-    window_size_readings[flow_name] = flow.window_size
 
     # --- WRITE TO DATA FILES ---
     
@@ -505,10 +661,10 @@ def update_and_write_flow_data(flow):
     
 def record_network_status():
     '''
-    Description:        Records the status of the network at the current time.  It
-                        then creates a new event for the next network recording.
-                        Before doing this, however, it checks if there are events
-                        in the queue. 
+    Description:        Records the status of the network at the current time.  
+                        It then creates a new event for the next network 
+                        recording. Before doing this, however, it checks if 
+                        there are events in the queue. 
 
     Arguments:          unused_list (List) 
                             - Done in this way so we can enqueue this as an 
@@ -523,24 +679,6 @@ def record_network_status():
                       
                         times (WRITE) 
                             - Time appended.
-                      
-                        link_rate_readings (WRITE) 
-                            - Link rate appended.
-
-                        buffer_oc_readings (WRITE) 
-                            - Buffer occupancy appended.
-
-                        packet_loss_readings (WRITE) 
-                            - Packet loss appended.
-                      
-                        flow_rate_readings (WRITE) 
-                            - Flow rate appended.
-                      
-                        packet_delay_readings (WRITE) 
-                            - Packet Delay appended.
-                        
-                        window_size_readings (WRITE) 
-                            - Window size recorded.
 
     Limitations:        None.
 
@@ -556,21 +694,16 @@ def record_network_status():
 
     # Get the names of all the links and flows in the system.
     all_links = sim.links.keys()
-    all_flows = sim.flows.keys()
-    
-    # Get all of the readings.
-    np.append(time_recordings, sim.network_now())
+    # Get all the names of the flows except the routing flow, which we don't
+    # need to plot metrics for
+    all_flows = [x for x in list(sim.flows.keys()) if x != ct.ROUTING_FLOW]
 
-    times.write(str(sim.network_now()) + "\n")
+    # Write out each time to the 'times' csv file, converting each data point
+    # from milliseconds to seconds
+    times.write(str(sim.network_now() / 1000) + "\n")
 
     # Get the link rate, buffer occupancies and packet loss for all links
     for link_name in all_links:
-        # If this is the first reading, create entries for links.
-        if link_name not in link_rate_readings:
-            link_rate_readings[link_name] = []
-            buffer_oc_readings[link_name] = []
-            packet_loss_readings[link_name] = []
-        
         # Get the link associated with this link name.
         link = sim.links[link_name]
 
@@ -580,12 +713,6 @@ def record_network_status():
 
     # Get the flow rate, packet delay and window size.
     for flow_name in all_flows:        
-        # If first reading, create entries for flows
-        if flow_name not in flow_rate_readings:
-            flow_rate_readings[flow_name] = []
-            packet_delay_readings[flow_name] = []
-            window_size_readings[flow_name] = []
-        
         # Get the flow associated with this flow name
         flow = sim.flows[flow_name]
 

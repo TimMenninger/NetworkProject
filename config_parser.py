@@ -201,7 +201,9 @@ def load_network_objects(network_file):
     print("--- NETWORK TOPOLOGY ---\n")
     u.print_dict_keys("Endpoints", sim.endpoints)
     u.print_dict_keys("Links", sim.links)
-    u.print_dict_keys("Flows", sim.flows)
+    net_flows = sim.flows.copy()
+    del net_flows[ct.ROUTING_FLOW]
+    u.print_dict_keys("Flows", net_flows)
     print("\n------------------------")
 
     # Return all the dictionaries

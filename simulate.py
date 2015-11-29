@@ -19,6 +19,7 @@
 ############################################################################
 
 import sys
+from sys import stdout
 import time
 
 # Import network objects
@@ -46,7 +47,6 @@ import config_parser as cp
 import heapq
 
 
-
 ############################################################################
 #                                                                          #
 #                               Global Variables                           #
@@ -63,9 +63,6 @@ running_flows = [] # Flows that have packets still to send.
 
 event_queue = [] # Heap queue containing (time, event) tuples
 
-# The time of the network in simulated milliseconds.
-network_time = 0
-
 # We cannot have duplicate entries for time, so we must keep a "count" of
 #   entries so we have a "tie breaker"
 ev_time_dict = {}
@@ -76,6 +73,10 @@ log_router = open(ct.ROUTER_LOG_FILE, 'w')
 log_flow = open(ct.FLOW_LOG_FILE, 'w')
 log_main = open(ct.MAIN_LOG_FILE, 'w')
 
+# The time of the network in simulated milliseconds.
+network_time = 0
+
+# The number of network recordings being taken by the simulation.
 network_recordings = 0    
 
 ############################################################################
@@ -142,6 +143,25 @@ def run_network():
 
             # Call the event function with the correct actor and parameters
             event(actor, event_parameters)
+
+        compute_and_print_progress_status()
+
+def compute_and_print_progress_status():
+    '''
+    '''
+    total_pkts = 0
+    total_progress = 0
+    for flow in flows.values():
+        if flow.flow_name != ct.ROUTING_FLOW:
+            num_flow_pkts = int(cv.MB_to_bytes(flow.size) /ct.PACKET_DATA_SIZE) 
+            total_pkts += num_flow_pkts
+            total_progress += num_flow_pkts - len(flow.packets_to_send)
+    
+    # Dynamically update user of Simulation Progress
+    progress_msg = "Simulation Progress: %.1f%%" \
+                                    % (100 * (total_progress / total_pkts))
+    stdout.write("\r" + progress_msg)
+    stdout.flush()
 
 
 def network_now():
@@ -284,8 +304,9 @@ if __name__ == "__main__":
 
     # End the timer because the simulation is over
     end = time.time()
-    print("\n[SUCCESS]: NETWORK SIMULATION COMPLETE.") 
-    print("    [ELAPSED NETWORK TIME]: %.3f seconds" % (network_now() / 1000))
+    print("\n\n[SUCCESS]: NETWORK SIMULATION COMPLETE.") 
+    net_time = (network_recordings * ct.RECORD_TIME) / 1000
+    print("    [ELAPSED NETWORK TIME]: %.3f seconds" % net_time)
     print("    [ELAPSED REAL TIME]:    %.3f seconds" % (end - start))
     print("    [NETWORK RECORDINGS]:   %d\n" % network_recordings)
 

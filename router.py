@@ -712,8 +712,9 @@ class Router:
                 % (sim.network_now(), self.router_name, packet.src)
             sim.log_router.write(rec_msg)
             sim.log_router.write("\tPacket ID: %d\n" % packet.ID)
-            sim.log_router.write("\tNext link: %s\n" % \
-                            self.routing_table[packet.dest])
+            if packet.dest in self.routing_table:
+                sim.log_router.write("\tNext link: %s\n" % \
+                                        self.routing_table[packet.dest])
             # Data of ack Packet should correspond with data of packet it is 
             # acknowleding, unless a packet is lost.  In any event, it's just
             # an integer

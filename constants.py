@@ -11,6 +11,9 @@
 #
 ##########################################################################
 
+# Output figure dimensions
+FIG_WID				 = 12
+FIG_LEN 			 = 7
 
 # Log output filenames
 MAIN_LOG_FILE 	 	 = "misc/log/main.log"
@@ -37,7 +40,7 @@ TEST_CASE_2_FILENAME = "misc/test_configs/case_2.txt"
 TIME_BIT 			 = 0.000000000001
 
 # How often to record the network status in milliseconds
-RECORD_TIME 		 = 1
+RECORD_TIME 		 = 10
 
 # How often to send routing packets to configure routing tables (in ms)
 CONFIG_PKT_TIME 	 = 5000
