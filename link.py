@@ -309,6 +309,10 @@ class Link:
             # storing an additional packet.size
             self.buffer_load[ep] += packet.size
         
+        else: 
+            # Log a dropped Packet!
+            pass
+
         # We now want to kickstart the putting packets on the link.  If there
         #   is already a packet in transmission, then nothing will happen.
         #   Otherwise, we are telling it the buffer is now nonempty.  However,

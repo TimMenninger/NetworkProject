@@ -543,15 +543,12 @@ class Router:
         [packet, link_name] = arg_list
         link = sim.links[link_name]
         
+        # Log the send_packet() event to ct.ROUTER_LOG_FILE
+        self.log_send_packet(packet)
+
         # Give the packet to the link to handle.  Here, it will either be
         #   enqueued on a buffer or transmitted.
         link.put_packet_on_buffer(self.router_name, packet)
-        
-        if packet.type != ct.PACKET_ROUTING:
-            print("[%.5f] %s: sent packet %d with data %d to %s.\n" % 
-                (sim.network_now(), self.router_name, packet.ID, packet.data, 
-                 packet.dest))
-            print(self.routing_table)
 
 
     def receive_packet(self, arg_list):
@@ -591,6 +588,9 @@ class Router:
         [flow_name, packet_ID] = arg_list
         packet = sim.packets[(flow_name, packet_ID)]
 
+        # Log the receive_packet() event to ct.ROUTER_LOG_FILE
+        self.log_receive_packet(packet)
+
         # If this is a routing packet, use it to update the routing table and
         #   then resend it so others can do the same.
         if packet.type == ct.PACKET_ROUTING:
@@ -605,11 +605,129 @@ class Router:
             send_ev = e.Event(self.router_name, 'send_packet',
                                 [packet, self.routing_table[packet.dest]])
             sim.enqueue_event(send_time, send_ev)
-            
-            print("[%.5f] %s: received packet %d containing %d going to %s" + \
-                  ".  Sending on link %s\n" % 
-                (sim.network_now(), self.router_name, packet.ID, packet.data, 
-                    packet.dest, self.routing_table[packet.dest]))
-            print(self.routing_table)
+
+
+    def log_send_packet(self, packet):
+        '''
+        Description:        Provides log output in ct.ROUTER_LOG_FILE about a 
+                            call to send_packet() with this Router object.  
+                            Specifically, it logs which host is sending a 
+                            Packet, the ID of the Packet it is sending and the 
+                            data it is sending within the Packet (be it an 
+                            index or a full routing table)
+        
+        Arguments:          packet 
+                                - The Packet object that is being sent.
+        
+        Return Values:      None.
+        
+        Shared Variables:   None.
+        
+        Global Variables:   sim.log_router (WRITE)
+
+                            ct.PACKET_DATA (READ)
+
+                            ct.PACKET_ACK (READ)
+        
+        Limitations:        None.
+        
+        Known Bugs:         None.
+        
+        Revision History:   2015/11/28: Created
+        '''
+        if packet.type == ct.PACKET_DATA:
+            snd_msg = "[%.5f]: Sending data packet from %s to %s.\n" \
+                        % (sim.network_now(), self.router_name, packet.dest)
+            sim.log_router.write(snd_msg)
+            sim.log_router.write("\tPacket ID: %d\n" % packet.ID)
+            sim.log_router.write("\tNext link: %s\n" % \
+                            self.routing_table[packet.dest])
+            # Data of Packet is just its index within the Flow
+            sim.log_router.write("\tData: %d\n" % packet.data)
+
+        elif packet.type == ct.PACKET_ACK: # it's an ack Packet
+            snd_msg = "[%.5f]: Sending ack packet from %s to %s.\n" \
+                        % (sim.network_now(), self.router_name, packet.dest)
+            sim.log_router.write(snd_msg)
+            sim.log_router.write("\tPacket ID: %d\n" % packet.ID)
+            sim.log_router.write("\tNext link: %s\n" % \
+                            self.routing_table[packet.dest])
+            # Data of ack Packet should correspond with data of packet it is 
+            # acknowleding, unless a packet is lost.  In any event, it's just
+            # an integer
+            sim.log_router.write("\tData: %d\n" % packet.data)
+
+        else:
+            # Destination of routing config packets is 'None'
+            snd_msg = "[%.5f]: Sending routing config packet from %s.\n"\
+            % (sim.network_now(), self.router_name) 
+            sim.log_router.write(snd_msg)
+            sim.log_router.write("\tPacket ID: %d\n" % packet.ID)
+            # Data of Packet is a routing table
+            sim.log_router.write("\tData (Distances):\n")
+            for ep in packet.data: 
+                sim.log_router.write("\t\t%s : %s\n" % (ep, packet.data[ep]))
+
+
+    def log_receive_packet(self, packet):
+        '''
+        Description:        Provides log output in ct.ROUTER_LOG_FILE about a 
+                            call to receive_packet() with this Router object.  
+                            Specifically, it logs which host is sending a 
+                            Packet, the ID of the Packet it is sending and the 
+                            data it is sending within the Packet (be it an 
+                            index or a full routing table)
+        
+        Arguments:          packet 
+                                - The Packet object that is being sent.
+        
+        Return Values:      None.
+        
+        Shared Variables:   None.
+        
+        Global Variables:   sim.log_router (WRITE)
+
+                            ct.PACKET_DATA (READ)
+
+                            ct.PACKET_ACK (READ)
+        
+        Limitations:        None.
+        
+        Known Bugs:         None.
+        
+        Revision History:   2015/11/28: Created
+        '''
+        if packet.type == ct.PACKET_DATA:
+            rec_msg = "[%.5f]: Receiving data packet at %s sent from %s.\n" \
+                      % (sim.network_now(), self.router_name, packet.src)
+            sim.log_router.write(rec_msg)
+            sim.log_router.write("\tPacket ID: %d\n" % packet.ID)
+            sim.log_router.write("\tNext link: %s\n" % \
+                            self.routing_table[packet.dest])
+            # Data of Packet is just its index within the Flow
+            sim.log_router.write("\tData: %d\n" % packet.data)
+
+        elif packet.type == ct.PACKET_ACK: # it's an ack Packet
+            rec_msg = "[%.5f]: Receiving ack packet at %s sent from %s.\n" \
+                % (sim.network_now(), self.router_name, packet.src)
+            sim.log_router.write(rec_msg)
+            sim.log_router.write("\tPacket ID: %d\n" % packet.ID)
+            sim.log_router.write("\tNext link: %s\n" % \
+                            self.routing_table[packet.dest])
+            # Data of ack Packet should correspond with data of packet it is 
+            # acknowleding, unless a packet is lost.  In any event, it's just
+            # an integer
+            sim.log_router.write("\tData: %d\n" % packet.data)
+
+        else: # it's a Routing Packet
+            rec_msg = "[%.5f]: Receiving routing config packet at %s sent " \
+                  "from %s.\n" % (sim.network_now(), self.router_name, 
+                                  packet.src)
+            sim.log_router.write(rec_msg)
+            sim.log_router.write("\tPacket ID: %d\n" % packet.ID)
+            # Data of Packet is a routing table
+            sim.log_router.write("\tData (Distances):\n")
+            for ep in packet.data: 
+                sim.log_router.write("\t\t%s : %.5f\n" % (ep, packet.data[ep]))
 
 

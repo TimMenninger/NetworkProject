@@ -71,7 +71,10 @@ network_time = 0
 ev_time_dict = {}
 
 # A file to log output
-log = open(ct.OUTPUT_LOG_FILE, 'w')
+log_host = open(ct.HOST_LOG_FILE, 'w')
+log_router = open(ct.ROUTER_LOG_FILE, 'w')
+log_flow = open(ct.FLOW_LOG_FILE, 'w')
+log_main = open(ct.MAIN_LOG_FILE, 'w')
 
 network_recordings = 0    
 

@@ -13,7 +13,10 @@
 
 
 # Log output filenames
-OUTPUT_LOG_FILE 	 = "misc/log/case_0.log"
+MAIN_LOG_FILE 	 	 = "misc/log/main.log"
+HOST_LOG_FILE 	     = "misc/log/host.log"
+ROUTER_LOG_FILE 	 = "misc/log/router.log"
+FLOW_LOG_FILE    	 = "misc/log/flow.log"
 
 # Data output filenames
 TIMES_OUT 			 = "misc/data/times.csv"

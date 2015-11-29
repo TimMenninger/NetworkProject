@@ -359,9 +359,10 @@ class Flow:
         Revision History:       11/13/15: Created
         '''
         
-        sim.log.write("[%.5f] %s: in-flight / window size %d/%d\n" %
-            (sim.network_now(), self.flow_name, len(self.packets_in_flight), 
-                self.window_size))
+        sim.log_flow.write("[%.5f]: Updating %s\n" % 
+                          (sim.network_now(), self.flow_name))
+        sim.log_flow.write("\tin-flight / window size: %d/%d (Before)\n" %
+                          (len(self.packets_in_flight), self.window_size))
 
         while len(self.packets_in_flight) < self.window_size:
             # If there are no packets to send, the flow is done.
@@ -385,9 +386,8 @@ class Flow:
             send_event = e.Event(self.src, 'send_packet', [pkt])
             sim.enqueue_event(send_time, send_event)
         
-        sim.log.write("[%.5f] %s: in-flight / window size %d/%d\n" %
-            (sim.network_now(), self.flow_name, len(self.packets_in_flight), 
-                self.window_size))
+        sim.log_flow.write("\tin-flight / window size: %d/%d (After)\n" %
+                          (len(self.packets_in_flight), self.window_size))
         
 
         

@@ -146,10 +146,10 @@ class Host:
         # The argument list is just the packet.
         [packet] = arg_list
         flow = sim.flows[packet.flow]
-        print("[%.5f] %s: sent packet %d with data %d.\n" % 
-            (sim.network_now(), self.host_name, packet.ID, packet.data))
-        print(flow.to_complete, flow.expecting)
-        
+
+        # Log the send_packet() event to ct.HOST_LOG_FILE
+        self.log_send_packet(packet)
+
         # First want to put the current time on the packet so we can calculate
         #   RTT later.
         packet.time = sim.network_now()
@@ -259,10 +259,9 @@ class Host:
         [flow_name, packet_ID] = arg_list
         packet = sim.packets[(flow_name, packet_ID)]
         flow = sim.flows[flow_name]
-        if 0:#packet.type != ct.PACKET_ROUTING:
-            print("[%.5f] %s: received packet %d with data %d.\n" % 
-                (sim.network_now(), self.host_name, packet.ID, packet.data))
-            print(flow.to_complete, flow.expecting)
+
+        # Log the receive_packet() event to ct.HOST_LOG_FILE
+        self.log_receive_packet(packet)
 
         # If this is a data packet, create an ack packet and send it back.
         if packet.type == ct.PACKET_DATA:
@@ -319,3 +318,106 @@ class Host:
         # else the packet is a routing packet and can be ignored.
         
         
+    def log_send_packet(self, packet):
+        '''
+        Description:        Provides log output in ct.HOST_LOG_FILE about a 
+                            call to send_packet().  Specifically, it logs 
+                            which host is sending a Packet, the ID of the 
+                            Packet it is sending and the data it is sending
+                            within the Packet (be it an index or a full
+                            routing table)
+        
+        Arguments:          packet 
+                                - The Packet object that is being sent.
+        
+        Return Values:      None.
+        
+        Shared Variables:   None.
+        
+        Global Variables:   sim.log_host (WRITE)
+        
+                            ct.PACKET_DATA (READ)
+
+                            ct.PACKET_ACK (READ)
+
+        Limitations:        None.
+        
+        Known Bugs:         None.
+        
+        Revision History:   2015/11/28: Created
+        '''
+        if packet.type == ct.PACKET_DATA:
+            sim.log_host.write("[%.5f]: Sending data packet from %s to %s.\n" % 
+                            (sim.network_now(), self.host_name, packet.dest))
+            sim.log_host.write("\tPacket ID: %d\n" % packet.ID)
+            # Data of Packet is just its index within the Flow
+            sim.log_host.write("\tData: %d\n" % packet.data)
+
+        elif packet.type == ct.PACKET_ACK: # it's an ack Packet
+            sim.log_host.write("[%.5f]: Sending ack packet from %s to %s.\n" % 
+                              (sim.network_now(), self.host_name, packet.dest))
+            sim.log_host.write("\tPacket ID: %d\n" % packet.ID)
+            # Data of ack Packet should correspond with data of packet it is 
+            # acknowleding, unless a packet is lost.  In any event, it's just
+            # an integer
+            sim.log_host.write("\tData: %d\n" % packet.data)
+
+        else: # It's a routing packet
+            # Not printing the routing tables received by hosts.
+            pass
+
+    def log_receive_packet(self, packet):
+        '''
+        Description:        Provides log output in ct.HOST_LOG_FILE about a 
+                            call to receive_packet().  Specifically, it logs 
+                            which host is sending a Packet, the ID of the 
+                            packet it is sending and the data it is sending
+                            within the Packet (be it an index or a full
+                            routing table)
+        
+        Arguments:          packet 
+                                - The Packet object that is being received.
+        
+        Return Values:      None.
+        
+        Shared Variables:   None.
+        
+        Global Variables:   sim.log_host (WRITE)
+        
+                            ct.PACKET_DATA (READ)
+
+                            ct.PACKET_ACK (READ)
+
+        Limitations:        None.
+        
+        Known Bugs:         None.
+        
+        Revision History:   2015/11/28: Created
+        '''
+        # Retrieve the Flow that this Packet belongs to
+        flow = sim.flows[packet.flow]
+        if packet.type == ct.PACKET_DATA:
+            rec_msg = "[%.5f]: Receiving data packet at %s sent from %s.\n" \
+                      % (sim.network_now(), self.host_name, packet.src)
+            sim.log_host.write(rec_msg)
+            sim.log_host.write("\tPacket ID: %d\n" % packet.ID)
+            # Data of Packet is just its index within the Flow
+            sim.log_host.write("\tData: %d\n" % packet.data)
+            sim.log_host.write("\tExpected Data: %d\n" % flow.expecting)
+
+        elif packet.type == ct.PACKET_ACK: # it's an ack Packet
+            rec_msg = "[%.5f]: Receiving ack packet at %s sent from %s.\n" \
+                % (sim.network_now(), str(self.host_name), str(packet.src))
+            sim.log_host.write(rec_msg)
+            sim.log_host.write("\tPacket ID: %d\n" % packet.ID)
+            # Data of ack Packet should correspond with data of packet it is 
+            # acknowleding, unless a packet is lost.  In any event, it's just
+            # an integer
+            sim.log_host.write("\tData: %d\n" % packet.data)
+            sim.log_host.write("\tTo Complete: %d\n" % flow.to_complete)
+
+        else: 
+            # Not printing the routing tables received by hosts.
+            pass
+
+
