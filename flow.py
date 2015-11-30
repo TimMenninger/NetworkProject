@@ -126,6 +126,9 @@ class Flow:
                             self.to_complete (WRITE)       (not init argument)
                                 - Initialized
 
+                            self.acked_packets (WRITE)     (not init argument)
+                                - Initialized
+
                             self.last_RTT (WRITE)          (not init argument)
                                 - Initialized
 
@@ -174,6 +177,10 @@ class Flow:
         #   ack for (i.e. every packet whose data is strictly less than
         #   this has been acknowledged)
         self.to_complete = 1
+
+        # The number of packets that have been acknowledged in this record
+        #   interval.  Used to compute flow rate.
+        self.acked_packets = 0
         
         # Keep track of the round trip time a packet has taken so we can
         #   guage an appropriate timeout-check delay.  Before any acks are

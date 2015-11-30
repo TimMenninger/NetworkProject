@@ -82,6 +82,10 @@ def open_data_files():
 
                         ct.PACKET_LOSS_OUT (WRITE)
 
+                        ct.HOST_RECEIVE_OUT (WRITE)
+
+                        ct.HOST_SEND_OUT (WRITE)
+
                         ct.FLOW_RATE_OUT (WRITE)
 
                         ct.WINDOW_SIZE_OUT (WRITE)
@@ -106,6 +110,12 @@ def open_data_files():
     pl = open(ct.PACKET_LOSS_OUT, 'w')          # packet loss recordings
     pl.write('link_name,packet_loss\n')
 
+    hr = open(ct.HOST_RECEIVE_OUT, 'w')         # host receive recordings
+    hr.write('host_name,pkts_received_rate,ack_received_rate\n')
+
+    hs = open(ct.HOST_SEND_OUT, 'w')            # host send recordings
+    hs.write('host_name,pkts_send_rate,ack_send_rate\n')
+
     fr = open(ct.FLOW_RATE_OUT, 'w')            # flow rate recordings
     fr.write('flow_name,flow_rate\n')
 
@@ -115,14 +125,16 @@ def open_data_files():
     p = open(ct.PACKET_DELAY_OUT, 'w')          # packet delay recordings
     p.write('flow_name,packet_delay\n')
 
-    return (t, lr, bo, pl, fr, ws, p)
+    return (t, lr, bo, pl, hr, hs, fr, ws, p)
 
 
-# Open the 7 different data files 
+# Open the 9 different data files 
 (times, 
  link_rates, 
  buffer_occs, 
  packet_loss, 
+ host_receives, 
+ host_sends,
  flow_rates, 
  window_sizes, 
  packet_delays) = open_data_files()
@@ -148,6 +160,10 @@ def close_data_files():
 
                         packet_loss (WRITE)
 
+                        host_receives (WRITE)
+
+                        host_sends (WRITE)
+
                         flow_rates (WRITE)
 
                         window_sizes (WRITE)
@@ -167,6 +183,8 @@ def close_data_files():
     link_rates.close()
     buffer_occs.close()
     packet_loss.close()
+    host_receives.close()
+    host_sends.close()
     flow_rates.close()
     window_sizes.close()
     packet_delays.close()
@@ -342,6 +360,108 @@ def plot_per_link_metrics(tms, time_max):
                     None,                                   # Line label
                     time_max,                               # Max-X
                     False)                                  # Yes legend
+
+
+def plot_per_host_metrics(tms, time_max):
+    '''
+    Description:        Uses the matplotlib module to build the two per-host
+                        plots; it is called from construct_plots() where the 
+                        plots are rendered for the user.  The two per-host 
+                        plots that are produced are:  
+                          - host send-rate (data/ack)
+                          - host receive-rate (data/ack)    
+
+    Arguments:          time_max (integer)
+                            - Used as the maximum x-coordinate on the plots.
+
+    Return Values:      None.
+
+    Global Variables:   sim.endpoints (READ)
+
+                        ct.TYPE_HOST (READ)
+
+                        ct.FIG_WID (READ)
+
+                        ct.FIG_LEN (READ)
+
+    Limitations:        None.
+
+    Known Bugs:         None.
+
+    Revision History:   2015/11/29: Created and filled in.
+    '''
+    # Get the names of all the hosts in the system.
+    all_hosts = []
+    for object_name in list(sim.endpoints.keys()):
+        if sim.endpoints[object_name].type == ct.TYPE_HOST:
+            all_hosts.append(object_name)
+        
+    # Pull in the rec_rate, send_rate recordings
+    rr = pd.read_csv(ct.HOST_RECEIVE_OUT, 
+                     dtype={'host_name': str, 'pkts_received': np.int32})
+    sr = pd.read_csv(ct.HOST_SEND_OUT, 
+                     dtype={'host_name': str, 'pkts_sent': np.int32})
+
+    # Create a matplotlib figure to display host receive rate metrics for each 
+    # host
+    fig_rec_rate, ax_rec_rate = plt.subplots(len(all_hosts), 1, 
+                                            figsize=(ct.FIG_WID, ct.FIG_LEN))
+    fig_send_rate, ax_send_rate = plt.subplots(len(all_hosts), 1, 
+                                            figsize=(ct.FIG_WID, ct.FIG_LEN))
+
+    fig_rec_rate.tight_layout()
+    fig_send_rate.tight_layout()
+
+    for i, host_name in enumerate(all_hosts):
+
+        rr_host = rr[rr['host_name'] == host_name]
+        sr_host = sr[sr['host_name'] == host_name]
+
+        # --- PLOT HOST RECEIVES ---
+        # Plot data packet host receives per host
+        plot_metric(ax_rec_rate[i],                         # Plot
+                    tms['time'],                            # X
+                    rr_host['pkts_received_rate'],          # Y
+                    "Host Receive Rate (" + host_name + ")",# Title
+                    "seconds",                              # X-axis
+                    "pkts/second",                          # Y-axis
+                    "Data",                                 # Line label
+                    time_max,                               # Max-X
+                    True)                                   # Yes legend
+
+        # Plot ack packet receives per host
+        plot_metric(ax_rec_rate[i],                         # Plot
+                    tms['time'],                            # X
+                    rr_host['ack_received_rate'],           # Y
+                    "Host Receive Rate (" + host_name + ")",# Title
+                    "seconds",                              # X-axis
+                    "pkts/second",                          # Y-axis
+                    "Ack",                                  # Line label
+                    time_max,                               # Max-X
+                    True)                                   # Yes legend
+
+        # --- PLOT HOST SENDS ---
+        # Plot host data packet sends per host
+        plot_metric(ax_send_rate[i],                        # Plot
+                    tms['time'],                            # X
+                    sr_host['pkts_send_rate'],              # Y
+                    "Host Send Rate (" + host_name + ")",   # Title
+                    "seconds",                              # X-axis
+                    "pkts/second",                          # Y-axis
+                    "Data",                                 # Line label
+                    time_max,                               # Max-X
+                    False)                                  # Yes legend
+
+        # Plot host ack packet sends per host
+        plot_metric(ax_send_rate[i],                        # Plot
+                    tms['time'],                            # X
+                    sr_host['ack_send_rate'],               # Y
+                    "Host Send Rate (" + host_name + ")",   # Title
+                    "seconds",                              # X-axis
+                    "pkts/second",                          # Y-axis
+                    "Ack",                                  # Line label
+                    time_max,                               # Max-X
+                    True)                                   # Yes legend
 
 
 def plot_per_flow_metrics(tms, time_max):
@@ -580,6 +700,9 @@ def construct_plots():
         # Plot the per-link metrics.
         plot_per_link_metrics(tms, time_max)
 
+        # Plot the per-host metrics.
+        plot_per_host_metrics(tms, time_max)
+
         # Plot the per-flow metrics.
         plot_per_flow_metrics(tms, time_max) 
 
@@ -587,11 +710,9 @@ def construct_plots():
     plt.show()
  
 
-def update_and_write_link_data(link):
+def write_link_data(link):
     '''
-    Description:        This function updates the link data structures given 
-                        the new  data that has been collected within the 
-                        network. Additionally, it writes the data to the 
+    Description:        This function writes the data to the 
                         three link output files.  
 
     Arguments:          link (Link) 
@@ -610,6 +731,7 @@ def update_and_write_link_data(link):
     # --- WRITE TO DATA FILES ---
     
     # Link rate readings
+    link_rate = link.data_on_link
     link_rates.write(str(link_name) + "," + str(link.data_on_link) + "\n")
     
     # Buffer occupancy recordings (two buffers for each link)
@@ -626,11 +748,52 @@ def update_and_write_link_data(link):
     packet_loss.write(pack_row)
 
 
-def update_and_write_flow_data(flow):
+def write_host_data(host):
     '''
-    Description:        This function updates the link data structures given 
-                        the new data that has been collected within the 
-                        network. Additionally, it writes the data to the three 
+    Description:        This function writes the data to the two 
+                        host output files.  
+
+    Arguments:          host (Host) 
+
+    Return Values:      None.
+
+    Global Variables:   None.
+
+    Limitations:        None.
+
+    Known Bugs:         None.
+
+    Revision History:   2015/11/29: Created and filled in.
+    '''
+    host_name = host.host_name
+
+    # --- WRITE TO DATA FILES ---
+    
+    # Compute the packet receive rate for this host (in pkts/sec)
+    pkts_received_rate = (host.pkts_received / ct.RECORD_TIME) * 1000
+    ack_received_rate = (host.ack_received / ct.RECORD_TIME) * 1000
+    host_receive_row = str(host_name) + "," + str(pkts_received_rate) + "," + \
+                       str(ack_received_rate) + "\n"
+    host_receives.write(host_receive_row)
+    
+    # Compute the packet send rate for this host (in pkts/sec)
+    pkts_send_rate = (host.pkts_sent / ct.RECORD_TIME) * 1000
+    ack_send_rate = (host.ack_sent/ ct.RECORD_TIME) * 1000
+    host_send_row = str(host_name) + "," + str(pkts_send_rate) + "," + \
+                    str(ack_send_rate) + "\n"
+    host_sends.write(host_send_row)
+
+    # Reset the pkts_received, ack_received, pkts_sent, and ack_sent attributes 
+    # for this host so that the next interval measures a new rate
+    host.pkts_received = 0
+    host.ack_received = 0
+    host.pkts_sent = 0
+    host.ack_sent = 0
+
+
+def write_flow_data(flow):
+    '''
+    Description:        This function writes the data to the three 
                         flow output files.  
 
     Arguments:          flow (Flow) 
@@ -649,9 +812,16 @@ def update_and_write_flow_data(flow):
 
     # --- WRITE TO DATA FILES ---
     
-    # Flow rate readings
-    flow_rates.write(str(flow_name) + "," + str(0) + "\n")
+    # Compute the flow rate as the amount of the data being sent for this flow
+    # that is acknowledged in this record interval (in Mbps)
+    acked_data_amt = cv.bytes_to_MB(flow.acked_packets * ct.PACKET_DATA_SIZE)
+    flow_rate = (acked_data_amt / ct.RECORD_TIME) * 1000
+    flow_rates.write(str(flow_name) + "," + str(flow_rate) + "\n")
     
+    # Reset the acked_packets attribute of the flow so it can compute the 
+    # next flow rate in the next interval
+    flow.acked_packets = 0
+
     # Packet delay readings
     packet_delays.write(str(flow_name) + "," + str(flow.last_RTT) + "\n")
     
@@ -692,8 +862,15 @@ def record_network_status():
     # Increment the number of recordings of the network
     sim.network_recordings += 1
 
-    # Get the names of all the links and flows in the system.
-    all_links = sim.links.keys()
+    # Get the names of all the links in the system.
+    all_links = list(sim.links.keys())
+
+    # Get the names of all the hosts in the system.
+    all_hosts = []
+    for object_name in list(sim.endpoints.keys()):
+        if sim.endpoints[object_name].type == ct.TYPE_HOST:
+            all_hosts.append(object_name)
+
     # Get all the names of the flows except the routing flow, which we don't
     # need to plot metrics for
     all_flows = [x for x in list(sim.flows.keys()) if x != ct.ROUTING_FLOW]
@@ -707,18 +884,24 @@ def record_network_status():
         # Get the link associated with this link name.
         link = sim.links[link_name]
 
-        # Update the data structures and write link data to the 3 link output 
-        # files.
-        update_and_write_link_data(link)
+        # Write link data to the 3 link output files.
+        write_link_data(link)
+
+    # Get the host send and receive rate for all hosts
+    for host_name in all_hosts:
+        # Get the host associated with this host name.
+        host = sim.endpoints[host_name]
+
+        # Write host data to the 2 host output files
+        write_host_data(host)
 
     # Get the flow rate, packet delay and window size.
     for flow_name in all_flows:        
         # Get the flow associated with this flow name
         flow = sim.flows[flow_name]
 
-        # Update the data structures and write flow data to the 3 flow output
-        # files
-        update_and_write_flow_data(flow)
+        # Write flow data to the 3 flow output files
+        write_flow_data(flow)
 
     # Create the event that will record the network status, but only if there
     #   is nothing else in the event queue.  Otherwise, this will keep the

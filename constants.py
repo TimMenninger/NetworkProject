@@ -26,6 +26,8 @@ TIMES_OUT 			 = "misc/data/times.csv"
 LINK_RATE_OUT 		 = "misc/data/link_rate.csv"
 BUFFER_OCC_OUT 		 = 'misc/data/buffer_occupancy.csv'
 PACKET_LOSS_OUT 	 = 'misc/data/packet_loss.csv'
+HOST_RECEIVE_OUT 	 = 'misc/data/host_receive.csv'
+HOST_SEND_OUT 		 = 'misc/data/host_send.csv'
 FLOW_RATE_OUT 		 = 'misc/data/flow_rate.csv'
 WINDOW_SIZE_OUT 	 = 'misc/data/window_size.csv'
 PACKET_DELAY_OUT 	 = 'misc/data/packet_delay.csv'
@@ -79,7 +81,7 @@ LINK_ERROR           = 1    		# Unknown error with link
 LINK_FULL            = 2    		# Link was full
 
 # Time constants
-RECORDING_INTERVAL   = 10    		# Number of milliseconds between each 
+RECORDING_INTERVAL   = 1    		# Number of milliseconds between each 
 									# 	network status recording
 MAX_SIMULATION_TIME  = 1e6  		# Maximum number of milliseconds the 
 									# 	network should run

@@ -91,6 +91,18 @@ class Host:
         
         # The link_name representing the Link to this Host
         self.link = None
+
+        # Number of Packets this Host has sent in a record interval
+        self.pkts_sent = 0
+
+        # Number of ack Packets this Host has sent in a record interval
+        self.ack_sent = 0
+
+        # Number of Packets this Host has received in a record interval
+        self.pkts_received = 0
+
+        # Number of ack Packets this host has received in a record interval
+        self.ack_received = 0
         
         
     def add_link(self, link_name):
@@ -160,7 +172,7 @@ class Host:
         # Give the packet to the link to handle.  Here, it will either be
         #   enqueued on a buffer or transmitted.
         link.put_packet_on_buffer(self.host_name, packet)
-        
+
         # Create an event that will search for acknowledgement after some 
         #   amount of time.  If ack was not received, it will resend the 
         #   packets.  This only applies to data packets.
@@ -170,6 +182,12 @@ class Host:
             tmout_event = e.Event(self.host_name, 'check_ack_timeout', 
                                   [packet])
             sim.enqueue_event(tmout_time, tmout_event)
+
+            self.pkts_sent += 1
+
+        elif packet.type == ct.PACKET_ACK:
+
+            self.ack_sent += 1
 
         
     def check_ack_timeout(self, list_packet):
@@ -265,6 +283,10 @@ class Host:
 
         # If this is a data packet, create an ack packet and send it back.
         if packet.type == ct.PACKET_DATA:
+            # Increment the number of data packets received by this host in 
+            # this record interval
+            self.pkts_received += 1 
+
             # Check if it is the one that this dest is expecting.
             if packet.data == flow.expecting:
                 # Increment what we are now expecting.
@@ -287,6 +309,10 @@ class Host:
             self.send_packet([ack_pkt])
                 
         elif packet.type == ct.PACKET_ACK:
+            # Increment the number of ack packets received by this host in 
+            # this record interval
+            self.ack_received += 1
+
             # If this is acknowledgement, see if any packets were lost.
             if packet.data > flow.to_complete:
                 # The dest has received packets <to_complete> through
@@ -294,6 +320,7 @@ class Host:
                 #   there is separation between these two parameters.
                 for i in range(packet.data - flow.to_complete):
                     flow.to_complete += 1
+                    flow.acked_packets += 1
                     heapq.heappop(flow.packets_in_flight)
                 assert (packet.data == flow.to_complete)
                 
