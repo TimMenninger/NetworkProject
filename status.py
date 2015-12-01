@@ -55,6 +55,17 @@ import pandas as pd
 import time
 import warnings
 
+
+
+DATA_ON_LINKS   = {}
+ACKED_DATA      = {}
+BUFFER_OCCS     = {}
+WINDOW_SIZES    = {}
+PACKET_DELAYS   = {}
+
+
+
+
 ############################################################################
 #                                                                          #
 #                             Status Functions                             #
@@ -278,7 +289,7 @@ def plot_per_link_metrics(tms, time_max):
                         bf_link['buffer_occ_1'],                # Y
                         "Buffer Occupancy (" + link_name + ")", # Title
                         "seconds",                              # X-axis
-                        "pkts",                                 # Y-axis
+                        "KB",                                   # Y-axis
                         "buffer 1",                             # Line label
                         time_max,                               # Max-X
                         True)                                   # Yes legend
@@ -290,7 +301,7 @@ def plot_per_link_metrics(tms, time_max):
                         bf_link['buffer_occ_2'],                # Y
                         "Buffer Occupancy (" + link_name + ")", # Title
                         "seconds",                              # X-axis
-                        "pkts",                                 # Y-axis
+                        "KB",                                   # Y-axis
                         "buffer 2",                             # Line label
                         time_max,                               # Max-X
                         True)                                   # Yes legend
@@ -726,17 +737,28 @@ def write_link_data(link):
     Known Bugs:         None.
 
     Revision History:   2015/11/19: Created and filled in.
+                        2015/11/30: Updated so that curves are no longer
+                                    jaggedy
     '''
     link_name = link.link_name
+
+    # Compute the link rate, buffer occupancies, and packet losses from
+    # the data structures 
+
+    # The total amount of data on the link for this recording delta
+    # divided by the amount of seconds that have passed for this delta
+    link_rate = sum(DATA_ON_LINKS[link_name]) / ct.DELTA_SECS
+
+    # Average buffer occupancy on buffer 1
+    buffer_occ_1 = sum(BUFFER_OCCS[(link_name, 0)]) / ct.RECORD_DELTA
+
+    # Average buffer occupancy on buffer 2
+    buffer_occ_2 = sum(BUFFER_OCCS[(link_name, 1)]) / ct.RECORD_DELTA
+
     # --- WRITE TO DATA FILES ---
     
     # Link rate readings
-    link_rate = link.data_on_link
-    link_rates.write(str(link_name) + "," + str(link.data_on_link) + "\n")
-    
-    # Buffer occupancy recordings (two buffers for each link)
-    buffer_occ_1 = link.buffer_load[0] / link.buffer_size
-    buffer_occ_2 = link.buffer_load[1] / link.buffer_size
+    link_rates.write(str(link_name) + "," + str(link_rate) + "\n")
 
     # Buffer occupancy readings (two buffers for each link)
     buf_row = str(link_name) + "," + str(buffer_occ_1) + "," + \
@@ -744,8 +766,53 @@ def write_link_data(link):
     buffer_occs.write(buf_row + "\n")
     
     # Packet loss readings
-    pack_row = str(link_name) + ',' + str(link.num_packets_lost) + "\n"
-    packet_loss.write(pack_row)
+    packet_loss.write((link_name) + ',' + str(link.num_packets_lost) + "\n")
+
+    # Clear the data structures 
+    DATA_ON_LINKS.clear()
+    BUFFER_OCCS.clear()
+
+
+def update_link_data(link):
+    '''
+    Description:        This function updates the two link data structures
+                        that are global to this module, adding to them the
+                        most recent recordings from the network.  
+
+    Arguments:          link (Link) 
+
+    Return Values:      None.
+
+    Global Variables:   DATA_ON_LINKS (WRITE)
+
+                        BUFFER_OCCS (WRITE)
+
+    Limitations:        None.
+
+    Known Bugs:         None.
+
+    Revision History:   2015/11/30: Created and filled in.
+    '''
+    link_name = link.link_name
+    
+    # Add the current link rate to the data structure
+    if link_name not in DATA_ON_LINKS:
+        DATA_ON_LINKS[link_name] = [link.data_on_link]
+    else:
+        DATA_ON_LINKS[link_name].append(link.data_on_link)
+
+    # Add the current buffer occupancies to the data structure
+    if (link_name, 0) not in BUFFER_OCCS and (link_name, 1) not in BUFFER_OCCS:
+        BUFFER_OCCS[(link_name, 0)] = [link.buffer_load[0]]
+        BUFFER_OCCS[(link_name, 1)] = [link.buffer_load[1]]
+    else:
+        BUFFER_OCCS[(link_name, 0)].append(
+                                    link.buffer_load[0])
+        BUFFER_OCCS[(link_name, 1)].append(
+                                    link.buffer_load[1])
+
+    # Do not need to update a packet losses data structure because
+    # it is just a cumulative count
 
 
 def write_host_data(host):
@@ -770,15 +837,16 @@ def write_host_data(host):
     # --- WRITE TO DATA FILES ---
     
     # Compute the packet receive rate for this host (in pkts/sec)
-    pkts_received_rate = (host.pkts_received / ct.RECORD_TIME) * 1000
-    ack_received_rate = (host.ack_received / ct.RECORD_TIME) * 1000
+    pkts_received_rate = host.pkts_received / ct.DELTA_SECS
+    ack_received_rate = host.ack_received / ct.DELTA_SECS
+    
     host_receive_row = str(host_name) + "," + str(pkts_received_rate) + "," + \
                        str(ack_received_rate) + "\n"
     host_receives.write(host_receive_row)
     
     # Compute the packet send rate for this host (in pkts/sec)
-    pkts_send_rate = (host.pkts_sent / ct.RECORD_TIME) * 1000
-    ack_send_rate = (host.ack_sent/ ct.RECORD_TIME) * 1000
+    pkts_send_rate = host.pkts_sent / ct.DELTA_SECS
+    ack_send_rate = host.ack_sent/ ct.DELTA_SECS
     host_send_row = str(host_name) + "," + str(pkts_send_rate) + "," + \
                     str(ack_send_rate) + "\n"
     host_sends.write(host_send_row)
@@ -786,9 +854,9 @@ def write_host_data(host):
     # Reset the pkts_received, ack_received, pkts_sent, and ack_sent attributes 
     # for this host so that the next interval measures a new rate
     host.pkts_received = 0
-    host.ack_received = 0
-    host.pkts_sent = 0
-    host.ack_sent = 0
+    host.ack_received  = 0
+    host.pkts_sent     = 0
+    host.ack_sent      = 0
 
 
 def write_flow_data(flow):
@@ -810,12 +878,17 @@ def write_flow_data(flow):
     '''
     flow_name = flow.flow_name
 
+    # Compute the average flow rate, packet delay and window size for the 
+    # recording delta 
+    flow_rate = sum(ACKED_DATA[flow_name]) / ct.DELTA_SECS
+    packet_delay = sum(PACKET_DELAYS[flow_name]) / \
+                    len(PACKET_DELAYS[flow_name])
+    window_size = sum(WINDOW_SIZES[flow_name]) / len(WINDOW_SIZES[flow_name])
+
     # --- WRITE TO DATA FILES ---
     
     # Compute the flow rate as the amount of the data being sent for this flow
     # that is acknowledged in this record interval (in Mbps)
-    acked_data_amt = cv.bytes_to_MB(flow.acked_packets * ct.PACKET_DATA_SIZE)
-    flow_rate = (acked_data_amt / ct.RECORD_TIME) * 1000
     flow_rates.write(str(flow_name) + "," + str(flow_rate) + "\n")
     
     # Reset the acked_packets attribute of the flow so it can compute the 
@@ -823,10 +896,33 @@ def write_flow_data(flow):
     flow.acked_packets = 0
 
     # Packet delay readings
-    packet_delays.write(str(flow_name) + "," + str(flow.last_RTT) + "\n")
+    packet_delays.write(str(flow_name) + "," + str(packet_delay) + "\n")
     
     # Window size readings
-    window_sizes.write(str(flow_name) + "," + str(flow.window_size) + "\n")
+    window_sizes.write(str(flow_name) + "," + str(window_size) + "\n")
+
+
+def update_flow_data(flow):
+    '''
+    '''
+    flow_name = flow.flow_name
+
+    # Add the amount of acknowledged data to the data structure
+    acked_data_amt = flow.acked_packets * ct.PACKET_DATA_SIZE
+    if flow_name not in ACKED_DATA:
+        ACKED_DATA[flow_name] = [acked_data_amt]
+    else:
+        ACKED_DATA[flow_name].append(acked_data_amt)
+
+    if flow_name not in PACKET_DELAYS:
+        PACKET_DELAYS[(flow_name)] = [flow.last_RTT]
+    else:
+        PACKET_DELAYS[(flow_name)].append(flow.last_RTT)
+
+    if flow_name not in WINDOW_SIZES:
+        WINDOW_SIZES[(flow_name)] = [flow.window_size]
+    else:
+        WINDOW_SIZES[(flow_name)].append(flow.window_size)
 
     
 def record_network_status():
@@ -875,33 +971,51 @@ def record_network_status():
     # need to plot metrics for
     all_flows = [x for x in list(sim.flows.keys()) if x != ct.ROUTING_FLOW]
 
+    is_write_recording = sim.network_recordings % ct.RECORD_DELTA == 0
+
     # Write out each time to the 'times' csv file, converting each data point
     # from milliseconds to seconds
-    times.write(str(sim.network_now() / 1000) + "\n")
+    if is_write_recording:
+        times.write(str(sim.network_now() / 1000) + "\n")
+
 
     # Get the link rate, buffer occupancies and packet loss for all links
     for link_name in all_links:
         # Get the link associated with this link name.
         link = sim.links[link_name]
 
-        # Write link data to the 3 link output files.
-        write_link_data(link)
+        # Update the data structures to contain information from this 
+        # recording
+        update_link_data(link)
+
+        if is_write_recording:
+            # Write link data to the 3 link output files.
+            write_link_data(link)
+
 
     # Get the host send and receive rate for all hosts
-    for host_name in all_hosts:
-        # Get the host associated with this host name.
-        host = sim.endpoints[host_name]
+    if is_write_recording:
+        for host_name in all_hosts:
+            # Get the host associated with this host name.
+            host = sim.endpoints[host_name]
+            
+            # Write host data to the 2 host output files
+            write_host_data(host)
 
-        # Write host data to the 2 host output files
-        write_host_data(host)
 
     # Get the flow rate, packet delay and window size.
     for flow_name in all_flows:        
         # Get the flow associated with this flow name
         flow = sim.flows[flow_name]
 
-        # Write flow data to the 3 flow output files
-        write_flow_data(flow)
+        # Update the data structures to contain the flow information from this
+        # recording
+        update_flow_data(flow)
+
+        if is_write_recording:
+            # Write flow data to the 3 flow output files
+            write_flow_data(flow)
+
 
     # Create the event that will record the network status, but only if there
     #   is nothing else in the event queue.  Otherwise, this will keep the

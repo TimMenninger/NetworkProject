@@ -298,7 +298,7 @@ class Link:
         #   The time we use for this will be now, because we are using first
         #   come first served priority on the links, but only if there is 
         #   enough space.
-        if packet.size + self.buffer_load[ep] <= \
+        if packet.size + cv.KB_to_bytes(self.buffer_load[ep]) <= \
            cv.KB_to_bytes(self.buffer_size):
             # Add the packet identifier to the link buffer heap queue along 
             # with the time
@@ -307,7 +307,7 @@ class Link:
 
             # Update the buffer load for this link buffer because it is now
             # storing an additional packet.size
-            self.buffer_load[ep] += packet.size
+            self.buffer_load[ep] += cv.bytes_to_KB(packet.size)
         
         else: 
             self.num_packets_lost += 1
@@ -503,7 +503,7 @@ class Link:
             heapq.heappush(self.packets_on_link[next_pop],
                            (sim.network_now(), flow_name, packet_ID))
             packet_size = sim.packets[(flow_name, packet_ID)].size # in bytes
-            self.buffer_load[next_pop] -= packet_size
+            self.buffer_load[next_pop] -= cv.bytes_to_KB(packet_size)
             self.data_on_link += cv.bytes_to_Mb(packet_size)
             
             # Calculate the transmission time as the size of the packet 

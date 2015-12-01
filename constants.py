@@ -44,6 +44,12 @@ TIME_BIT 			 = 0.000000000001
 # How often to record the network status in milliseconds
 RECORD_TIME 		 = 1
 
+# The number of network recordings used to produce rate metrics 
+RECORD_DELTA 	     = 75
+
+# The number of seconds for each recording delta (in seconds)
+DELTA_SECS 			 = (RECORD_TIME * RECORD_DELTA) / 1000
+
 # How often to send routing packets to configure routing tables (in ms)
 CONFIG_PKT_TIME 	 = 5000
 
@@ -80,9 +86,7 @@ SUCCESS              = 0    		# Operation was success
 LINK_ERROR           = 1    		# Unknown error with link
 LINK_FULL            = 2    		# Link was full
 
-# Time constants
-RECORDING_INTERVAL   = 1    		# Number of milliseconds between each 
-									# 	network status recording
+
 MAX_SIMULATION_TIME  = 1e6  		# Maximum number of milliseconds the 
 									# 	network should run
                             
