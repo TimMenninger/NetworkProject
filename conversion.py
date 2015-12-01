@@ -43,6 +43,12 @@ def KB_to_bits(num_in_KB):
     '''
     return num_in_KB * 8000
     
+def bytes_to_Mb(num_in_bytes):
+    '''
+    Converts the parameter given in bytes to Mb and returns it.
+    '''
+    return (1.0 * num_in_bytes) / (8 * 10 ** 6)
+
 def KB_to_bytes(num_in_KB):
 	'''
 	Converts the parameter given in KB to bytes and returns it.
@@ -68,5 +74,6 @@ def bytes_to_MB(num_in_bytes):
     Converts the parameter given in bytes to MB and returns it.
     '''
     return (1.0 * num_in_bytes) / (10 ** 6)
+
 
 

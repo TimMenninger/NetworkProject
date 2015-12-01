@@ -145,7 +145,7 @@ class Link:
         #   negative, there is no flow.
         self.flowing_from = -1
 
-        # How fast the Router can send data (in MB/sec) 
+        # How fast the Router can send data (in Mb/sec) 
         self.rate = in_rate
 
         # How much data can be stored in the buffer (in KB)
@@ -170,7 +170,7 @@ class Link:
         #   these must be empty at all times because the link is half-duplex.
         self.packets_on_link = [ [], [] ]
         
-        # The amount of data on the link in MB
+        # The amount of data on the link in Mb
         self.data_on_link = 0
         
         # If a packet is currently being moved from the buffer to the link,
@@ -504,7 +504,7 @@ class Link:
                            (sim.network_now(), flow_name, packet_ID))
             packet_size = sim.packets[(flow_name, packet_ID)].size # in bytes
             self.buffer_load[next_pop] -= packet_size
-            self.data_on_link += cv.bytes_to_MB(packet_size)
+            self.data_on_link += cv.bytes_to_Mb(packet_size)
             
             # Calculate the transmission time as the size of the packet 
             #   divided by the link capacity (aka rate).
@@ -580,7 +580,7 @@ class Link:
         [time, flow_name, packet_ID] = \
                 heapq.heappop(self.packets_on_link[sender_index])
         packet_size = sim.packets[(flow_name, packet_ID)].size # in bytes
-        self.data_on_link -= cv.bytes_to_MB(packet_size)
+        self.data_on_link -= cv.bytes_to_Mb(packet_size)
         
         # Use the sender index to figure out the receiver index.
         rcv_index = (sender_index + 1) % 2
