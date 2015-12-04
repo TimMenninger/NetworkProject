@@ -1,4 +1,4 @@
-################################################################################
+###########################################################################
 #
 # Ricky Galliani, Tim Menninger, Rush Joshi, Schaeffer Reed
 # Network Simulator Project
@@ -10,19 +10,16 @@
 # the event queue is here, the lists of objects are here and the main loop
 # is here.
 #
-################################################################################
+###########################################################################
 
 
+###########################################################################
+#                                                                         #
+#                               Imported Modules                          #
+#                                                                         #
+###########################################################################
 
-
-
-
-################################################################################
-#                                                                              #
-#                               Imported Modules                               #
-#                                                                              #
-################################################################################
-
+# So we can use command line arguments.
 import sys
 
 # Import network objects
@@ -37,58 +34,70 @@ import event as e
 import constants as ct
 import conversion as cv
 
-# Import the simulator so we have access to the global variables in it.
+# Import simulator so we can access events, objects and time.
 sim = sys.modules['__main__']
 
+# Import utility functions
 import utility as u
 
 
-################################################################################
-#                                                                              #
-#                                   Functions                                  #
-#                                                                              #
-################################################################################
+############################################################################
+#                                                                          #
+#                                   Functions                              #
+#                                                                          #
+############################################################################
 
-#
-# load_network_objects
-#
-#
-# Description:      Loads the network topology from a config file that is argued
-#                   at the command line.  For each object in the network
-#                   topology, this creates an object and indexes it in a
-#                   dictionary by its name/ID.
-#
-# Arguments:        network_file (string) - A string representing the name of
-#                       the network topology config file.
-#
-# Return Values:    sim.endpoints (dictionary) - A dictionary of routers and
-#                       hosts indexed by their name.
-#                   sim.links (dictionary) - A dictionary of links indexed by
-#                       their respective names.
-#                   sim.flows (dictionary) - A dictionary of flows indexed by
-#                       the flow names.
-#                   sim.packets (dictionary) - A dictionary of packets, which is
-#                       left untouched (and thus empty) by this function.
-#
-# Global Variables: sim.endpoints (WRITE) - Adds hosts and routers to this
-#                       dictionary when loading the network objects.
-#                   sim.links (WRITE) - Adds links to this dictionary when
-#                       loading the network objects.
-#                   sim.flows (WRITE) - Adds flow objects to this dictionary
-#                       when loading network objects.
-#
-# Limitations:      Only works if the network topology file is in the correct
-#                   format.  Behavior is undefined otherwise.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/11/02: Created
-#
 
 def load_network_objects(network_file):
     '''
-    Loads network topology from the user's config file and instantiates the
-    Flow, Host, Link, and/or Router objects, as necessary.
+    Description:        Loads the network topology from a config file that is 
+                        argued at the command line.  For each object in the 
+                        network topology, this funciton creates an object and 
+                        indexes it in a dictionary by its unique identifier 
+                        (usually a name or ID).
+
+    Arguments:          network_file (string) 
+                            - A string representing the relative file name of 
+                            the network topology config file.
+
+    Return Values:      sim.endpoints (dictionary) 
+                            - A dictionary of Router and Host indexed by 
+                            their router_name and host_name, respectively.
+                        
+                        sim.links (dictionary) 
+                            - A dictionary of Link indexed by their respective 
+                            names.
+                        
+                        sim.flows (dictionary) 
+                            - A dictionary of Flow indexed by the flow names.
+                        
+                        sim.packets (dictionary) 
+                            - A dictionary of Packet indexed by their unique
+                            identifier (a (packet_ID, flow_name)) tuple.  This
+                            dicationary is untouched (and thus empty) by this 
+                            function.
+
+    Shared Variables:   None
+
+    Global Variables:   sim.endpoints (WRITE) 
+                            - Adds Host and Router instances to this dictionary 
+                            when loading the network objects.
+                  
+                        sim.links (WRITE) 
+                            - Adds Link instances to this dictionary when 
+                            loading the network objects.
+                  
+                        sim.flows (WRITE) 
+                            - Adds Flow instances to this dictionary when 
+                            loading network objects.
+
+    Limitations:        Only works if the network topology file is in the 
+                        correct format.  Behavior is undefined and 
+                        unpredictable otherwise.  Please see the 
+
+    Known Bugs:         None.
+
+    Revision History:   2015/11/02: Created
     '''
     
     # Open the file so we can parse it.
@@ -192,7 +201,9 @@ def load_network_objects(network_file):
     print("--- NETWORK TOPOLOGY ---\n")
     u.print_dict_keys("Endpoints", sim.endpoints)
     u.print_dict_keys("Links", sim.links)
-    u.print_dict_keys("Flows", sim.flows)
+    net_flows = sim.flows.copy()
+    del net_flows[ct.ROUTING_FLOW]
+    u.print_dict_keys("Flows", net_flows)
     print("\n------------------------")
 
     # Return all the dictionaries

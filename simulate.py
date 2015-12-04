@@ -1,3 +1,4 @@
+############################################################################
 #
 # Ricky Galliani, Tim Menninger, Rush Joshi, Schaeffer Reed
 # Network Simulator Project
@@ -8,14 +9,17 @@
 # This module contains functions that are required to carry out a network 
 # simulation.
 #
+############################################################################
 
-################################################################################
-#                                                                              #
-#                               Imported Modules                               #
-#                                                                              #
-################################################################################
+
+############################################################################
+#                                                                          #
+#                               Imported Modules                           #
+#                                                                          #
+############################################################################
 
 import sys
+from sys import stdout
 import time
 
 # Import network objects
@@ -43,12 +47,11 @@ import config_parser as cp
 import heapq
 
 
-
-################################################################################
-#                                                                              #
-#                               Global Variables                               #
-#                                                                              #
-################################################################################
+############################################################################
+#                                                                          #
+#                               Global Variables                           #
+#                                                                          #
+############################################################################
 
 # Global variables containing objects in the network as well as events.
 packets     = {} # Packets in the system
@@ -60,49 +63,56 @@ running_flows = [] # Flows that have packets still to send.
 
 event_queue = [] # Heap queue containing (time, event) tuples
 
-# The time of the network in simulated milliseconds.
-network_time = 0
-
 # We cannot have duplicate entries for time, so we must keep a "count" of
 #   entries so we have a "tie breaker"
 ev_time_dict = {}
 
 # A file to log output
-log = open(ct.OUTPUT_LOG_FILE, 'w')
+log_host = open(ct.HOST_LOG_FILE, 'w')
+log_router = open(ct.ROUTER_LOG_FILE, 'w')
+log_flow = open(ct.FLOW_LOG_FILE, 'w')
+log_main = open(ct.MAIN_LOG_FILE, 'w')
 
+# The time of the network in simulated milliseconds.
+network_time = 0
+
+# The number of network recordings being taken by the simulation.
 network_recordings = 0    
 
-#
-# run_network
-#
-# Description:      Starts the loop that will run the network.  This loop will
-#                   run either until there are no more events (which means the
-#                   network either failed or completed successfully) or until
-#                   the maximum simulation time is reached.  This starts by 
-#                   creating initial events and then the loop is fueled by
-#                   functions adding events.
-#
-# Arguments:        None.
-#
-# Return Values:    None.
-#
-# Global Variables: network_time (WRITE) - Updated to show current time.
-#                   event_queue (WRITE) - Updated to have next events.
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/10/22: Created as main()
-#                   2015/10/29: Changed to run_network and filled in more than
-#                                   print functions.
-#                   2015/11/17: Restyled and neatened it up
-#                   2015/11/18: Adding halting condition for network 
-#
+############################################################################
+#                                                                          #
+#                           Simulator Functions                            #
+#                                                                          #
+############################################################################
 
 def run_network():
     '''
-    Runs the network.
+    Description:        Starts the loop that will run the network.  This loop 
+                        will run either until there are no more events (which 
+                        means the network either failed or completed 
+                        successfully) or until the maximum simulation time is 
+                        reached.  This starts by creating initial events and 
+                        then the loop is fueled by functions adding events.
+
+    Arguments:          None.
+
+    Return Values:      None.
+
+    Global Variables:   network_time (WRITE) 
+                            - Updated to show current time.
+                      
+                        event_queue (WRITE) 
+                            - Updated to have next events.
+
+    Limitations:        None.
+
+    Known Bugs:         None.
+
+    Revision History:   2015/10/22: Created as main()
+                        2015/10/29: Changed to run_network and filled in more 
+                                    than print functions.
+                        2015/11/17: Restyled and neatened it up
+                        2015/11/18: Adding halting condition for network 
     '''
     
     # Declare that we are using/changing the global variable.
@@ -134,58 +144,67 @@ def run_network():
             # Call the event function with the correct actor and parameters
             event(actor, event_parameters)
 
+        compute_and_print_progress_status()
 
-#
-# network_now
-#
-# Description:      Returns the current simulation time in milliseconds.
-#
-# Arguments:        None.
-#
-# Return Values:    (integer) - The number of milliseconds since the network
-#                       simulation began.
-#
-# Global Variables: None.
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/11/02: Created
-#
+def compute_and_print_progress_status():
+    '''
+    '''
+    total_pkts = 0
+    total_progress = 0
+    for flow in flows.values():
+        if flow.flow_name != ct.ROUTING_FLOW:
+            num_flow_pkts = int(cv.MB_to_bytes(flow.size) /ct.PACKET_DATA_SIZE) 
+            total_pkts += num_flow_pkts
+            total_progress += num_flow_pkts - len(flow.packets_to_send)
+    
+    # Dynamically update user of Simulation Progress
+    progress_msg = "Simulation Progress: %.1f%%" \
+                                    % (100 * (total_progress / total_pkts))
+    stdout.write("\r" + progress_msg)
+    stdout.flush()
+
 
 def network_now():
     '''
-    Returns the time of the network simulation.
+    Description:        Returns the current simulation time in milliseconds.
+
+    Arguments:          None.
+
+    Return Values:      (integer) 
+                            - The number of milliseconds since the network
+                            simulation began.
+
+    Global Variables: None.
+
+    Limitations:      None.
+
+    Known Bugs:       None.
+
+    Revision History: 2015/11/02: Created
     '''
     return network_time
 
-#
-# create_initial_events
-#
-# Description:      This takes the flows and creates the initial events for
-#                   them.  The initial event will be the same for all flows,
-#                   but the time of the event will depend on the flow start
-#                   time.
-#
-# Arguments:        None.
-#
-# Return Values:    None.
-#
-# Global Variables: event_queue (WRITE) - The event_queue heapqueue has the
-#                       initial flow events enqueued.
-#
-# Limitations:      None.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/11/02: Created
-#
 
 def create_initial_events():
     '''
-    This takes the set of flows and their descriptors and fills the event queue
-    with events that signify the start of the respective flow.
+    Description:        This takes the flows and creates the initial events for
+                        them.  The initial Event will be the same for all Flow
+                        objects, but the time of the event will depend on the 
+                        Flow start time.
+
+    Arguments:          None.
+
+    Return Values:      None.
+
+    Global Variables:   event_queue (WRITE) 
+                            - The event_queue heapqueue has the initial Flow 
+                            events enqueued.
+
+    Limitations:        None.
+
+    Known Bugs:         None.
+
+    Revision History:   2015/11/02: Created
     '''    
     # Create the event that will record the network status.
     enqueue_event(network_now(), e.Event(None, None, None))
@@ -220,39 +239,40 @@ def create_initial_events():
         routing_event = e.Event(ep.router_name, 'transmit_config_packet', [])
         enqueue_event(routing_time, routing_event)
     
-
-#
-# enqueue_event
-#
-# Description:      This enqueues an event onto the event queue.  Python queues
-#                   do not accept two identical entries, and because it cannot
-#                   sort Event instances, two entries of the same time counts as
-#                   a duplicate entry.  Thus, this counts how many entries the
-#                   time has, and includes that number so that Python has a way
-#                   of differentiating and sorting the heap.
-#
-# Arguments:        time (float) - The time the event is to occur/be enqueued.
-#                   event (Event) - The event that is to occur/be enqueued.
-#
-# Return Values:    None.
-#
-# Shared Variables: None.
-#
-# Global Variables: ev_time_dict (WRITE) - Uses this to count how many times a
-#                       particular time appears in the event queue.
-#                   event_queue (WRITE) - Enqueues the event.
-#
-# Limitations:      This orders events that are otherwise supposed to be
-#                   simultaneous.
-#
-# Known Bugs:       None.
-#
-# Revision History: 2015/11/16: Created
-#
     
 def enqueue_event(time, event):
     '''
-    Enqueues an event on the event queue.
+    Description:        This enqueues an event onto the event queue.  Python 
+                        queues do not accept two identical entries, and because 
+                        it cannot sort Event instances, two entries of the 
+                        same time counts as a duplicate entry.  Thus, this 
+                        counts how many entries the time has, and includes 
+                        that number so that Python has a way of 
+                        differentiating and sorting the heap.
+
+    Arguments:          time (float) 
+                            - The time the event is to occur/be enqueued.
+                        
+                        event (Event) 
+                            - The event that is to occur/be enqueued.
+
+    Return Values:      None.
+
+    Shared Variables:   None.
+
+    Global Variables:   ev_time_dict (WRITE) 
+                            - Uses this to count how many times a particular 
+                            time appears in the event queue.
+
+                        event_queue (WRITE) 
+                            - Enqueues the event.
+
+    Limitations:        This orders events that are otherwise supposed to be
+                        simultaneous.
+
+    Known Bugs:         None.
+
+    Revision History:   2015/11/16: Created
     '''
     # Figure out the "count" for this particular time so that we don't have two
     #   entries in the heapqueue that have the exact same key.
@@ -284,10 +304,13 @@ if __name__ == "__main__":
 
     # End the timer because the simulation is over
     end = time.time()
-    print("\n[SUCCESS]: NETWORK SIMULATION COMPLETE.") 
-    print("    [ELAPSED NETWORK TIME]: %.3f seconds" % (network_now() / 1000))
+    print("\n\n[SUCCESS]: NETWORK SIMULATION COMPLETE.") 
+    net_time = (network_recordings * ct.RECORD_TIME) / 1000
+    print("    [ELAPSED NETWORK TIME]: %.3f seconds" % net_time)
     print("    [ELAPSED REAL TIME]:    %.3f seconds" % (end - start))
     print("    [NETWORK RECORDINGS]:   %d\n" % network_recordings)
 
     # Construct and desplay the plots
     s.construct_plots()
+
+
