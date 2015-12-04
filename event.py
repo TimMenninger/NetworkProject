@@ -28,7 +28,6 @@ import link as l
 import flow as f
 import router as r
 import host as h
-import event as e
 
 # Import the constants and the conversion functions
 import constants as ct

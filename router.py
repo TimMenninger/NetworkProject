@@ -27,7 +27,6 @@
 import packet as p
 import link as l
 import flow as f
-import router as r
 import host as h
 import event as e
 

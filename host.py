@@ -205,9 +205,15 @@ class Host:
         #   than we actually did.
         if len(flow.packets_in_flight) > 0 and \
            packet.ID > (flow.packets_in_flight[0][1].ID):
+            # Time out will cause congestion control to revert to slow-start 
+            #   phase, so we reset the window size to initial size of 1 packet, 
+            #   change state to slow-start, and set sst to window/2
+            flow.sst = flow.window/2
+            flow.window = 1
+            flow.state = 0
             flow.resend_inflight_packets()
         
-        # Next, because we want to check if the time we waited for timeout is
+        # Next, we want to check if the time we waited for timeout is
         #   sufficient.  If we have not received any acknowledgements yet, it
         #   is possible that we simply aren't waiting long enough for ack.
         #   Therefore, if there have been no acks received at all, increase
@@ -255,6 +261,10 @@ class Host:
         [flow_name, packet_ID] = arg_list
         packet = sim.packets[(flow_name, packet_ID)]
         flow = sim.flows[flow_name]
+
+        # Unpack our duplicate ack tuple
+        (last_ack, num_dups) = flow.num_dups
+
         if 0:#packet.type != ct.PACKET_ROUTING:
             print("[%.5f] %s: received packet %d with data %d.\n" % 
                 (sim.network_now(), self.host_name, packet.ID, packet.data))
@@ -264,8 +274,6 @@ class Host:
         if packet.type == ct.PACKET_DATA:
             # Check if it is the one that this dest is expecting.
             if packet.data == flow.expecting:
-                # Increment what we are now expecting.
-                flow.expecting += 1
                 
             # This is what we want, create an ack packet and send it.
             ack_pkt = p.Packet(-1 * packet.ID, 
@@ -288,6 +296,20 @@ class Host:
                 # The dest has received packets <to_complete> through
                 #   <packet.data> - 1, so we want to pop as many packets as
                 #   there is separation between these two parameters.
+
+                # If the flow is in slow-start phase, increment window size by 1
+                if flow.state == 0:
+                    # If we have reached the sst threshold, enter congestion avoidance
+                    if flow.window >= flow.sst:
+                        flow.state = 1
+
+                    # Otherwise we are still in slow-start, increment window by 1
+                    flow.window += 1
+
+                # If the flow is in congestion avoidance, increase window by 1/W
+                if flow.state == 1:
+                    flow.window += 1/flow.window
+
                 for i in range(packet.data - flow.to_complete):
                     flow.to_complete += 1
                     heapq.heappop(flow.packets_in_flight)
@@ -301,11 +323,14 @@ class Host:
                 # flight)
                 flow.update_flow()
                 
-            else:#if packet.data > flow.to_complete:
+            else:#if packet.data < flow.to_complete:
                 # Packets were lost.  Resend any and all that were in flight,
                 #   but only do this if this is one of the packets in flight.
                 #   Otherwise, we will end up thinking we lost way more packets
                 #   than we actually did.
+
+                if 
+
                 if len(flow.packets_in_flight) > 0 and \
                    packet.ID > (flow.packets_in_flight[0][1].ID):
                     flow.resend_inflight_packets()

@@ -82,7 +82,7 @@ ACK_TIMEOUT_FACTOR  = 3     # Number of milliseconds to wait for acknowledgement
                             # before timeout
 INITIAL_ASSUMED_RTT = 500   # Before we know the round trip time, we need to
                             #   define an initial one that we assume (in ms)
-INITIAL_WINDOW_SIZE = 10    # The initial window size for each flow.
+INITIAL_WINDOW_SIZE = 1.0   # The initial window size for each flow.
 
 # The name of the flow used for inter-router communication
 ROUTING_FLOW        = 'routing_flow'

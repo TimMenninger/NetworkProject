@@ -106,6 +106,20 @@ class Flow:
         #   guage an appropriate timeout-check delay.  Before any acks are
         #   received, this is more of a blind guess.
         self.last_RTT = ct.INITIAL_ASSUMED_RTT
+
+        # Keep track of the minimum RTT up until this point for Fast TCP
+        self.min_RTT
+
+        # The state that the flow is currently in. 0 = slow-start, 
+        #   1 = congestion avoidance, 2 = fast retransmit. Default 
+        #   set for slow-start phase
+        self.state = 0
+
+        # The slow-start threshold for the flow. Initially set to be infinity
+        self.sst = float("inf")
+
+        # Tuple to represent the last received ack # and a# of duplicate acks
+        self.num_dups = (0, 0)
         
         
     #

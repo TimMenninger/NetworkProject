@@ -10,7 +10,6 @@
 #
 
 # Import network objects
-import packet as p
 import link as l
 import flow as f
 import router as r
@@ -34,7 +33,7 @@ class Packet:
         # Store the type so we can easily identify the object.
         self.type = ct.TYPE_PACKET
         
-        # ID of the Link, each ID is a unique string (i.e. "P1")
+        # ID of the Packet, each ID is a unique string (i.e. "P1")
         self.ID = the_ID
 
         # Flow that the Packet belongs to 
