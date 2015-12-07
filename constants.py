@@ -68,6 +68,19 @@ TYPE_PACKET 		 = 4
 FLOW_FAST_TCP        = 0
 FLOW_TCP_RENO        = 1
 
+# Congestion control update reasons
+CONG_PROPER_ACK		 = 0
+CONG_DUP_ACK		 = 1
+CONG_TIMEOUT		 = 2
+
+# Congestion control algorithm lookup table
+CONG_UPDATE 		 = { CONG_PROPER_ACK : { FLOW_FAST_TCP : 'rec_update_fast_tcp',
+											 FLOW_TCP_RENO : 'rec_update_tcp_reno' },
+						 CONG_DUP_ACK    : { FLOW_FAST_TCP : 'dup_update_fast_tcp',
+											 FLOW_TCP_RENO : 'dup_update_tcp_reno' },
+						 CONG_TIMEOUT    : { FLOW_FAST_TCP : 'timeout_update_fast_tcp',
+											 FLOW_TCP_RENO : 'timeout_update_tcp_reno' } }
+
 # Packet types
 PACKET_DATA          = 0
 PACKET_ACK           = 1

@@ -190,16 +190,20 @@ class Flow:
         # Keep track of the minimum RTT up until this point for Fast TCP
         self.min_RTT
 
-        # The state that the flow is currently in. 0 = slow-start, 
-        #   1 = congestion avoidance, 2 = fast retransmit. Default 
-        #   set for slow-start phase
+        # The state that the flow is currently in. 0 = slow-start and  
+        #   1 = congestion avoidance. Default set for slow-start phase
         self.state = 0
 
         # The slow-start threshold for the flow. Initially set to be infinity
         self.sst = float("inf")
 
         # Tuple to represent the last received ack # and a# of duplicate acks
-        self.num_dups = (0, 0)
+        self.num_dup_acks = (0, 0)
+
+        # The congestion control algorithm used to update window size on this
+        #   flow.
+        self.congestion_alg = None
+
         
         
     def create_packet_ID(self):

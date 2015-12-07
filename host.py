@@ -226,12 +226,27 @@ class Host:
         if packet.data < flow.to_complete:
             return
         
+
+
+
+        ## Get the actor and function for updating window size as a result of
+        ##   this timed-out packet.
+        # actor, function = u.get_actor_and_function(self.host_name, \
+        #       ct.CONG_UPDATE[ct.CONG_TIMEOUT][flow.congestion_alg])
+        #
+        ## Call the function on the actor which will update the flow's window
+        ##   size according to the congestion control algorithm parameter.
+        # actor.function(/* Any parameters required */)
+
+
+
+
         # If not, we want to first resend all packets in flight,
         #   but only do this if this is one of the packets in flight.
         #   Otherwise, we will end up thinking we lost way more packets
         #   than we actually did.
         if len(flow.packets_in_flight) > 0 and \
-           packet.ID > (flow.packets_in_flight[0][1].ID):
+           packet.ID >= (flow.packets_in_flight[0][1].ID):
             # Time out will cause congestion control to revert to slow-start 
             #   phase, so we reset the window size to initial size of 1 packet, 
             #   change state to slow-start, and set sst to window/2
@@ -285,7 +300,7 @@ class Host:
         flow = sim.flows[flow_name]
 
         # Unpack our duplicate ack tuple
-        (last_ack, num_dups) = flow.num_dups
+        (last_ack, num_dups) = flow.num_dup_acks
 
         # Log the receive_packet() event to ct.HOST_LOG_FILE
         self.log_receive_packet(packet)
@@ -298,6 +313,7 @@ class Host:
 
             # Check if it is the one that this dest is expecting.
             if packet.data == flow.expecting:
+                flow.expecting += 1
                 
             # This is what we want, create an ack packet and send it.
             ack_pkt = p.Packet(-1 * packet.ID, 
