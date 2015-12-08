@@ -235,6 +235,9 @@ class Host:
         #   size according to the congestion control algorithm parameter.
         # actor.function(/* Any parameters required */)
 
+
+
+
         # If not, we want to first resend all packets in flight,
         #   but only do this if this is one of the packets in flight.
         #   Otherwise, we will end up thinking we lost way more packets
@@ -248,6 +251,11 @@ class Host:
             flow.window_size = 1
             flow.state = 0'''
             flow.resend_inflight_packets()
+
+        # If we are using FAST TCP, and a packet is timed out, we need to 
+        #   increment last_RTT so that the window size decreases.
+        flow.assumed_RTT *= (flow.assumed_RTT + 1) / flow.assumed_RTT
+        flow.avg_RTT = (flow.avg_RTT[0] + flow.assumed_RTT, flow.avg_RTT[1] + 1)
         
         # Next, we want to check if the time we waited for timeout is
         #   sufficient.  If we have not received any acknowledgements yet, it
@@ -362,7 +370,8 @@ class Host:
                 # Compute the most recent RTT, which can be used for congestion
                 #   control
                 flow.last_RTT = sim.network_now() - packet.time
-
+                flow.assumed_RTT = flow.last_RTT
+                #print("Expected RTT: " + str(flow.last_RTT))
                 # Add this last_RTT to our cumulative for avg
                 flow.avg_RTT = (flow.avg_RTT[0] + flow.last_RTT, flow.avg_RTT[1] + 1)
 

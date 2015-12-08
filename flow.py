@@ -248,6 +248,8 @@ class Flow:
         Revision History:   2015/12/07: Created
         '''
         # Unpack avg_RTT so we can compute the average_RTT
+        #print("Initial window size: " + str(self.window_size))
+
         (cum_RTT, num_RTTs) = self.avg_RTT
         if num_RTTs == 0:
             average_RTT = self.last_RTT
@@ -257,15 +259,18 @@ class Flow:
         if self.min_RTT == 0:
             self.min_RTT = self.last_RTT
 
-        if self.last_RTT == 0:
-            self.window_size = ct.ALPHA_VALUE
-        else:
-            self.window_size = self.window_size * (self.min_RTT / self.last_RTT) \
+        if average_RTT != 0:
+            self.window_size = self.window_size * (self.min_RTT / average_RTT) \
                                + ct.ALPHA_VALUE
-        print("")
-        print("Min RTT = " + str(self.min_RTT))
-        print("Avg RTT = " + str(average_RTT))
-        print("Window Size = " + str(self.window_size))
+
+        self.window_size = max(ct.ALPHA_VALUE, self.window_size)
+        #print()
+        #print("Min RTT     = " + str(self.min_RTT))
+        #print("Last RTT    = " + str(self.last_RTT))
+        #print("Avg RTT     = " + str(average_RTT))
+        #print("New Window Size = " + str(self.window_size))
+
+        self.avg_RTT = (0, 0)
 
         # Enqueue event for updating flow, this will cause window to be updated 
         #   periodically. There must be more than one flow running for this 
@@ -275,7 +280,6 @@ class Flow:
             update_time = sim.network_now() + ct.FAST_TCP_PERIOD
             sim.enqueue_event(update_time, FAST_TCP_update)
 
-        self.avg_RTT = (0, 0)
         
         
     def create_packet_ID(self):
