@@ -205,6 +205,48 @@ class Flow:
         self.congestion_alg = None
 
     
+    def periodic_window_update(self):
+        '''
+        Description:        This will update window size according to FAST TCP
+        
+        Arguments:          self (Flow)
+        
+        Return Values:      None.
+        
+        Shared Variables:   self.last_RTT (READ) 
+                                - This is the previous RTT time computed 
+                                for the flow.
+
+        Shared Variables:   self.min_RTT (READ) 
+                                - This is the minimum RTT time that has 
+                                been computed up to this point.
+
+        Shared Variables:   self.window_size (WRITE) 
+                                - This is the window size of the flow, that 
+                                will be updated according to FAST TCP
+        
+        Global Variables:   None.
+        
+        Limitations:        None.
+        
+        Known Bugs:         None.
+        
+        Revision History:   2015/12/07: Created
+        '''
+
+        '''
+        if self.min_RTT == 0 or self.last_RTT == 0:
+        self.window_size = self.window_size * (self.min_RTT / self.last_RTT) \
+                           + ct.ALPHA_VALUE)
+
+        # Enqueue event for updating flow, this will cause window to be updated 
+        #   periodically. There must be more than one flow running for this 
+        #   event to be enqueued.
+        if len(sim.running_flows) > 1:
+            FAST_TCP_update = e.Event(self.flow_name, 'update_flow', [])
+            sim.enqueue_event(FAST_TCP_update, 
+                              sim.network_now() + ct.FAST_TCP_PERIOD)
+        '''
         
     def create_packet_ID(self):
         '''
@@ -261,6 +303,10 @@ class Flow:
         
         Revision History:   11/16/15: Created
         '''
+        # Call update_flow() initially so that periodic window update can 
+        #   be enqueued, to start the periodic updates
+        self.update_flow()
+
         # Calculate the number of packets we need to send all of the data
         num_packets = int(cv.MB_to_bytes(self.size) / ct.PACKET_DATA_SIZE) + 1
         
@@ -375,7 +421,9 @@ class Flow:
         
         Global Variables:       sim.event_queue (WRITE) 
                                     - An event is added to this queue whenever 
-                                    a packet needs to be put in flight.
+                                    a packet needs to be put in flight, and to 
+                                    account for window updates in the case of 
+                                    FAST TCP being used.
         
         Limitations:            None.
         
@@ -383,7 +431,9 @@ class Flow:
         
         Revision History:       11/13/15: Created
         '''
-        
+        # Do only if FAST TCP is being used
+        # self.periodic_window_update()
+
         sim.log_flow.write("[%.5f]: Updating %s\n" % 
                           (sim.network_now(), self.flow_name))
         sim.log_flow.write("\tin-flight / window size: %d/%d (Before)\n" %

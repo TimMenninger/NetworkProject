@@ -57,6 +57,9 @@ CONFIG_PKT_TIME 	 = 5000
 #	useful packets to update routing tables.
 ROUTING_TIMEOUT		 = 999
 
+# How often FAST TCP window update should be called (in milliseconds)
+FAST_TCP_PERIOD		 = 100
+
 # Network objects
 TYPE_FLOW 			 = 0
 TYPE_LINK 			 = 1
@@ -106,9 +109,12 @@ MAX_SIMULATION_TIME  = 1e6  		# Maximum number of milliseconds the
 # Initial values
 ACK_TIMEOUT_FACTOR  = 3     # Number of milliseconds to wait for acknowledgement
                             # before timeout
-INITIAL_ASSUMED_RTT = 500   # Before we know the round trip time, we need to
+INITIAL_ASSUMED_RTT = 500.0 # Before we know the round trip time, we need to
                             #   define an initial one that we assume (in ms)
 INITIAL_WINDOW_SIZE = 1.0   # The initial window size for each flow.
+
+ALPHA_VALUE 		= 20	# The alpha value for FAST TCP window update in 
+							#	pkts/sec
 
 # The name of the flow used for inter-router communication
 ROUTING_FLOW         = 'routing_flow'

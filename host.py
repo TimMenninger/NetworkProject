@@ -367,6 +367,10 @@ class Host:
                 # Compute the most recent RTT, which can be used for congestion
                 #   control
                 flow.last_RTT = sim.network_now() - packet.time
+
+                # If the last computed RTT is less than min, update min
+                if flow.last_RTT < flow.min_RTT:
+                    flow.min_RTT = flow.last_RTT
                 
                 # See if the flow can be updated (i.e., more packets put in 
                 # flight)
