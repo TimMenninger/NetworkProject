@@ -39,7 +39,8 @@ TEST_CASE_2_FILENAME = "misc/test_configs/case_2.txt"
 
 # Smallest timestep we use.  Needs to be ~0 because it is used to ensure one
 #   "simultaneous" event occurs before another.
-TIME_BIT 			 = 0#0.000000000001
+TIME_BIT 			 = 0		# Changed to zero because the heapqueue has
+								#	been re-implemented to not need this...
 
 # How often to record the network status in milliseconds
 RECORD_TIME 		 = 1
@@ -51,11 +52,14 @@ RECORD_DELTA 	     = 75
 DELTA_SECS 			 = (RECORD_TIME * RECORD_DELTA) / 1000
 
 # How often to send routing packets to configure routing tables (in ms)
-CONFIG_PKT_TIME 	 = 300
+CONFIG_PKT_TIME 	 = 500
 
 # The number of milliseconds before routers assume they are receiving no more
 #	useful packets to update routing tables.
 ROUTING_TIMEOUT		 = 100
+
+# How often FAST TCP window update should be called (in milliseconds)
+FAST_TCP_PERIOD		 = 100
 
 # Network objects
 TYPE_FLOW 			 = 0
@@ -106,9 +110,12 @@ MAX_SIMULATION_TIME  = 1e6  		# Maximum number of milliseconds the
 # Initial values
 ACK_TIMEOUT_FACTOR  = 3     # Number of milliseconds to wait for acknowledgement
                             # before timeout
-INITIAL_ASSUMED_RTT = 500   # Before we know the round trip time, we need to
+INITIAL_ASSUMED_RTT = 500.0 # Before we know the round trip time, we need to
                             #   define an initial one that we assume (in ms)
 INITIAL_WINDOW_SIZE = 1.0   # The initial window size for each flow.
+
+ALPHA_VALUE 		= 20	# The alpha value for FAST TCP window update in 
+							#	pkts/sec
 
 # The name of the flow used for inter-router communication
 ROUTING_FLOW         = 'routing_flow'

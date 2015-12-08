@@ -194,6 +194,10 @@ class Flow:
         # Keep track of the minimum RTT up until this point for Fast TCP
         self.min_RTT = 0
 
+        # Keep track of average RTT over update period for FAST TCP. The 
+        #   tuple is (cum_RTT, num_RTT's observed)
+        self.avg_RTT = (0, 0)
+
         # The state that the flow is currently in. 0 = slow-start and  
         #   1 = congestion avoidance. Default set for slow-start phase
         self.state = 0
@@ -209,6 +213,70 @@ class Flow:
         self.congestion_alg = None
 
     
+    def periodic_window_update(self):
+        '''
+        Description:        This will update window size according to FAST TCP
+        
+        Arguments:          self (Flow)
+        
+        Return Values:      None.
+        
+        Shared Variables:   self.last_RTT (READ) 
+                                - This is the previous RTT time computed 
+                                for the flow.
+
+                            self.min_RTT (READ) 
+                                - This is the minimum RTT time that has 
+                                been computed up to this point.
+
+                            self.window_size (WRITE) 
+                                - This is the window size of the flow, that 
+                                will be updated according to FAST TCP
+        
+                            self.avg_RTT (READ/WRITE) 
+                                - This has cum_RTT over last update period 
+                                from which we can compute the average_RTT 
+                                for the FAST TCP window update. It will be 
+                                reset to (0,0) at the end of update
+
+        Global Variables:   None.
+        
+        Limitations:        None.
+        
+        Known Bugs:         None.
+        
+        Revision History:   2015/12/07: Created
+        '''
+
+        '''
+        # Unpack avg_RTT so we can compute the average_RTT
+        (cum_RTT, num_RTTs) = self.avg_RTT
+        if num_RTTs == 0:
+            average_RTT = 0
+
+        else:
+            average_RTT = cumRTT / num_RTTs
+
+        if self.min_RTT == 0:
+            self.min_RTT = self.last_RTT
+
+        if self.last_RTT == 0:
+            self.window_size = ct.ALPHA_VALUE
+
+        else:
+            self.window_size = self.window_size * (self.min_RTT / average_RTT) \
+                               + ct.ALPHA_VALUE)
+
+        # Enqueue event for updating flow, this will cause window to be updated 
+        #   periodically. There must be more than one flow running for this 
+        #   event to be enqueued.
+        if len(sim.running_flows) > 1:
+            FAST_TCP_update = e.Event(self.flow_name, 'periodic_window_update', [])
+            sim.enqueue_event(FAST_TCP_update, 
+                              sim.network_now() + ct.FAST_TCP_PERIOD)
+
+        self.avg_RTT = (0, 0)
+        '''
         
     def create_packet_ID(self):
         '''
@@ -238,6 +306,7 @@ class Flow:
         
         Revision History:   2015/10/29: Created
         '''
+
         self.next_available_ID += 1
         return self.next_available_ID - 1
         
@@ -265,6 +334,11 @@ class Flow:
         
         Revision History:   11/16/15: Created
         '''
+
+        # Call periodic_window_update initially so that periodic window update can 
+        #   be enqueued, to start the periodic updates
+        self.periodic_window_update()
+
         # Calculate the number of packets we need to send all of the data
         num_packets = int(cv.MB_to_bytes(self.size) / ct.PACKET_DATA_SIZE) + 1
         
@@ -379,7 +453,9 @@ class Flow:
         
         Global Variables:       sim.event_queue (WRITE) 
                                     - An event is added to this queue whenever 
-                                    a packet needs to be put in flight.
+                                    a packet needs to be put in flight, and to 
+                                    account for window updates in the case of 
+                                    FAST TCP being used.
         
         Limitations:            None.
         
@@ -387,7 +463,7 @@ class Flow:
         
         Revision History:       11/13/15: Created
         '''
-        
+
         sim.log_flow.write("[%.5f]: Updating %s\n" % 
                           (sim.network_now(), self.flow_name))
         sim.log_flow.write("\tin-flight / window size: %d/%d (Before)\n" %
