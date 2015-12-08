@@ -435,7 +435,7 @@ def plot_per_host_metrics(tms, time_max):
                     rr_host['pkts_received_rate'],          # Y
                     "Host Receive Rate (" + host_name + ")",# Title
                     "seconds",                              # X-axis
-                    "pkts/second",                          # Y-axis
+                    "Mbps",                                 # Y-axis
                     "Data",                                 # Line label
                     time_max,                               # Max-X
                     True)                                   # Yes legend
@@ -446,7 +446,7 @@ def plot_per_host_metrics(tms, time_max):
                     rr_host['ack_received_rate'],           # Y
                     "Host Receive Rate (" + host_name + ")",# Title
                     "seconds",                              # X-axis
-                    "pkts/second",                          # Y-axis
+                    "Mbps",                                 # Y-axis
                     "Ack",                                  # Line label
                     time_max,                               # Max-X
                     True)                                   # Yes legend
@@ -458,7 +458,7 @@ def plot_per_host_metrics(tms, time_max):
                     sr_host['pkts_send_rate'],              # Y
                     "Host Send Rate (" + host_name + ")",   # Title
                     "seconds",                              # X-axis
-                    "pkts/second",                          # Y-axis
+                    "Mbps",                                 # Y-axis
                     "Data",                                 # Line label
                     time_max,                               # Max-X
                     False)                                  # Yes legend
@@ -469,7 +469,7 @@ def plot_per_host_metrics(tms, time_max):
                     sr_host['ack_send_rate'],               # Y
                     "Host Send Rate (" + host_name + ")",   # Title
                     "seconds",                              # X-axis
-                    "pkts/second",                          # Y-axis
+                    "Mbps",                                 # Y-axis
                     "Ack",                                  # Line label
                     time_max,                               # Max-X
                     True)                                   # Yes legend
@@ -750,10 +750,12 @@ def write_link_data(link):
     link_rate = sum(DATA_ON_LINKS[link_name]) / ct.DELTA_SECS
 
     # Average buffer occupancy on buffer 1
-    buffer_occ_1 = int(sum(BUFFER_OCCS[(link_name, 0)]) / ct.RECORD_DELTA)
+    buffer_1_readings = BUFFER_OCCS[(link_name, 0)]
+    buffer_occ_1 = int(sum(buffer_1_readings) / len(buffer_1_readings))
 
     # Average buffer occupancy on buffer 2
-    buffer_occ_2 = int(sum(BUFFER_OCCS[(link_name, 1)]) / ct.RECORD_DELTA)
+    buffer_2_readings = BUFFER_OCCS[(link_name, 1)]
+    buffer_occ_2 = int(sum(buffer_2_readings) / len(buffer_2_readings))
 
     # --- WRITE TO DATA FILES ---
     
@@ -836,17 +838,28 @@ def write_host_data(host):
 
     # --- WRITE TO DATA FILES ---
     
-    # Compute the packet receive rate for this host (in pkts/sec)
-    pkts_received_rate = host.pkts_received / ct.DELTA_SECS
+    # Compute the packet receive rate for this host (in Mbps)
+    data_pkts_rec_Mb = cv.bytes_to_Mb(host.pkts_received * ct.PACKET_DATA_SIZE) 
+    pkts_received_rate = data_pkts_rec_Mb / ct.DELTA_SECS
+
+    # Compute the ack packet receive rate for this host (in Mbps)
+    ack_pkts_rec_Mb = cv.bytes_to_Mb(host.ack_received * ct.PACKET_ACK_SIZE)
     ack_received_rate = host.ack_received / ct.DELTA_SECS
-    
+
+    # Get the string to write out to the host recs file
     host_receive_row = str(host_name) + "," + str(pkts_received_rate) + "," + \
                        str(ack_received_rate) + "\n"
     host_receives.write(host_receive_row)
     
-    # Compute the packet send rate for this host (in pkts/sec)
-    pkts_send_rate = host.pkts_sent / ct.DELTA_SECS
-    ack_send_rate = host.ack_sent/ ct.DELTA_SECS
+    # Compute the packet send rate for this host (in Mbps/sec)
+    data_pkts_sent_Mb = cv.bytes_to_Mb(host.pkts_sent * ct.PACKET_DATA_SIZE)
+    pkts_send_rate = data_pkts_sent_Mb / ct.DELTA_SECS
+
+    # Compute the ack packet send rate for this host (in Mbps/sec)
+    ack_pkts_sent_Mb = cv.bytes_to_Mb(host.ack_sent * ct.PACKET_ACK_SIZE)
+    ack_send_rate = ack_pkts_sent_Mb / ct.DELTA_SECS
+
+    # Get the string to write out to the host_sends file
     host_send_row = str(host_name) + "," + str(pkts_send_rate) + "," + \
                     str(ack_send_rate) + "\n"
     host_sends.write(host_send_row)
@@ -901,6 +914,11 @@ def write_flow_data(flow):
     # Window size readings
     window_sizes.write(str(flow_name) + "," + str(window_size) + "\n")
 
+    # Clear the data structures
+    ACKED_DATA.clear()
+    WINDOW_SIZES.clear()
+    PACKET_DELAYS.clear()
+
 
 def update_flow_data(flow):
     '''
@@ -908,7 +926,7 @@ def update_flow_data(flow):
     flow_name = flow.flow_name
 
     # Add the amount of acknowledged data to the data structure
-    acked_data_amt = flow.acked_packets * ct.PACKET_DATA_SIZE
+    acked_data_amt = flow.acked_packets * cv.Mb_to_MB(ct.PACKET_DATA_SIZE)
     if flow_name not in ACKED_DATA:
         ACKED_DATA[flow_name] = [acked_data_amt]
     else:
