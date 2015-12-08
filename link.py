@@ -419,7 +419,7 @@ class Link:
                 next_pop = data_src
             elif time1 < time0:
                 next_pop = 1
-        
+    
         return data_src, next_pop
 
             
@@ -509,7 +509,7 @@ class Link:
             # Calculate the transmission time as the size of the packet 
             #   divided by the link capacity (aka rate).
             packet_size = sim.packets[(flow_name, packet_ID)].size
-            transmission_time =  cv.bytes_to_MB(packet_size) / self.rate
+            transmission_time =  cv.bytes_to_Mb(packet_size) / self.rate
             
             # Create an event after this packet's transmission to reset the
             #   in_transmission flag.  Subtract a small amount of time to 

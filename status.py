@@ -30,6 +30,7 @@ import flow as f
 import router as r
 import host as h
 import event as e
+import link as l
 
 # Import the constants and the conversion functions
 import constants as ct
@@ -55,16 +56,12 @@ import pandas as pd
 import time
 import warnings
 
-
-
+# Python dictionaries that store network recording data
 DATA_ON_LINKS   = {}
 ACKED_DATA      = {}
 BUFFER_OCCS     = {}
 WINDOW_SIZES    = {}
 PACKET_DELAYS   = {}
-
-
-
 
 ############################################################################
 #                                                                          #
@@ -995,7 +992,6 @@ def record_network_status():
     # from milliseconds to seconds
     if is_write_recording:
         times.write(str(sim.network_now() / 1000) + "\n")
-
 
     # Get the link rate, buffer occupancies and packet loss for all links
     for link_name in all_links:
