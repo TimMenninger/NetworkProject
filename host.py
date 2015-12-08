@@ -248,9 +248,9 @@ class Host:
             # Time out will cause congestion control to revert to slow-start 
             #   phase, so we reset the window size to initial size of 1 packet, 
             #   change state to slow-start, and set sst to window/2
-            flow.sst = flow.window_size/2
+            '''flow.sst = flow.window_size/2
             flow.window_size = 1
-            flow.state = 0
+            flow.state = 0'''
             flow.resend_inflight_packets()
         
         # Next, we want to check if the time we waited for timeout is
@@ -340,10 +340,10 @@ class Host:
                 #   <packet.data> - 1, so we want to pop as many packets as
                 #   there is separation between these two parameters.
 
-                flow.num_dup_acks = (packet.ID, 0)
+                #flow.num_dup_acks = (packet.ID, 0)
 
                 # If the flow is in slow-start phase, increment window size by 1
-                if flow.state == 0:
+                '''if flow.state == 0:
                     # If we have reached the sst threshold, enter congestion avoidance
                     if flow.window_size >= flow.sst:
                         flow.state = 1
@@ -354,7 +354,7 @@ class Host:
 
                 # If the flow is in congestion avoidance, increase window by 1/W
                 if flow.state == 1:
-                    flow.window_size += 1/flow.window_size
+                    flow.window_size += 1/flow.window_size'''
 
                 for i in range(packet.data - flow.to_complete):
                     flow.to_complete += 1
@@ -392,11 +392,11 @@ class Host:
 
                 # If at least three duplicate acks have been received, then set 
                 #   window size to w/2, set sst to w/2, and retransmit
-                if num_dups == 3:
+                '''if num_dups == 3:
                     flow.sst = flow.window_size/2
                     flow.window_size = flow.window_size/2
                     # num_dups = 0
-                    flow.num_dup_acks = (packet.ID, 0)
+                    flow.num_dup_acks = (packet.ID, 0)'''
 
                 # Resend all packets in flight.
                 if len(flow.packets_in_flight) > 0 and \

@@ -213,7 +213,7 @@ class Flow:
         self.congestion_alg = None
 
     
-    def periodic_window_update(self):
+    def periodic_window_update(self, unused_list):
         '''
         Description:        This will update window size according to FAST TCP
         
@@ -248,14 +248,14 @@ class Flow:
         Revision History:   2015/12/07: Created
         '''
 
-        '''
+        
         # Unpack avg_RTT so we can compute the average_RTT
         (cum_RTT, num_RTTs) = self.avg_RTT
         if num_RTTs == 0:
             average_RTT = 0
 
         else:
-            average_RTT = cumRTT / num_RTTs
+            average_RTT = cum_RTT / num_RTTs
 
         if self.min_RTT == 0:
             self.min_RTT = self.last_RTT
@@ -265,18 +265,18 @@ class Flow:
 
         else:
             self.window_size = self.window_size * (self.min_RTT / average_RTT) \
-                               + ct.ALPHA_VALUE)
+                               + ct.ALPHA_VALUE
 
         # Enqueue event for updating flow, this will cause window to be updated 
         #   periodically. There must be more than one flow running for this 
         #   event to be enqueued.
         if len(sim.running_flows) > 1:
             FAST_TCP_update = e.Event(self.flow_name, 'periodic_window_update', [])
-            sim.enqueue_event(FAST_TCP_update, 
-                              sim.network_now() + ct.FAST_TCP_PERIOD)
+            update_time = sim.network_now() + ct.FAST_TCP_PERIOD
+            sim.enqueue_event(update_time, FAST_TCP_update)
 
         self.avg_RTT = (0, 0)
-        '''
+        
         
     def create_packet_ID(self):
         '''
@@ -337,7 +337,7 @@ class Flow:
 
         # Call periodic_window_update initially so that periodic window update can 
         #   be enqueued, to start the periodic updates
-        self.periodic_window_update()
+        self.periodic_window_update([])
 
         # Calculate the number of packets we need to send all of the data
         num_packets = int(cv.MB_to_bytes(self.size) / ct.PACKET_DATA_SIZE) + 1
