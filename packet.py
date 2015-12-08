@@ -122,7 +122,7 @@ class Packet:
             self.size = ct.PACKET_ROUTING_SIZE
         
         # The time of transmission from src.  -1 means not transmitted
-        self.time = -1
+        self.time = None
         
         # The data is usually a marker so we have some sense of chronology of
         #   packets

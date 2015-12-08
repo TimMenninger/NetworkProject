@@ -165,7 +165,7 @@ class Link:
         # The packet buffers on either end of the half-duplex link (heapq's)
         self.buffers = [ [], [] ]
         
-        # The amount of data in the buffer in KB.
+        # The amount of data in the buffer in kilobytes.
         self.buffer_load = [ 0, 0 ]
         
         # The number of packets on the link from the indexed endpoint.  One of
@@ -494,7 +494,8 @@ class Link:
         #   travel as the other packets, put it on the link.  Otherwise, we 
         #   must wait until the link is clear to send it the opposite 
         #   direction.
-        if next_pop == data_src or data_src == -1:
+        if (next_pop == data_src and not self.in_transmission) or \
+			data_src == -1:
             # We are sending a packet, so set the in_transmission flag.
             self.in_transmission = True
             

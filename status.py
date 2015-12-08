@@ -1063,7 +1063,7 @@ def record_network_status():
     # Create the event that will record the network status, but only if there
     #   is nothing else in the event queue.  Otherwise, this will keep the
     #   network running indefinitely.  The one flow running that is allowed
-    #	is the routing flow.
+    #   is the routing flow.
     if len(sim.running_flows) > 1:
         next_recording = sim.network_now() + ct.RECORD_TIME
         sim.enqueue_event(next_recording, e.Event(None, None, None))

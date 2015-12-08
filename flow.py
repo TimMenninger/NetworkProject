@@ -411,6 +411,10 @@ class Flow:
             # Make sure the new packet contains the same data (index)
             new_pkt.set_data(old_pkt.data)
             
+            # Set the time of this new packet to be the current time so we can
+            #	determine the round trip time later.
+            new_pkt.time = sim.network_now()
+            
             # Add it to the new queue of packets.
             heapq.heappush(self.packets_in_flight, (new_pkt.data, new_pkt))
             
@@ -482,6 +486,10 @@ class Flow:
                 
             # Get a packet from the list of packets to send.
             (pkt_num, pkt) = heapq.heappop(self.packets_to_send)
+            
+            # Set the time of the packet so we can calculate the round trip
+            #	time upon reception of this packet's ack.
+            pkt.time = sim.network_now()
 
             # Put it in flight.
             heapq.heappush(self.packets_in_flight, (pkt_num, pkt))
