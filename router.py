@@ -461,7 +461,7 @@ class Router:
         #
         data *= 2
         num_pkts *= 2
-        queuing_delay = data / link.rate
+        queuing_delay = (data / link.rate) / 1000
         prop_delay = (num_pkts / ct.CONSEC_PKTS + 1) * link.delay
         return queuing_delay + prop_delay
         

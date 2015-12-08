@@ -35,6 +35,8 @@ import conversion as cv
 # Import utility functions
 import utility as u
 
+import status as st
+
 # Import functions to carry out the simulation
 sim  = sys.modules['__main__']
 
@@ -294,6 +296,9 @@ class Link:
         #   index of the opposite endpoint.
         ep, other_ep = u.assign_endpoints(self.end_points, sender_name)
         
+        # Add the buffer recording
+        st.add_buffer_recording(sim.network_now(), self.link_name)
+
         # Put the packet onto the buffer heapqueue corresponding to the sender.
         #   The time we use for this will be now, because we are using first
         #   come first served priority on the links, but only if there is 
@@ -320,7 +325,8 @@ class Link:
         link_time = sim.network_now() + ct.TIME_BIT
         link_ev = e.Event(self.link_name, 'put_packet_on_link', [])
         sim.enqueue_event(link_time, link_ev)
-            
+    
+
             
     def reset_in_transmission(self, unused_list):
         '''
@@ -479,10 +485,10 @@ class Link:
         #   here.
         if len(self.buffers[0]) == 0 and len(self.buffers[1]) == 0:
             return
-        
+
         # Get which buffer to pop a packet from next (0 or 1)
         data_src, next_pop = self.get_next_buffer_pop()
-        
+
         # Now that we know the source of the next packet, we know if it goes on
         #   right away.  If the next packet will go in the same direction of 
         #   travel as the other packets, put it on the link.  Otherwise, we 
@@ -504,12 +510,14 @@ class Link:
                            (sim.network_now(), flow_name, packet_ID))
             packet_size = sim.packets[(flow_name, packet_ID)].size # in bytes
             self.buffer_load[next_pop] -= cv.bytes_to_KB(packet_size)
+
             self.data_on_link += cv.bytes_to_Mb(packet_size)
             
             # Calculate the transmission time as the size of the packet 
             #   divided by the link capacity (aka rate).
             packet_size = sim.packets[(flow_name, packet_ID)].size
-            transmission_time =  cv.bytes_to_Mb(packet_size) / self.rate
+            transmission_time =  (cv.bytes_to_Mb(packet_size) / self.rate) 
+            transmission_time /= 1000 # To get it in ms 
             
             # Create an event after this packet's transmission to reset the
             #   in_transmission flag.  Subtract a small amount of time to 

@@ -112,8 +112,10 @@ def open_data_files():
     lr = open(ct.LINK_RATE_OUT, 'w')            # link rate recordings
     lr.write("link_name,link_rate\n")
 
+    # Note! Buffer Occupancies has its own times column because it is sampled
+    # at a higher frequency
     bo = open(ct.BUFFER_OCC_OUT, 'w')           # buffer occupancy recordings
-    bo.write("link_name,buffer_occ_1,buffer_occ_2\n")
+    bo.write("times,link_name,buffer_occ_1,buffer_occ_2\n")
 
     pl = open(ct.PACKET_LOSS_OUT, 'w')          # packet loss recordings
     pl.write('link_name,packet_loss\n')
@@ -253,8 +255,9 @@ def plot_per_link_metrics(tms, time_max):
     lr = pd.read_csv(ct.LINK_RATE_OUT, 
                      dtype={'link_name': str, 'link_rate': np.float64})
     bf = pd.read_csv(ct.BUFFER_OCC_OUT, 
-                     dtype={'link_name': str, 'buffer_occ_1': np.float64, 
-                                              'buffer_occ_2': np.float64})
+                     dtype={'times':np.float64,'link_name': str, 
+                                               'buffer_occ_1': np.float64, 
+                                               'buffer_occ_2': np.float64})
     pl = pd.read_csv(ct.PACKET_LOSS_OUT, 
                      dtype={'link_name': str, 'packet_loss': np.int32})
 
@@ -282,7 +285,7 @@ def plot_per_link_metrics(tms, time_max):
 
             # First, buffer 1
             plot_metric(ax_buf_occ[i],                          # Plot
-                        tms['time'],                            # X
+                        bf_link['times'],                       # X
                         bf_link['buffer_occ_1'],                # Y
                         "Buffer Occupancy (" + link_name + ")", # Title
                         "seconds",                              # X-axis
@@ -294,7 +297,7 @@ def plot_per_link_metrics(tms, time_max):
 
             # Next, buffer 2
             plot_metric(ax_buf_occ[i],                          # Plot
-                        tms['time'],                            # X
+                        bf_link['times'],                       # X
                         bf_link['buffer_occ_2'],                # Y
                         "Buffer Occupancy (" + link_name + ")", # Title
                         "seconds",                              # X-axis
@@ -336,19 +339,19 @@ def plot_per_link_metrics(tms, time_max):
         
         # First, buffer 1
         plot_metric(ax_buf_occ,                             # Plot
-                    tms['time'],                            # X
+                    bf['times'],                            # X
                     bf['buffer_occ_1'],                     # Y
                     "Buffer Occupancy (" + link_name + ")", # Title
                     "seconds",                              # X-axis
                     "pkts",                                 # Y-axis
                     "buffer 1",                             # Line label
                     time_max,                               # Max-X
-                    True)                                   # Yes legend
+                    True)                                  # No legend
 
 
         # Next, buffer 2
         plot_metric(ax_buf_occ,                             # Plot
-                    tms['time'],                            # X
+                    bf['times'],                            # X
                     bf['buffer_occ_2'],                     # Y
                     "Buffer Occupancy (" + link_name + ")", # Title
                     "seconds",                              # X-axis
@@ -718,12 +721,42 @@ def construct_plots():
     plt.show()
  
 
-def write_link_data(link):
+def add_buffer_recording(time, link_name):
+    '''
+    Description:        This function adds a buffer occupancy recording, which
+                        needs to be sampled at a higher frequency than all of 
+                        the other recordings 
+
+    Arguments:          time (float)
+
+                        link_name (string)
+
+                        ep (int)
+
+                        buffer_load (float) 
+
+    Return Values:      None.
+
+    Global Variables:   None.
+
+    Limitations:        None.
+
+    Known Bugs:         None.
+
+    Revision History:   2015/12/7: Created and filled in.
+    '''
+    link = sim.links[link_name]
+    write_link_data(link, True)
+
+
+def write_link_data(link, just_buffer):
     '''
     Description:        This function writes the data to the 
                         three link output files.  
 
-    Arguments:          link (Link) 
+    Arguments:          - link (Link)
+
+                        - just_buffer (boolean)
 
     Return Values:      None.
 
@@ -736,6 +769,7 @@ def write_link_data(link):
     Revision History:   2015/11/19: Created and filled in.
                         2015/11/30: Updated so that curves are no longer
                                     jaggedy
+                        2015/12/7:  Updated with just_buffer argument
     '''
     link_name = link.link_name
 
@@ -744,31 +778,33 @@ def write_link_data(link):
 
     # The total amount of data on the link for this recording delta
     # divided by the amount of seconds that have passed for this delta
-    link_rate = sum(DATA_ON_LINKS[link_name]) / ct.DELTA_SECS
+    if not just_buffer:
+        link_rate = sum(DATA_ON_LINKS[link_name]) / ct.DELTA_SECS
 
     # Average buffer occupancy on buffer 1
-    buffer_1_readings = BUFFER_OCCS[(link_name, 0)]
-    buffer_occ_1 = int(sum(buffer_1_readings) / len(buffer_1_readings))
+    buffer_occ_1 = link.buffer_load[0]
 
     # Average buffer occupancy on buffer 2
-    buffer_2_readings = BUFFER_OCCS[(link_name, 1)]
-    buffer_occ_2 = int(sum(buffer_2_readings) / len(buffer_2_readings))
+    buffer_occ_2 = link.buffer_load[1]
 
     # --- WRITE TO DATA FILES ---
     
     # Link rate readings
-    link_rates.write(str(link_name) + "," + str(link_rate) + "\n")
+    if not just_buffer:
+        link_rates.write(str(link_name) + "," + str(link_rate) + "\n")
 
     # Buffer occupancy readings (two buffers for each link)
-    buf_row = str(link_name) + "," + str(buffer_occ_1) + "," + \
-              str(buffer_occ_2)
+    buf_row = str(sim.network_now() / 1000) + "," + str(link_name) + "," + \
+              str(buffer_occ_1) + "," + str(buffer_occ_2)
     buffer_occs.write(buf_row + "\n")
     
     # Packet loss readings
-    packet_loss.write((link_name) + ',' + str(link.num_packets_lost) + "\n")
+    if not just_buffer:
+        packet_loss.write((link_name) + ',' + str(link.num_packets_lost) + "\n")
 
     # Clear the data structures 
-    DATA_ON_LINKS.clear()
+    if not just_buffer:
+        DATA_ON_LINKS.clear()
     BUFFER_OCCS.clear()
 
 
@@ -800,15 +836,8 @@ def update_link_data(link):
     else:
         DATA_ON_LINKS[link_name].append(link.data_on_link)
 
-    # Add the current buffer occupancies to the data structure
-    if (link_name, 0) not in BUFFER_OCCS and (link_name, 1) not in BUFFER_OCCS:
-        BUFFER_OCCS[(link_name, 0)] = [link.buffer_load[0]]
-        BUFFER_OCCS[(link_name, 1)] = [link.buffer_load[1]]
-    else:
-        BUFFER_OCCS[(link_name, 0)].append(
-                                    link.buffer_load[0])
-        BUFFER_OCCS[(link_name, 1)].append(
-                                    link.buffer_load[1])
+    add_buffer_recording(sim.network_now(), link_name)
+    add_buffer_recording(sim.network_now(), link_name)
 
     # Do not need to update a packet losses data structure because
     # it is just a cumulative count
@@ -1004,7 +1033,7 @@ def record_network_status():
 
         if is_write_recording:
             # Write link data to the 3 link output files.
-            write_link_data(link)
+            write_link_data(link, False)
 
 
     # Get the host send and receive rate for all hosts
