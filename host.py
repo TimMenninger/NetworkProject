@@ -404,7 +404,6 @@ class Host:
                     flow.num_dup_acks = (packet.ID, num_dups)
             # else the packet has already been received
         # else the packet is a routing packet and can be ignored.
-        print(flow.last_RTT)
         
         
     def log_send_packet(self, packet):
