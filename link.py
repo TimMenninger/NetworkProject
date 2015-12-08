@@ -419,7 +419,7 @@ class Link:
                 next_pop = data_src
             elif time1 < time0:
                 next_pop = 1
-        
+    
         return data_src, next_pop
 
             
