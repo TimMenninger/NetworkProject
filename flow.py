@@ -247,13 +247,10 @@ class Flow:
         
         Revision History:   2015/12/07: Created
         '''
-
-        
         # Unpack avg_RTT so we can compute the average_RTT
         (cum_RTT, num_RTTs) = self.avg_RTT
         if num_RTTs == 0:
-            average_RTT = 0
-
+            average_RTT = self.last_RTT
         else:
             average_RTT = cum_RTT / num_RTTs
 
@@ -262,10 +259,13 @@ class Flow:
 
         if self.last_RTT == 0:
             self.window_size = ct.ALPHA_VALUE
-
         else:
-            self.window_size = self.window_size * (self.min_RTT / average_RTT) \
+            self.window_size = self.window_size * (self.min_RTT / self.last_RTT) \
                                + ct.ALPHA_VALUE
+        print("")
+        print("Min RTT = " + str(self.min_RTT))
+        print("Avg RTT = " + str(average_RTT))
+        print("Window Size = " + str(self.window_size))
 
         # Enqueue event for updating flow, this will cause window to be updated 
         #   periodically. There must be more than one flow running for this 
