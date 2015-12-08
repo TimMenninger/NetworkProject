@@ -183,7 +183,7 @@ class Flow:
         self.acked_packets = 0
         
         # This is the assumed RTT, which is only relevant when we have not
-        #	yet received any packets and are still guessing the RTT.
+        #   yet received any packets and are still guessing the RTT.
         self.assumed_RTT = ct.INITIAL_ASSUMED_RTT
         
         # Keep track of the round trip time a packet has taken so we can
@@ -247,31 +247,6 @@ class Flow:
         
         Revision History:   2015/12/07: Created
         '''
-        # Unpack avg_RTT so we can compute the average_RTT
-        #print("Initial window size: " + str(self.window_size))
-
-        (cum_RTT, num_RTTs) = self.avg_RTT
-        if num_RTTs == 0:
-            average_RTT = self.last_RTT
-        else:
-            average_RTT = cum_RTT / num_RTTs
-
-        if self.min_RTT == 0:
-            self.min_RTT = self.last_RTT
-
-        if average_RTT != 0:
-            self.window_size = self.window_size * (self.min_RTT / average_RTT) \
-                               + ct.ALPHA_VALUE
-
-        self.window_size = max(ct.ALPHA_VALUE, self.window_size)
-        #print()
-        #print("Min RTT     = " + str(self.min_RTT))
-        #print("Last RTT    = " + str(self.last_RTT))
-        #print("Avg RTT     = " + str(average_RTT))
-        #print("New Window Size = " + str(self.window_size))
-
-        self.avg_RTT = (0, 0)
-
         # Enqueue event for updating flow, this will cause window to be updated 
         #   periodically. There must be more than one flow running for this 
         #   event to be enqueued.
@@ -279,6 +254,21 @@ class Flow:
             FAST_TCP_update = e.Event(self.flow_name, 'periodic_window_update', [])
             update_time = sim.network_now() + ct.FAST_TCP_PERIOD
             sim.enqueue_event(update_time, FAST_TCP_update)
+        
+        # Unpack avg_RTT so we can compute the average_RTT
+        (cum_RTT, num_RTTs) = self.avg_RTT
+        # If there are no RTTs, we have no information to update the flow with.
+        if num_RTTs != 0:
+            average_RTT = cum_RTT / num_RTTs
+
+            if average_RTT != 0:
+                self.window_size = self.window_size * (self.min_RTT / average_RTT) \
+                                   + ct.ALPHA_VALUE
+                                   
+        # Reset the metrics used to update the flow for FAST TCP
+        self.avg_RTT = (0, 0)
+        self.min_RTT = 0
+
 
         
         
@@ -417,7 +407,7 @@ class Flow:
             new_pkt.set_data(old_pkt.data)
             
             # Set the time of this new packet to be the current time so we can
-            #	determine the round trip time later.
+            #   determine the round trip time later.
             new_pkt.time = sim.network_now()
             
             # Add it to the new queue of packets.
@@ -493,7 +483,7 @@ class Flow:
             (pkt_num, pkt) = heapq.heappop(self.packets_to_send)
             
             # Set the time of the packet so we can calculate the round trip
-            #	time upon reception of this packet's ack.
+            #   time upon reception of this packet's ack.
             pkt.time = sim.network_now()
 
             # Put it in flight.

@@ -52,15 +52,11 @@ RECORD_DELTA 	     = 75
 DELTA_SECS 			 = (RECORD_TIME * RECORD_DELTA) / 1000
 
 # How often to send routing packets to configure routing tables (in ms)
-CONFIG_PKT_TIME 	 = 200
+CONFIG_PKT_TIME 	 = 500
 
 # The number of milliseconds before routers assume they are receiving no more
 #	useful packets to update routing tables.
-ROUTING_TIMEOUT		 = 100
-
-# How often FAST TCP window update should be called (in milliseconds)
-FAST_TCP_PERIOD		 = 50
-FAST_TCP_TIMEOUT_FACTOR = 1.5
+ROUTING_TIMEOUT		 = 150
 
 # Network objects
 TYPE_FLOW 			 = 0
@@ -72,20 +68,7 @@ TYPE_PACKET 		 = 4
 # Congestion Control algorithm
 FLOW_FAST_TCP        = 0
 FLOW_TCP_RENO        = 1
-DEFAULT_ALG          = FLOW_TCP_RENO
-
-# Congestion control update reasons
-CONG_PROPER_ACK		 = 0
-CONG_DUP_ACK		 = 1
-CONG_TIMEOUT		 = 2
-
-# Congestion control algorithm lookup table
-CONG_UPDATE 		 = { CONG_PROPER_ACK : { FLOW_FAST_TCP : 'rec_update_fast_tcp',
-											 FLOW_TCP_RENO : 'rec_update_tcp_reno' },
-						 CONG_DUP_ACK    : { FLOW_FAST_TCP : 'dup_update_fast_tcp',
-											 FLOW_TCP_RENO : 'dup_update_tcp_reno' },
-						 CONG_TIMEOUT    : { FLOW_FAST_TCP : 'timeout_update_fast_tcp',
-											 FLOW_TCP_RENO : 'timeout_update_tcp_reno' } }
+DEFAULT_ALG          = FLOW_FAST_TCP
 
 # Packet types
 PACKET_DATA          = 0
@@ -116,8 +99,12 @@ INITIAL_ASSUMED_RTT = 500.0 # Before we know the round trip time, we need to
                             #   define an initial one that we assume (in ms)
 INITIAL_WINDOW_SIZE = 1.0   # The initial window size for each flow.
 
-ALPHA_VALUE 		= 20 	# The alpha value for FAST TCP window update in 
+ALPHA_VALUE 		= 2 	# The alpha value for FAST TCP window update in 
 							#	pkts/sec
+
+# How often FAST TCP window update should be called (in milliseconds)
+FAST_TCP_PERIOD		 = 100
+FAST_TCP_TIMEOUT_FACTOR = 8 #Use 8 for case 0 and 1.35 for case 1 
 
 # The name of the flow used for inter-router communication
 ROUTING_FLOW         = 'routing_flow'

@@ -168,6 +168,12 @@ class Link:
         # The amount of data in the buffer in kilobytes.
         self.buffer_load = [ 0, 0 ]
         
+        # The total amount of data that has traversed this link in either
+        #   direction.  This is used for Bellman Ford and is reset by that
+        #   process.
+        self.total_buffer_load = [ 0, 0 ]
+        self.total_packets = [ 0, 0 ]
+        
         # The number of packets on the link from the indexed endpoint.  One of
         #   these must be empty at all times because the link is half-duplex.
         self.packets_on_link = [ [], [] ]
@@ -214,7 +220,7 @@ class Link:
         
         # Return the amount of data in the buffer and the number of packets
         #   (which is necessary because not all packets are the same size)
-        return self.buffer_load[ep_index], len(self.buffers[ep_index])
+        return self.total_buffer_load[ep_index], self.total_packets[ep_index]
     
         
     def get_other_ep(self, ep_name):
@@ -313,6 +319,10 @@ class Link:
             # Update the buffer load for this link buffer because it is now
             # storing an additional packet.size
             self.buffer_load[ep] += cv.bytes_to_KB(packet.size)
+            
+            # Add to the totals so Bellman Ford can run.
+            self.total_packets[ep] += 1
+            self.total_buffer_load[ep] += packet.size
         
         else: 
             self.num_packets_lost += 1
@@ -325,6 +335,40 @@ class Link:
         link_time = sim.network_now() + ct.TIME_BIT
         link_ev = e.Event(self.link_name, 'put_packet_on_link', [])
         sim.enqueue_event(link_time, link_ev)
+        
+        
+    
+    def reset_this_buffer(self, ep_name):
+        '''
+        reset_this_buffer
+        
+        Description:        Resets the buffer totals so that the routers can
+                            start to tally again and carry out Bellman Ford.
+                            
+        Arguments:          self (Link)
+                            ep_name (string) - The name of the endpoint (should
+                                be a router) that called this function to have
+                                its buffer data cleared.
+                                
+        Return Values:      None
+        
+        Shared Variables:   total_buffer_load (WRITE)
+                            total_packets (WRITE)
+                            
+        Global Variables:   None.
+        
+        Limitations:        None.
+        
+        Known Bugs:         None.
+        
+        Revision History:   12/08/15: Created
+        '''
+        # Get the endpoint index for the caller of this function.
+        ep_index = self.end_points[ep_name]
+        
+        # Reset the buffer totals for it.
+        self.total_buffer_load[ep_index] = 0
+        self.total_packets[ep_index] = 0
     
 
             
@@ -495,7 +539,7 @@ class Link:
         #   must wait until the link is clear to send it the opposite 
         #   direction.
         if (next_pop == data_src and not self.in_transmission) or \
-			data_src == -1:
+            data_src == -1:
             # We are sending a packet, so set the in_transmission flag.
             self.in_transmission = True
             

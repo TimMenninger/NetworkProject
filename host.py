@@ -235,7 +235,7 @@ class Host:
         #   size according to the congestion control algorithm parameter.
         # actor.function(/* Any parameters required */)
 
-
+        #print(flow.window_size, flow.min_RTT, flow.avg_RTT)
 
 
         # If not, we want to first resend all packets in flight,
@@ -253,14 +253,20 @@ class Host:
                 flow.window_size = 1
                 flow.state = 0
 
-
+            # Resend all of the packets in flight because if one was lost,
+            #   then it is presumable that the rest of the ones in flight
+            #   were lost.
             flow.resend_inflight_packets()
 
-        # If we are using FAST TCP, and a packet is timed out, we need to 
-        #   increment last_RTT so that the window size decreases.
+        # If we are using FAST TCP, and a packet is timed out, we need to dock
+        #   the average RTT so that we don't increase the window size as
+        #   significantly (if at all).  The amount we dock it varies with the
+        #   window size so that it gets hurt less if 1 out of a thousand
+        #   is lost instead of 1 out of ten.
         if flow.congestion_alg == ct.FLOW_FAST_TCP:
-            flow.assumed_RTT *= (flow.assumed_RTT + 1) / flow.assumed_RTT
-            flow.avg_RTT = (flow.avg_RTT[0] + flow.assumed_RTT, flow.avg_RTT[1] + 1)
+            flow.avg_RTT = (flow.avg_RTT[0] * \
+                            (1 + 1 / (ct.FAST_TCP_TIMEOUT_FACTOR * \
+                            flow.window_size)), flow.avg_RTT[1])
         
         # Next, we want to check if the time we waited for timeout is
         #   sufficient.  If we have not received any acknowledgements yet, it
@@ -360,9 +366,10 @@ class Host:
                         if flow.window_size >= flow.sst:
                             flow.state = 1
 
-                        # Otherwise we are still in slow-start, increment window by 1
-                        #   for acknowledged packet
-                        flow.window_size += 1
+                        else:
+                            # Otherwise we are still in slow-start, increment window by 1
+                            #   for acknowledged packet
+                            flow.window_size += 1
 
                     # If the flow is in congestion avoidance, increase window by 1/W
                     if flow.state == 1:
@@ -382,10 +389,12 @@ class Host:
                 #print("Expected RTT: " + str(flow.last_RTT))
                 # Add this last_RTT to our cumulative for avg
                 flow.avg_RTT = (flow.avg_RTT[0] + flow.last_RTT, flow.avg_RTT[1] + 1)
+                #print (flow.last_RTT)
 
                 # If the last computed RTT is less than min, update min
-                if flow.last_RTT < flow.min_RTT:
+                if flow.min_RTT == 0:
                     flow.min_RTT = flow.last_RTT
+                flow.min_RTT = min(flow.min_RTT, flow.last_RTT)
                 
                 # See if the flow can be updated (i.e., more packets put in 
                 # flight)

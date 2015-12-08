@@ -459,8 +459,10 @@ class Router:
         #           after the way is cleared.
         #
         data *= 2
+        data /= ct.CONFIG_PKT_TIME # Puts it as a rate per millisecond.
         num_pkts *= 2
-        queuing_delay = (data / link.rate) / 1000
+        num_pkts /= ct.CONFIG_PKT_TIME # Puts it as a rate per millisecond.
+        queuing_delay = (cv.KB_to_Mb(data) / link.rate) / 1000
         prop_delay = (num_pkts / ct.CONSEC_PKTS + 1) * link.delay
         return queuing_delay + prop_delay
         
@@ -504,6 +506,11 @@ class Router:
         for host_name in self.routing_table:
             if host_name not in self.updating_table:
                 self.updating_table[host_name] = self.routing_table[host_name]
+                
+        # Reset the data logger on the link so we can fill the table again.
+        for link_name in self.links:
+            link = sim.links[link_name]
+            link.reset_this_buffer(self.router_name)
                         
         # Switch routing tables then clear the updating one for the next time
         #   around.
