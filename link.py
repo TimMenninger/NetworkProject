@@ -163,7 +163,7 @@ class Link:
         # The packet buffers on either end of the half-duplex link (heapq's)
         self.buffers = [ [], [] ]
         
-        # The amount of data in the buffer in bytes.
+        # The amount of data in the buffer in kilobytes.
         self.buffer_load = [ 0, 0 ]
         
         # The number of packets on the link from the indexed endpoint.  One of
@@ -488,7 +488,8 @@ class Link:
         #   travel as the other packets, put it on the link.  Otherwise, we 
         #   must wait until the link is clear to send it the opposite 
         #   direction.
-        if next_pop == data_src or data_src == -1:
+        if (next_pop == data_src and not self.in_transmission) or \
+			data_src == -1:
             # We are sending a packet, so set the in_transmission flag.
             self.in_transmission = True
             
@@ -509,7 +510,7 @@ class Link:
             # Calculate the transmission time as the size of the packet 
             #   divided by the link capacity (aka rate).
             packet_size = sim.packets[(flow_name, packet_ID)].size
-            transmission_time =  cv.bytes_to_MB(packet_size) / self.rate
+            transmission_time =  cv.bytes_to_Mb(packet_size) / self.rate
             
             # Create an event after this packet's transmission to reset the
             #   in_transmission flag.  Subtract a small amount of time to 
