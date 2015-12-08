@@ -479,6 +479,7 @@ class Link:
         #   here.
         if len(self.buffers[0]) == 0 and len(self.buffers[1]) == 0:
             return
+        #print(sim.network_now(), "\t\t\t", self.buffer_load)
         
         # Get which buffer to pop a packet from next (0 or 1)
         data_src, next_pop = self.get_next_buffer_pop()

@@ -799,7 +799,7 @@ def update_link_data(link):
         DATA_ON_LINKS[link_name] = [link.data_on_link]
     else:
         DATA_ON_LINKS[link_name].append(link.data_on_link)
-
+    #print(sim.network_now(), link.buffer_load)
     # Add the current buffer occupancies to the data structure
     if (link_name, 0) not in BUFFER_OCCS and (link_name, 1) not in BUFFER_OCCS:
         BUFFER_OCCS[(link_name, 0)] = [link.buffer_load[0]]
@@ -1034,7 +1034,7 @@ def record_network_status():
     # Create the event that will record the network status, but only if there
     #   is nothing else in the event queue.  Otherwise, this will keep the
     #   network running indefinitely.  The one flow running that is allowed
-    #	is the routing flow.
+    #   is the routing flow.
     if len(sim.running_flows) > 1:
         next_recording = sim.network_now() + ct.RECORD_TIME
         sim.enqueue_event(next_recording, e.Event(None, None, None))
