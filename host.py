@@ -230,20 +230,14 @@ class Host:
         if packet.data < flow.to_complete:
             return
         
-
-
-
-        ## Get the actor and function for updating window size as a result of
-        ##   this timed-out packet.
+        # Get the actor and function for updating window size as a result of
+        #   this timed-out packet.
         # actor, function = u.get_actor_and_function(self.host_name, \
         #       ct.CONG_UPDATE[ct.CONG_TIMEOUT][flow.congestion_alg])
         #
-        ## Call the function on the actor which will update the flow's window
-        ##   size according to the congestion control algorithm parameter.
+        # Call the function on the actor which will update the flow's window
+        #   size according to the congestion control algorithm parameter.
         # actor.function(/* Any parameters required */)
-
-
-
 
         # If not, we want to first resend all packets in flight,
         #   but only do this if this is one of the packets in flight.
@@ -371,6 +365,9 @@ class Host:
                 # Compute the most recent RTT, which can be used for congestion
                 #   control
                 flow.last_RTT = sim.network_now() - packet.time
+
+                # Add this last_RTT to our cumulative for avg
+                flow.avg_RTT = (flow.avg_RTT[0] + flow.last_RTT, flow.avg_RTT[1] + 1)
 
                 # If the last computed RTT is less than min, update min
                 if flow.last_RTT < flow.min_RTT:
