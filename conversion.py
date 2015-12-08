@@ -62,6 +62,12 @@ def bits_to_MB(num_in_bits):
     return (1.0 * num_in_bits) / (8 * (10 ** 6))
 
 
+def Mb_to_MB(num_in_Mb):
+    '''
+    Converts the parameter given in Mb to MB and returns the result.
+    '''
+    return num_in_Mb / 8
+
 def MB_to_KB(num_in_MB):
     '''
     Converts the parameter given in MB to KB and returns the result.

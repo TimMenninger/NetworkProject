@@ -189,10 +189,10 @@ class Flow:
         # Keep track of the round trip time a packet has taken so we can
         #   guage an appropriate timeout-check delay.  Before any acks are
         #   received, this is more of a blind guess.
-        self.last_RTT = ct.INITIAL_ASSUMED_RTT
+        self.last_RTT = 0
 
         # Keep track of the minimum RTT up until this point for Fast TCP
-        self.min_RTT = ct.INITIAL_ASSUMED_RTT
+        self.min_RTT = 0
 
         # The state that the flow is currently in. 0 = slow-start and  
         #   1 = congestion avoidance. Default set for slow-start phase
