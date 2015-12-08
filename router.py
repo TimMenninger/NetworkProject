@@ -232,7 +232,6 @@ class Router:
         
         Revision History:   11/23/15: Created
         '''
-        print (self.router_name)
         # This marks the start of configuration.
         self.configuring = True
         
@@ -498,7 +497,7 @@ class Router:
         # If the new routing table is empty, do nothing.
         if not self.configuring:
             return
-        print(sim.network_now(), self.router_name, ':', self.updating_table, self.routing_table)
+        #print(sim.network_now(), self.router_name, ':', self.updating_table, self.routing_table)
               
         # Fill any host entry in the routing table that is not in the updating
         #   table.

@@ -161,10 +161,6 @@ class Host:
 
         # Log the send_packet() event to ct.HOST_LOG_FILE
         self.log_send_packet(packet)
-
-        # First want to put the current time on the packet so we can calculate
-        #   RTT later.
-        packet.time = sim.network_now()
         
         # Get the link that we are going to send the packet on.
         link = sim.links[self.link]
@@ -328,6 +324,7 @@ class Host:
             #   will cross check this with what he sent and resend or not 
             #   accordingly
             ack_pkt.set_data(flow.expecting)
+            ack_pkt.time = packet.time
             
             # Add the packet to our dictionary of packets.
             sim.packets[(flow_name, ack_pkt.ID)] = ack_pkt
