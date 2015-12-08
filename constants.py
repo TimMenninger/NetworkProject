@@ -39,7 +39,7 @@ TEST_CASE_2_FILENAME = "misc/test_configs/case_2.txt"
 
 # Smallest timestep we use.  Needs to be ~0 because it is used to ensure one
 #   "simultaneous" event occurs before another.
-TIME_BIT 			 = 0.000000000001
+TIME_BIT 			 = 0#0.000000000001
 
 # How often to record the network status in milliseconds
 RECORD_TIME 		 = 1
@@ -51,7 +51,7 @@ RECORD_DELTA 	     = 75
 DELTA_SECS 			 = (RECORD_TIME * RECORD_DELTA) / 1000
 
 # How often to send routing packets to configure routing tables (in ms)
-CONFIG_PKT_TIME 	 = 5000
+CONFIG_PKT_TIME 	 = 300
 
 # The number of milliseconds before routers assume they are receiving no more
 #	useful packets to update routing tables.

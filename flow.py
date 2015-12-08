@@ -182,6 +182,10 @@ class Flow:
         #   interval.  Used to compute flow rate.
         self.acked_packets = 0
         
+        # This is the assumed RTT, which is only relevant when we have not
+        #	yet received any packets and are still guessing the RTT.
+        self.assumed_RTT = ct.INITIAL_ASSUMED_RTT
+        
         # Keep track of the round trip time a packet has taken so we can
         #   guage an appropriate timeout-check delay.  Before any acks are
         #   received, this is more of a blind guess.
