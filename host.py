@@ -250,8 +250,8 @@ class Host:
             # Time out will cause congestion control to revert to slow-start 
             #   phase, so we reset the window size to initial size of 1 packet, 
             #   change state to slow-start, and set sst to window/2
-            flow.sst = flow.window/2
-            flow.window = 1
+            flow.sst = flow.window_size/2
+            flow.window_size = 1
             flow.state = 0
             flow.resend_inflight_packets()
         
@@ -342,27 +342,21 @@ class Host:
                 #   <packet.data> - 1, so we want to pop as many packets as
                 #   there is separation between these two parameters.
 
-                # Keep track of this ack as last received. If duplicate, then 
-                #   increment counter and save last ack
-                if packet.packet_ID == last_ack:
-                    counter += 1
-                    flow.num_dup_acks = (packet.packet_ID, counter)
-
-                flow.num_dup_acks = (packet.packet_ID, 0)
+                flow.num_dup_acks = (packet.ID, 0)
 
                 # If the flow is in slow-start phase, increment window size by 1
                 if flow.state == 0:
                     # If we have reached the sst threshold, enter congestion avoidance
-                    if flow.window >= flow.sst:
+                    if flow.window_size >= flow.sst:
                         flow.state = 1
 
                     # Otherwise we are still in slow-start, increment window by 1
                     #   for acknowledged packet
-                    flow.window += 1
+                    flow.window_size += 1
 
                 # If the flow is in congestion avoidance, increase window by 1/W
                 if flow.state == 1:
-                    flow.window += 1/flow.window
+                    flow.window_size += 1/flow.window_size
 
                 for i in range(packet.data - flow.to_complete):
                     flow.to_complete += 1
@@ -378,7 +372,7 @@ class Host:
                 # flight)
                 flow.update_flow()
                 
-            else:#if packet.data < flow.to_complete:
+            else:#if packet.data <= flow.to_complete:
                 # Packets were lost.  Resend any and all that were in flight,
                 #   but only do this if this is one of the packets in flight.
                 #   Otherwise, we will end up thinking we lost way more packets
@@ -386,24 +380,28 @@ class Host:
 
                 # Check to see if this is a duplicate ack being received by 
                 #   comparing to the last received ack
-                if packet.packet_ID == last_ack and abs(packet.packet_ID) in flow.packets_in_flight:
-                    counter += 1
-                    flow.num_dup_acks = (packet.packet_ID, counter)
+                #if packet.ID == last_ack and \
+                #   abs(packet.ID) >= flow.packets_in_flight[0][1].ID:
+                #    num_dups += 1
+                #    flow.num_dup_acks = (packet.ID, num_dups)
 
                 # If at least three duplicate acks have been received, then set 
                 #   window size to w/2, set sst to w/2, and retransmit
-                if counter == 3:
-                    flow.sst = flow.window/2
-                    flow.window = flow.window/2
-                    # counter = 0
-                    flow.num_dup_acks = (packet.packet_ID, 0)
+                if num_dups == 3:
+                    flow.sst = flow.window_size/2
+                    flow.window_size = flow.window_size/2
+                    # num_dups = 0
+                    flow.num_dup_acks = (packet.ID, 0)
 
-                flow.num_dup_acks = (packet.packet_ID, 0)
-
+                # Resend all packets in flight.
                 if len(flow.packets_in_flight) > 0 and \
                    abs(packet.ID) > (flow.packets_in_flight[0][1].ID):
                     flow.resend_inflight_packets()
-            
+                    # Check to see if this is a duplicate ack being received
+                    #   by comparing to the last received ack
+                    num_dups += 1
+                    flow.num_dup_acks = (packet.ID, num_dups)
+            #print (flow.window_size, sim.network_now())
             # else the packet has already been received
         # else the packet is a routing packet and can be ignored.
         
@@ -412,7 +410,7 @@ class Host:
         '''
         Description:        Provides log output in ct.HOST_LOG_FILE about a 
                             call to send_packet().  Specifically, it logs 
-                            which host is sending a Packet, the ID of the 
+                            which hcost is sending a Packet, the ID of the 
                             Packet it is sending and the data it is sending
                             within the Packet (be it an index or a full
                             routing table)

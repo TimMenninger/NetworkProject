@@ -55,7 +55,7 @@ CONFIG_PKT_TIME 	 = 5000
 
 # The number of milliseconds before routers assume they are receiving no more
 #	useful packets to update routing tables.
-ROUTING_TIMEOUT		 = 1000
+ROUTING_TIMEOUT		 = 999
 
 # Network objects
 TYPE_FLOW 			 = 0

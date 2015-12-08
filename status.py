@@ -527,7 +527,7 @@ def plot_per_flow_metrics(tms, time_max):
     fr = pd.read_csv(ct.FLOW_RATE_OUT, 
                      dtype={'flow_name': str, 'flow_rate': np.float64})
     ws = pd.read_csv(ct.WINDOW_SIZE_OUT, 
-                     dtype={'flow_name': str, 'window_size': np.int32})
+                     dtype={'flow_name': str, 'window_size': np.float64})
     py = pd.read_csv(ct.PACKET_DELAY_OUT, 
                      dtype={'flow_name': str, 'packet_delay': np.float64})
 
@@ -750,10 +750,10 @@ def write_link_data(link):
     link_rate = sum(DATA_ON_LINKS[link_name]) / ct.DELTA_SECS
 
     # Average buffer occupancy on buffer 1
-    buffer_occ_1 = sum(BUFFER_OCCS[(link_name, 0)]) / ct.RECORD_DELTA
+    buffer_occ_1 = int(sum(BUFFER_OCCS[(link_name, 0)]) / ct.RECORD_DELTA)
 
     # Average buffer occupancy on buffer 2
-    buffer_occ_2 = sum(BUFFER_OCCS[(link_name, 1)]) / ct.RECORD_DELTA
+    buffer_occ_2 = int(sum(BUFFER_OCCS[(link_name, 1)]) / ct.RECORD_DELTA)
 
     # --- WRITE TO DATA FILES ---
     

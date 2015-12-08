@@ -497,8 +497,7 @@ class Router:
         #   table.
         for host_name in self.routing_table:
             if host_name not in self.updating_table:
-                self.updating_table[host_name] = self.routing_table[host_name]
-                
+                self.updating_table[host_name] = self.routing_table[host_name]        
         # Switch routing tables then clear the updating one for the next time
         #   around.
         self.routing_table = copy.deepcopy(self.updating_table)
@@ -585,7 +584,7 @@ class Router:
         '''
         # Unpack the argument list.
         [flow_name, packet_ID] = arg_list
-        packet = sim.packets[(flow_name, packet_ID)]
+        packet = sim.packets[(flow_name, packet_ID)] 
 
         # Log the receive_packet() event to ct.ROUTER_LOG_FILE
         self.log_receive_packet(packet)
