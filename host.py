@@ -342,6 +342,14 @@ class Host:
                 #   <packet.data> - 1, so we want to pop as many packets as
                 #   there is separation between these two parameters.
 
+                # Keep track of this ack as last received. If duplicate, then 
+                #   increment counter and save last ack
+                if packet.packet_ID == last_ack:
+                    counter += 1
+                    flow.num_dup_acks = (packet.packet_ID, counter)
+
+                flow.num_dup_acks = (packet.packet_ID, 0)
+
                 # If the flow is in slow-start phase, increment window size by 1
                 if flow.state == 0:
                     # If we have reached the sst threshold, enter congestion avoidance
@@ -349,6 +357,7 @@ class Host:
                         flow.state = 1
 
                     # Otherwise we are still in slow-start, increment window by 1
+                    #   for acknowledged packet
                     flow.window += 1
 
                 # If the flow is in congestion avoidance, increase window by 1/W
@@ -375,7 +384,21 @@ class Host:
                 #   Otherwise, we will end up thinking we lost way more packets
                 #   than we actually did.
 
-                if 
+                # Check to see if this is a duplicate ack being received by 
+                #   comparing to the last received ack
+                if packet.packet_ID == last_ack and abs(packet.packet_ID) in flow.packets_in_flight:
+                    counter += 1
+                    flow.num_dup_acks = (packet.packet_ID, counter)
+
+                # If at least three duplicate acks have been received, then set 
+                #   window size to w/2, set sst to w/2, and retransmit
+                if counter == 3:
+                    flow.sst = flow.window/2
+                    flow.window = flow.window/2
+                    # counter = 0
+                    flow.num_dup_acks = (packet.packet_ID, 0)
+
+                flow.num_dup_acks = (packet.packet_ID, 0)
 
                 if len(flow.packets_in_flight) > 0 and \
                    abs(packet.ID) > (flow.packets_in_flight[0][1].ID):

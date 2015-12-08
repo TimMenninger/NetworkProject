@@ -188,7 +188,7 @@ class Flow:
         self.last_RTT = ct.INITIAL_ASSUMED_RTT
 
         # Keep track of the minimum RTT up until this point for Fast TCP
-        self.min_RTT
+        self.min_RTT = ct.INITIAL_ASSUMED_RTT
 
         # The state that the flow is currently in. 0 = slow-start and  
         #   1 = congestion avoidance. Default set for slow-start phase
@@ -197,7 +197,7 @@ class Flow:
         # The slow-start threshold for the flow. Initially set to be infinity
         self.sst = float("inf")
 
-        # Tuple to represent the last received ack # and a# of duplicate acks
+        # Tuple to represent the last received ack # and # of duplicate acks
         self.num_dup_acks = (0, 0)
 
         # The congestion control algorithm used to update window size on this
