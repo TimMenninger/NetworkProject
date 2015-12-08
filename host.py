@@ -247,15 +247,20 @@ class Host:
             # Time out will cause congestion control to revert to slow-start 
             #   phase, so we reset the window size to initial size of 1 packet, 
             #   change state to slow-start, and set sst to window/2
-            '''flow.sst = flow.window_size/2
-            flow.window_size = 1
-            flow.state = 0'''
+
+            if flow.congestion_alg == ct.FLOW_TCP_RENO:
+                flow.sst = flow.window_size/2
+                flow.window_size = 1
+                flow.state = 0
+
+
             flow.resend_inflight_packets()
 
         # If we are using FAST TCP, and a packet is timed out, we need to 
         #   increment last_RTT so that the window size decreases.
-        flow.assumed_RTT *= (flow.assumed_RTT + 1) / flow.assumed_RTT
-        flow.avg_RTT = (flow.avg_RTT[0] + flow.assumed_RTT, flow.avg_RTT[1] + 1)
+        if flow.congestion_alg == ct.FLOW_FAST_TCP:
+            flow.assumed_RTT *= (flow.assumed_RTT + 1) / flow.assumed_RTT
+            flow.avg_RTT = (flow.avg_RTT[0] + flow.assumed_RTT, flow.avg_RTT[1] + 1)
         
         # Next, we want to check if the time we waited for timeout is
         #   sufficient.  If we have not received any acknowledgements yet, it
@@ -348,18 +353,21 @@ class Host:
                 #flow.num_dup_acks = (packet.ID, 0)
 
                 # If the flow is in slow-start phase, increment window size by 1
-                '''if flow.state == 0:
-                    # If we have reached the sst threshold, enter congestion avoidance
-                    if flow.window_size >= flow.sst:
-                        flow.state = 1
+                
+                if flow.congestion_alg == ct.FLOW_TCP_RENO:
+                    if flow.state == 0:
+                        # If we have reached the sst threshold, enter congestion avoidance
+                        if flow.window_size >= flow.sst:
+                            flow.state = 1
 
-                    # Otherwise we are still in slow-start, increment window by 1
-                    #   for acknowledged packet
-                    flow.window_size += 1
+                        # Otherwise we are still in slow-start, increment window by 1
+                        #   for acknowledged packet
+                        flow.window_size += 1
 
-                # If the flow is in congestion avoidance, increase window by 1/W
-                if flow.state == 1:
-                    flow.window_size += 1/flow.window_size'''
+                    # If the flow is in congestion avoidance, increase window by 1/W
+                    if flow.state == 1:
+                        flow.window_size += 1/flow.window_size
+
 
                 for i in range(packet.data - flow.to_complete):
                     flow.to_complete += 1
@@ -398,11 +406,13 @@ class Host:
 
                 # If at least three duplicate acks have been received, then set 
                 #   window size to w/2, set sst to w/2, and retransmit
-                '''if num_dups == 3:
-                    flow.sst = flow.window_size/2
-                    flow.window_size = flow.window_size/2
-                    # num_dups = 0
-                    flow.num_dup_acks = (packet.ID, 0)'''
+                
+                if flow.congestion_alg == ct.FLOW_TCP_RENO:
+                    if num_dups == 3:
+                        flow.sst = flow.window_size/2
+                        flow.window_size = flow.window_size/2
+                        # num_dups = 0
+                        flow.num_dup_acks = (packet.ID, 0)
 
                 # Resend all packets in flight.
                 if len(flow.packets_in_flight) > 0 and \

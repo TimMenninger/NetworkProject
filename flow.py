@@ -210,7 +210,7 @@ class Flow:
 
         # The congestion control algorithm used to update window size on this
         #   flow.
-        self.congestion_alg = None
+        self.congestion_alg = ct.DEFAULT_ALG
 
     
     def periodic_window_update(self, unused_list):
@@ -341,7 +341,8 @@ class Flow:
 
         # Call periodic_window_update initially so that periodic window update can 
         #   be enqueued, to start the periodic updates
-        self.periodic_window_update([])
+        if self.congestion_alg == ct.FLOW_FAST_TCP:
+            self.periodic_window_update([])
 
         # Calculate the number of packets we need to send all of the data
         num_packets = int(cv.MB_to_bytes(self.size) / ct.PACKET_DATA_SIZE) + 1
