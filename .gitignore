@@ -1,7 +1,5 @@
 *__pycache__*
 log.txt
 *.log
-misc/data/*
 *.csv
-
 *.pyc
