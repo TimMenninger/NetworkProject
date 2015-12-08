@@ -39,7 +39,8 @@ TEST_CASE_2_FILENAME = "misc/test_configs/case_2.txt"
 
 # Smallest timestep we use.  Needs to be ~0 because it is used to ensure one
 #   "simultaneous" event occurs before another.
-TIME_BIT 			 = 0.000000000001
+TIME_BIT 			 = 0		# Changed to zero because the heapqueue has
+								#	been re-implemented to not need this...
 
 # How often to record the network status in milliseconds
 RECORD_TIME 		 = 1
@@ -51,11 +52,11 @@ RECORD_DELTA 	     = 75
 DELTA_SECS 			 = (RECORD_TIME * RECORD_DELTA) / 1000
 
 # How often to send routing packets to configure routing tables (in ms)
-CONFIG_PKT_TIME 	 = 5000
+CONFIG_PKT_TIME 	 = 500
 
 # The number of milliseconds before routers assume they are receiving no more
 #	useful packets to update routing tables.
-ROUTING_TIMEOUT		 = 999
+ROUTING_TIMEOUT		 = 100
 
 # How often FAST TCP window update should be called (in milliseconds)
 FAST_TCP_PERIOD		 = 100
@@ -127,6 +128,6 @@ CONSEC_PKTS			 = 10
 # The number of consecutive epochs with no routing table update before 
 # 	deciding the router has nothing more to learn from routing packets and can 
 # 	start using the new routing table
-MAX_NO_IMPROVES		 = 2
+MAX_NO_IMPROVES		 = 3
 
 

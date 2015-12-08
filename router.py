@@ -232,6 +232,7 @@ class Router:
         
         Revision History:   11/23/15: Created
         '''
+        print (self.router_name)
         # This marks the start of configuration.
         self.configuring = True
         
@@ -326,10 +327,11 @@ class Router:
         for host_name in packet.data:
             if host_name not in self.routing_table:
                 self.routing_table[host_name] = copy.deepcopy(packet.src)
-                
+        
         # Ignore the packet if we are not currently configuring.
-        if not self.configuring:
-            return
+        #if not self.configuring:
+        #    return
+        #print(sim.network_now(), self.router_name, packet.src, packet.data, self.updating_table)  
             
         # Make sure this wasn't called by mistake.
         assert(packet.type == ct.PACKET_ROUTING)
@@ -340,6 +342,9 @@ class Router:
             # Get the distance from what sent this packet and add it to the
             #   data.
             packet.data[host_name] += self.get_distance(packet.src)
+            
+            if not self.configuring:
+                continue
             
             # If it is not in our table yet, it is clearly an update.  If it
             #   is in our table and is an improvement, there must also be an
@@ -360,14 +365,22 @@ class Router:
             # Otherwise, this did nothing for us.  Update the number of no
             #   improves for this link
             elif packet.src not in self.no_improves:
+                # Host is accessible by a different link.
                 self.no_improves[packet.src] = 1
             else:
                 self.no_improves[packet.src] += 1
-                
+         
+        # Check if we have received enough packets to determine we are in
+        #   equilibrium, in which case we can switch routing tables.
+        switch_tables = True
+        for link_name in self.no_improves:
+            if self.no_improves[link_name] < ct.MAX_NO_IMPROVES:
+                switch_tables = False
+                       
         # If we received this without improvement, only send it if the num
         #   improves is less than the max.  Otherwise, we can assume the 
         #   system is in equilibrium
-        if self.no_improves[packet.src] < ct.MAX_NO_IMPROVES:
+        if not switch_tables:#self.no_improves[packet.src] <= ct.MAX_NO_IMPROVES:
             for link_name in self.links:
                 # Copy the packet
                 updated_pkt = packet.copy_packet()
@@ -380,13 +393,6 @@ class Router:
                 
                 # Send the packet.
                 self.send_packet([updated_pkt, link_name])
-         
-        # Check if we have received enough packets to determine we are in
-        #   equilibrium, in which case we can switch routing tables.
-        switch_tables = True
-        for host_name in self.no_improves:
-            if self.no_improves[host_name] < ct.MAX_NO_IMPROVES:
-                switch_tables = False
         
         # If we never switched the flag to false, we have received enough
         #   packets to switch routing tables.
@@ -450,14 +456,14 @@ class Router:
         #           time.  Then, the next Packet can be sent (this time is
         #           not taken into account because it would be the same next
         #           Packet for every host).
+        #       - Add the link delay for this particular packet to be sent
+        #           after the way is cleared.
+        #
         data *= 2
         num_pkts *= 2
         queuing_delay = data / link.rate
-        prop_delay = (num_pkts / ct.CONSEC_PKTS) * link.delay
+        prop_delay = (num_pkts / ct.CONSEC_PKTS + 1) * link.delay
         return queuing_delay + prop_delay
-
-        # total_delay = queuing_delay + prop_delay + link.delay
-        #return total_delay
         
         
     def switch_routing_tables(self, empty_list):
@@ -492,16 +498,19 @@ class Router:
         # If the new routing table is empty, do nothing.
         if not self.configuring:
             return
+        print(sim.network_now(), self.router_name, ':', self.updating_table, self.routing_table)
               
         # Fill any host entry in the routing table that is not in the updating
         #   table.
         for host_name in self.routing_table:
             if host_name not in self.updating_table:
-                self.updating_table[host_name] = self.routing_table[host_name]        
+                self.updating_table[host_name] = self.routing_table[host_name]
+                        
         # Switch routing tables then clear the updating one for the next time
         #   around.
         self.routing_table = copy.deepcopy(self.updating_table)
         self.updating_table = {}
+        self.no_improves = {}
         self.configuring = False
 
 

@@ -176,9 +176,13 @@ class Host:
         # Create an event that will search for acknowledgement after some 
         #   amount of time.  If ack was not received, it will resend the 
         #   packets.  This only applies to data packets.
+        last_flow_RTT = flow.last_RTT
+        if last_flow_RTT == 0:
+            last_flow_RTT = flow.assumed_RTT
+        
         if packet.type == ct.PACKET_DATA:
             tmout_time = sim.network_now() + \
-                         ct.ACK_TIMEOUT_FACTOR * flow.last_RTT
+                         ct.ACK_TIMEOUT_FACTOR * last_flow_RTT
             tmout_event = e.Event(self.host_name, 'check_ack_timeout', 
                                   [packet])
             sim.enqueue_event(tmout_time, tmout_event)
@@ -261,7 +265,7 @@ class Host:
         #   Therefore, if there have been no acks received at all, increase
         #   the waiting time.
         if flow.to_complete == 1:
-            flow.last_RTT *= ct.ACK_TIMEOUT_FACTOR
+            flow.assumed_RTT *= ct.ACK_TIMEOUT_FACTOR
  
 
     def receive_packet(self, arg_list):
