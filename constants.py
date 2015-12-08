@@ -55,7 +55,7 @@ CONFIG_PKT_TIME 	 = 5000
 
 # The number of milliseconds before routers assume they are receiving no more
 #	useful packets to update routing tables.
-ROUTING_TIMEOUT		 = 999
+ROUTING_TIMEOUT		 = 100
 
 # Network objects
 TYPE_FLOW 			 = 0
@@ -121,6 +121,6 @@ CONSEC_PKTS			 = 10
 # The number of consecutive epochs with no routing table update before 
 # 	deciding the router has nothing more to learn from routing packets and can 
 # 	start using the new routing table
-MAX_NO_IMPROVES		 = 2
+MAX_NO_IMPROVES		 = 3
 
 
