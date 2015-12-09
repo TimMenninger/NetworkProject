@@ -1,0 +1,15 @@
+hostSpecs:
+<list host name of hosts in network here, one per line>
+<host_name>
+
+routerSpecs:
+<list router name(s) of router(s) in network here, one per line>
+<router_name>
+
+linkSpecs:
+<list specifications of link(s) here, one per line>
+<link_name Rate Delay Buffer Endpoint1 Endpoint2>
+
+flowSpecs:
+<list specifications of flow(s) here, one per line>
+<flow_name Src Dest Data Start_Time>

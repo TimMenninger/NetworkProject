@@ -327,11 +327,6 @@ class Router:
             if host_name not in self.routing_table:
                 self.routing_table[host_name] = copy.deepcopy(packet.src)
         
-        # Ignore the packet if we are not currently configuring.
-        #if not self.configuring:
-        #    return
-        #print(sim.network_now(), self.router_name, packet.src, packet.data, self.updating_table)  
-            
         # Make sure this wasn't called by mistake.
         assert(packet.type == ct.PACKET_ROUTING)
         
@@ -499,8 +494,7 @@ class Router:
         # If the new routing table is empty, do nothing.
         if not self.configuring:
             return
-        #print(sim.network_now(), self.router_name, ':', self.updating_table, self.routing_table)
-              
+        
         # Fill any host entry in the routing table that is not in the updating
         #   table.
         for host_name in self.routing_table:
