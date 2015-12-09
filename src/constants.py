@@ -15,27 +15,34 @@
 FIG_WID				 = 12
 FIG_LEN 			 = 7
 
+# Directories that outputs are written to
+OUTPUT_DIRECTORY	 = "../out/"
+INPUT_DIRECTORY		 = "../in/"
+DATA_DIRECTORY		 = OUTPUT_DIRECTORY + "data/"
+LOG_DIRECTORY		 = OUTPUT_DIRECTORY + "log/"
+TESTS_DIRECTORY		 = INPUT_DIRECTORY  + "test_configs/"
+
 # Log output filenames
-MAIN_LOG_FILE 	 	 = "misc/log/main.log"
-HOST_LOG_FILE 	     = "misc/log/host.log"
-ROUTER_LOG_FILE 	 = "misc/log/router.log"
-FLOW_LOG_FILE    	 = "misc/log/flow.log"
+MAIN_LOG_FILE 	 	 = LOG_DIRECTORY    + "main.log"
+HOST_LOG_FILE 	     = LOG_DIRECTORY    + "host.log"
+ROUTER_LOG_FILE 	 = LOG_DIRECTORY    + "router.log"
+FLOW_LOG_FILE    	 = LOG_DIRECTORY    + "flow.log"
 
 # Data output filenames
-TIMES_OUT 			 = "misc/data/times.csv"
-LINK_RATE_OUT 		 = "misc/data/link_rate.csv"
-BUFFER_OCC_OUT 		 = 'misc/data/buffer_occupancy.csv'
-PACKET_LOSS_OUT 	 = 'misc/data/packet_loss.csv'
-HOST_RECEIVE_OUT 	 = 'misc/data/host_receive.csv'
-HOST_SEND_OUT 		 = 'misc/data/host_send.csv'
-FLOW_RATE_OUT 		 = 'misc/data/flow_rate.csv'
-WINDOW_SIZE_OUT 	 = 'misc/data/window_size.csv'
-PACKET_DELAY_OUT 	 = 'misc/data/packet_delay.csv'
+TIMES_OUT 			 = DATA_DIRECTORY   + "times.csv"
+LINK_RATE_OUT 		 = DATA_DIRECTORY   + "link_rate.csv"
+BUFFER_OCC_OUT 		 = DATA_DIRECTORY   + "buffer_occupancy.csv"
+PACKET_LOSS_OUT 	 = DATA_DIRECTORY   + "packet_loss.csv"
+HOST_RECEIVE_OUT 	 = DATA_DIRECTORY   + "host_receive.csv"
+HOST_SEND_OUT 		 = DATA_DIRECTORY   + "host_send.csv"
+FLOW_RATE_OUT 		 = DATA_DIRECTORY   + "flow_rate.csv"
+WINDOW_SIZE_OUT 	 = DATA_DIRECTORY   + "window_size.csv"
+PACKET_DELAY_OUT 	 = DATA_DIRECTORY   + "packet_delay.csv"
 
 # Test case file names
-TEST_CASE_0_FILENAME = "misc/test_configs/case_0.txt"
-TEST_CASE_1_FILENAME = "misc/test_configs/case_1.txt"
-TEST_CASE_2_FILENAME = "misc/test_configs/case_2.txt"
+TEST_CASE_0_FILENAME = TESTS_DIRECTORY  + "case_0.txt"
+TEST_CASE_1_FILENAME = TESTS_DIRECTORY  + "case_1.txt"
+TEST_CASE_2_FILENAME = TESTS_DIRECTORY  + "case_2.txt"
 
 # Smallest timestep we use.  Needs to be ~0 because it is used to ensure one
 #   "simultaneous" event occurs before another.

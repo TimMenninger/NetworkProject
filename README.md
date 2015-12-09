@@ -1,7 +1,9 @@
-# CS143Project (Configurable Network Simulator, CS 143, Caltech, Fall 2015)
+# CS143Project
 ## Ricky Galliani, Tim Menninger, Rush Joshi, and Schaeffer Reed
+### Configurable Network Simulator 
+#### CS 143 (Caltech, Fall 2015)
 
-## Repository organization: 
+### Notes about repository organization: 
 
 - All Python code for our simulator (modules and classes) are in the
 *.py files of the home directory of this repository.
@@ -15,13 +17,16 @@ used to create new network configuration files) are in misc/test_configs/*
 
 - The misc/clean_up.sh script can be used to clean up the repository
 
-## Running the simulation:
+### Running the simulation:
 
-$ python simulate.py name_of_network_config_file
+$ python simulate.py <network_config_file>
 
-Test Case 0: $ python simulate.py misc/test_configs/case_0.txt
+Test Case 0
+$ python simulate.py misc/test_configs/case_0.txt
 
-Test Case 1: $ python simulate.py misc/test_configs/case_1.txt
+Test Case 1
+$ python simulate.py misc/test_configs/case_1.txt
 
-Test Case 2: $ python simulate.py misc/test_configs/case_2.txt
+Test Case 2
+$ python simulate.py misc/test_configs/case_2.txt
 
