@@ -413,7 +413,6 @@ class Host:
 
                 # If at least three duplicate acks have been received, then set 
                 #   window size to w/2, set sst to w/2, and retransmit
-                
                 if flow.congestion_alg == ct.FLOW_TCP_RENO and \
                     sim.network_now() >= (flow.last_update + 500):
                     if num_dups == 3:
