@@ -104,7 +104,7 @@ ALPHA_VALUE 		= 2 	# The alpha value for FAST TCP window update in
 
 # How often FAST TCP window update should be called (in milliseconds)
 FAST_TCP_PERIOD		 = 100
-FAST_TCP_TIMEOUT_FACTOR = 1.35 #Use 8 for case 0 and 1.35 for case 1 
+FAST_TCP_TIMEOUT_FACTOR = 8 # Use 8 for case 0 and 1.35 for case 1 
 
 # The name of the flow used for inter-router communication
 ROUTING_FLOW         = 'routing_flow'
