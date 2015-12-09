@@ -19,12 +19,9 @@ used to create new network configuration files) are in misc/test_configs/*
 
 $ python simulate.py <network_config_file>
 
-Test Case 0
-$ python simulate.py misc/test_configs/case_0.txt
+Test Case 0: $ python simulate.py misc/test_configs/case_0.txt
 
-Test Case 1
-$ python simulate.py misc/test_configs/case_1.txt
+Test Case 1: $ python simulate.py misc/test_configs/case_1.txt
 
-Test Case 2
-$ python simulate.py misc/test_configs/case_2.txt
+Test Case 2: $ python simulate.py misc/test_configs/case_2.txt
 
