@@ -1,3 +1,0 @@
-	Test    Alg(F/R)    Rate    Timeout    Alpha    Speed(net_time)    Plots_desc
-1)	0		F			75		8		   2		15.07	 		   Good
-2)	0		F
