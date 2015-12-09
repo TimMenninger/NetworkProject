@@ -212,6 +212,10 @@ class Flow:
         #   flow.
         self.congestion_alg = ct.DEFAULT_ALG
 
+        # Keep track of time of last dropped packet update so we have a buffer 
+        #   period that avoids too many successive window updates.
+        self.last_update = 0.0
+
     
     def periodic_window_update(self, unused_list):
         '''

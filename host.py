@@ -248,10 +248,12 @@ class Host:
             #   phase, so we reset the window size to initial size of 1 packet, 
             #   change state to slow-start, and set sst to window/2
 
-            if flow.congestion_alg == ct.FLOW_TCP_RENO:
+            if flow.congestion_alg == ct.FLOW_TCP_RENO and \
+                sim.network_now() >= (flow.last_update + 500):
                 flow.sst = flow.window_size/2
                 flow.window_size = 1
                 flow.state = 0
+                flow.last_update = sim.network_now()
 
             # Resend all of the packets in flight because if one was lost,
             #   then it is presumable that the rest of the ones in flight
@@ -416,7 +418,8 @@ class Host:
                 # If at least three duplicate acks have been received, then set 
                 #   window size to w/2, set sst to w/2, and retransmit
                 
-                if flow.congestion_alg == ct.FLOW_TCP_RENO:
+                if flow.congestion_alg == ct.FLOW_TCP_RENO and \
+                    sim.network_now() >= (flow.last_update + 500):
                     if num_dups == 3:
                         flow.sst = flow.window_size/2
                         flow.window_size = flow.window_size/2
