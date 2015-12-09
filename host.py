@@ -429,6 +429,7 @@ class Host:
                         flow.window_size = flow.window_size/2
                         num_dups = 0
                         flow.num_dup_acks = (packet.ID, 0)
+                        flow.last_update = sim.network_now()
             # else the packet has already been received
         # else the packet is a routing packet and can be ignored.
         

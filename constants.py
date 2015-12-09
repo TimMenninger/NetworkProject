@@ -68,7 +68,7 @@ TYPE_PACKET 		 = 4
 # Congestion Control algorithm
 FLOW_FAST_TCP        = 0
 FLOW_TCP_RENO        = 1
-DEFAULT_ALG          = FLOW_FAST_TCP
+DEFAULT_ALG          = FLOW_TCP_RENO
 
 # Packet types
 PACKET_DATA          = 0
