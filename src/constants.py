@@ -101,18 +101,18 @@ MAX_SIMULATION_TIME  = 1e6          # Maximum number of milliseconds the
                             
 # Initial values
 ACK_TIMEOUT_FACTOR   = 3     # Number of milliseconds to wait for acknowledgement
-                            # before timeout
+                             # before timeout
 INITIAL_ASSUMED_RTT  = 500.0 # Before we know the round trip time, we need to
-                            #   define an initial one that we assume (in ms)
+                             #   define an initial one that we assume (in ms)
 INITIAL_WINDOW_SIZE  = 1.0   # The initial window size for each flow.
 
 ALPHA_VALUE          = 15    # The alpha value for FAST TCP window update in 
-                            #   pkts/sec
+                             #   pkts/sec
 
 # How often FAST TCP window update should be called (in milliseconds)
 FAST_TCP_PERIOD      = 100
-                            # Optimal values:
-FAST_TCP_TIMEOUT_FACTOR = 8 # Case 0: 8, Case 1: 1.35, Case 2:
+                             # Optimal values:
+FAST_TCP_TIMEOUT_FACTOR = 8  # Case 0: 8, Case 1: 1.35, Case 2:
 
 # The name of the flow used for inter-router communication
 ROUTING_FLOW         = 'routing_flow'
