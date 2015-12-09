@@ -108,12 +108,3 @@ def assign_endpoints(endpoints, sender_name):
     return ep, other_ep
 
 
-def print_dict_keys(dict_name, dict):
-    '''
-    Description:        Prints the keys of a dictionary.
-    '''
-    print("- " + dict_name + " -")
-    for key in dict.keys():
-        print("\t" + key)
-
-

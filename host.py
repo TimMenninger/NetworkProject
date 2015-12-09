@@ -235,9 +235,6 @@ class Host:
         #   size according to the congestion control algorithm parameter.
         # actor.function(/* Any parameters required */)
 
-        #print(flow.window_size, flow.min_RTT, flow.avg_RTT)
-
-
         # If not, we want to first resend all packets in flight,
         #   but only do this if this is one of the packets in flight.
         #   Otherwise, we will end up thinking we lost way more packets
@@ -386,10 +383,9 @@ class Host:
                 #   control
                 flow.last_RTT = sim.network_now() - packet.time
                 flow.assumed_RTT = flow.last_RTT
-                #print("Expected RTT: " + str(flow.last_RTT))
+
                 # Add this last_RTT to our cumulative for avg
                 flow.avg_RTT = (flow.avg_RTT[0] + flow.last_RTT, flow.avg_RTT[1] + 1)
-                #print (flow.last_RTT)
 
                 # If the last computed RTT is less than min, update min
                 if flow.min_RTT == 0:
