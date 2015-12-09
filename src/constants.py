@@ -110,21 +110,21 @@ ALPHA_VALUE         = 15    # The alpha value for FAST TCP window update in
                             #   pkts/sec
 
 # How often FAST TCP window update should be called (in milliseconds)
-FAST_TCP_PERIOD      = 100
+FAST_TCP_PERIOD     = 100
                             # Optimal values:
 FAST_TCP_TIMEOUT_FACTOR = 8 # Case 0: 8, Case 1: 1.35, Case 2:
 
 # The name of the flow used for inter-router communication
-ROUTING_FLOW         = 'routing_flow'
+ROUTING_FLOW        = 'routing_flow'
 
 # The guessed number of consecutive packets that are sent (on average) on a
 #   link before transmission must stop to reverse direction of data travel
 #   on the half-duplex links.
-CONSEC_PKTS          = 10
+CONSEC_PKTS         = 10
 
 # The number of consecutive epochs with no routing table update before 
 #   deciding the router has nothing more to learn from routing packets and can 
 #   start using the new routing table
-MAX_NO_IMPROVES      = 3
+MAX_NO_IMPROVES     = 3
 
 
