@@ -68,7 +68,7 @@ TYPE_PACKET 		 = 4
 # Congestion Control algorithm
 FLOW_FAST_TCP        = 0
 FLOW_TCP_RENO        = 1
-DEFAULT_ALG          = FLOW_TCP_RENO
+DEFAULT_ALG          = FLOW_FAST_TCP
 
 # Packet types
 PACKET_DATA          = 0
@@ -99,7 +99,7 @@ INITIAL_ASSUMED_RTT = 500.0 # Before we know the round trip time, we need to
                             #   define an initial one that we assume (in ms)
 INITIAL_WINDOW_SIZE = 1.0   # The initial window size for each flow.
 
-ALPHA_VALUE 		= 15 	# The alpha value for FAST TCP window update in 
+ALPHA_VALUE 		= 2 	# The alpha value for FAST TCP window update in 
 							#	pkts/sec
 
 # How often FAST TCP window update should be called (in milliseconds)

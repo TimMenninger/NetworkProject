@@ -355,7 +355,7 @@ class Host:
                 #   <packet.data> - 1, so we want to pop as many packets as
                 #   there is separation between these two parameters.
 
-                #flow.num_dup_acks = (packet.ID, 0)
+                flow.num_dup_acks = (packet.ID, 0)
 
                 # If the flow is in slow-start phase, increment window size by 1
                 
@@ -406,21 +406,12 @@ class Host:
 
                 # Check to see if this is a duplicate ack being received by 
                 #   comparing to the last received ack
-                #if packet.ID == last_ack and \
-                #   abs(packet.ID) >= flow.packets_in_flight[0][1].ID:
-                #    num_dups += 1
-                #    flow.num_dup_acks = (packet.ID, num_dups)
+                if packet.ID == last_ack:
+                    num_dups += 1
+                    flow.num_dup_acks = (packet.ID, num_dups)
 
                 # If at least three duplicate acks have been received, then set 
                 #   window size to w/2, set sst to w/2, and retransmit
-                
-                if flow.congestion_alg == ct.FLOW_TCP_RENO and \
-                    sim.network_now() >= (flow.last_update + 500):
-                    if num_dups == 3:
-                        flow.sst = flow.window_size/2
-                        flow.window_size = flow.window_size/2
-                        # num_dups = 0
-                        flow.num_dup_acks = (packet.ID, 0)
 
                 # Resend all packets in flight.
                 if len(flow.packets_in_flight) > 0 and \
@@ -428,8 +419,16 @@ class Host:
                     flow.resend_inflight_packets()
                     # Check to see if this is a duplicate ack being received
                     #   by comparing to the last received ack
-                    num_dups += 1
-                    flow.num_dup_acks = (packet.ID, num_dups)
+                    #num_dups += 1
+                    #flow.num_dup_acks = (packet.ID, num_dups)
+
+                if flow.congestion_alg == ct.FLOW_TCP_RENO and \
+                    sim.network_now() >= (flow.last_update + 500):
+                    if num_dups == 3:
+                        flow.sst = flow.window_size/2
+                        flow.window_size = flow.window_size/2
+                        num_dups = 0
+                        flow.num_dup_acks = (packet.ID, 0)
             # else the packet has already been received
         # else the packet is a routing packet and can be ignored.
         
