@@ -311,6 +311,11 @@ class Host:
         packet = sim.packets[(flow_name, packet_ID)]
         flow = sim.flows[flow_name]
 
+        # If window size is 0, this means the flow is done so this is just 
+        #   an irrelevant packet -> ignore it.
+        if flow.window_size == 0:
+            return
+
         # Unpack our duplicate ack tuple
         (last_ack, num_dups) = flow.num_dup_acks
 

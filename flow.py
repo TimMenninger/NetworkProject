@@ -475,6 +475,7 @@ class Flow:
                 #   work, we already deleted it, so continue normally.
                 try:
                     sim.running_flows.remove(self.flow_name)
+                    self.window_size = 0
                 except ValueError:
                     pass
                 return
