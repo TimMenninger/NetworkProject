@@ -266,11 +266,7 @@ class Flow:
                                    + ct.ALPHA_VALUE
                                    
         # Reset the metrics used to update the flow for FAST TCP
-        self.avg_RTT = (0, 0)
-        self.min_RTT = 0
-
-
-        
+        self.avg_RTT = (0, 0)        
         
     def create_packet_ID(self):
         '''
