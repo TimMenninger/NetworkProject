@@ -17,11 +17,13 @@ used to create new network configuration files) are in in/test_configs/*
 
 ## Running the simulation:
 
-$ python3 src/simulate.py ../in/test_configs/<network_config_file>
+From the src directory:
+$ python3 simulate.py ../in/test_configs/<network_config_file>
 
 [or]
 
-$ python3 in/simulate.py in/test_configs/<network_config_file>
+From the CS143Project directory:
+$ python3 src/simulate.py in/test_configs/<network_config_file>
 
 Test Case 0
 $ python3 src/simulate.py in/test_configs/case_0.txt
@@ -34,4 +36,4 @@ $ python3 src/simulate.py in/test_configs/case_0.txt
 
 Note: the 'Simulation Progress' update presented to standard output while
 the simualation is running does not accurately reflect the simulation 
-progress when Test Case 3 (and probably all multi-flow networks) is running.
+progress when Test Case 2 (and probably all multi-flow networks) is running.
