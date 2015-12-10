@@ -220,20 +220,16 @@ class Host:
         # Unpack the argument list.
         [packet] = list_packet
         flow = sim.flows[packet.flow]
+
+        # If window size is 0, this means the flow is done so this is just 
+        #   an irrelevant packet -> ignore it.
+        if flow.window_size == 0:
+            return
         
         # Check if acknowledgement has been received for this packet.  If so,
         #   disregard, we are done here.
         if packet.data < flow.to_complete:
             return
-        
-        # Get the actor and function for updating window size as a result of
-        #   this timed-out packet.
-        # actor, function = u.get_actor_and_function(self.host_name, \
-        #       ct.CONG_UPDATE[ct.CONG_TIMEOUT][flow.congestion_alg])
-        #
-        # Call the function on the actor which will update the flow's window
-        #   size according to the congestion control algorithm parameter.
-        # actor.function(/* Any parameters required */)
 
         # If not, we want to first resend all packets in flight,
         #   but only do this if this is one of the packets in flight.
@@ -246,7 +242,7 @@ class Host:
             #   change state to slow-start, and set sst to window/2
 
             if flow.congestion_alg == ct.FLOW_TCP_RENO and \
-                sim.network_now() >= (flow.last_update + 500):
+                sim.network_now() >= (flow.last_update + ct.RENO_TIMEOUT_TIME):
                 flow.sst = flow.window_size/2
                 flow.window_size = 1
                 flow.state = 0
@@ -311,6 +307,11 @@ class Host:
         packet = sim.packets[(flow_name, packet_ID)]
         flow = sim.flows[flow_name]
 
+        # If window size is 0, this means the flow is done so this is just 
+        #   an irrelevant packet -> ignore it.
+        if flow.window_size == 0:
+            return
+
         # Unpack our duplicate ack tuple
         (last_ack, num_dups) = flow.num_dup_acks
 
@@ -351,11 +352,9 @@ class Host:
 
             # If this is acknowledgement, see if any packets were lost.
             if packet.data > flow.to_complete:
-                # The dest has received packets <to_complete> through
-                #   <packet.data> - 1, so we want to pop as many packets as
-                #   there is separation between these two parameters.
-
-                #flow.num_dup_acks = (packet.ID, 0)
+                # Received proper acknowledgement, so for TCP Reno, we want to
+                #	reset the number of duplicate acks for this ID.
+                flow.num_dup_acks = (packet.ID, 0)
 
                 # If the flow is in slow-start phase, increment window size by 1
                 
@@ -374,7 +373,8 @@ class Host:
                     if flow.state == 1:
                         flow.window_size += 1/flow.window_size
 
-
+				# Want to update for each packet of separation (this could be
+				#	more than 1 if we received a few acks ahead)
                 for i in range(packet.data - flow.to_complete):
                     flow.to_complete += 1
                     flow.acked_packets += 1
@@ -406,30 +406,29 @@ class Host:
 
                 # Check to see if this is a duplicate ack being received by 
                 #   comparing to the last received ack
-                #if packet.ID == last_ack and \
-                #   abs(packet.ID) >= flow.packets_in_flight[0][1].ID:
-                #    num_dups += 1
-                #    flow.num_dup_acks = (packet.ID, num_dups)
+                if packet.ID == last_ack:
+                    num_dups += 1
+                    flow.num_dup_acks = (packet.ID, num_dups)
 
-                # If at least three duplicate acks have been received, then set 
-                #   window size to w/2, set sst to w/2, and retransmit
-                
-                if flow.congestion_alg == ct.FLOW_TCP_RENO and \
-                    sim.network_now() >= (flow.last_update + 500):
-                    if num_dups == 3:
-                        flow.sst = flow.window_size/2
-                        flow.window_size = flow.window_size/2
-                        # num_dups = 0
-                        flow.num_dup_acks = (packet.ID, 0)
-
-                # Resend all packets in flight.
+                # Resend all packets in flight.  We only do this when the ID of
+                #   the packet corresponds to an inflight packet.  Otherwise,
+                #   if all packets in a window size are lost, we would end up
+                #   sending window_size^2 packets when we really only need to
+                #   resend window_size packets.
                 if len(flow.packets_in_flight) > 0 and \
                    abs(packet.ID) > (flow.packets_in_flight[0][1].ID):
                     flow.resend_inflight_packets()
-                    # Check to see if this is a duplicate ack being received
-                    #   by comparing to the last received ack
-                    num_dups += 1
-                    flow.num_dup_acks = (packet.ID, num_dups)
+
+                # If at least three duplicate acks have been received, then set 
+                #   window size to w/2, set sst to w/2, and retransmit
+                if flow.congestion_alg == ct.FLOW_TCP_RENO and \
+                    sim.network_now() >= (flow.last_update + 500):
+                    if num_dups >= ct.TCP_RENO_MAX_DUPS:
+                        flow.sst = flow.window_size/2
+                        flow.window_size = flow.window_size/2
+                        num_dups = 0
+                        flow.num_dup_acks = (packet.ID, 0)
+                        flow.last_update = sim.network_now()
             # else the packet has already been received
         # else the packet is a routing packet and can be ignored.
         

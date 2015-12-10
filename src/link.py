@@ -312,7 +312,7 @@ class Link:
         if packet.size + cv.KB_to_bytes(self.buffer_load[ep]) <= \
            cv.KB_to_bytes(self.buffer_size):
             # Add the packet identifier to the link buffer heap queue along 
-            # with the time
+            # 	with the time
             heapq.heappush(self.buffers[ep], 
                 (sim.network_now(), packet.flow, packet.ID))
 
