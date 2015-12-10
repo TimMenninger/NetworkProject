@@ -14,6 +14,10 @@
 
 
 
+# Congestion Control algorithm (Used for input parameters)
+FLOW_FAST_TCP        = 0
+FLOW_TCP_RENO        = 1
+
 
 ##########################################################################
 #                                                                        #
@@ -102,10 +106,6 @@ TYPE_LINK            = 1
 TYPE_ROUTER          = 2
 TYPE_HOST            = 3
 TYPE_PACKET          = 4
-
-# Congestion Control algorithm
-FLOW_FAST_TCP        = 0
-FLOW_TCP_RENO        = 1
 
 # Packet types
 PACKET_DATA          = 0
