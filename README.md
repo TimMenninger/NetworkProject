@@ -32,3 +32,6 @@ $ python3 src/simulate.py in/test_configs/case_0.txt
 Test Case 2
 $ python3 src/simulate.py in/test_configs/case_0.txt
 
+Note: the 'Simulation Progress' update presented to standard output while
+the simualation is running does not accurately reflect the simulation 
+progress when Test Case 3 (and probably multi-flow networks) are running.
