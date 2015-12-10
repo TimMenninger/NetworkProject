@@ -129,6 +129,17 @@ def run_network():
         # Advance the network time to the event time.
         network_time = event_time
         
+        # If we exceeded the maximum network running time, stop simulating.
+        if network_time >= ct.MAX_SIMULATION_TIME:
+            print ("\n +----------------------------------+\n",
+                      "|              WARNING             |\n",
+                      "|                                  |\n",
+                      "| Maximum simulation time reached. |\n",
+                      "| Aborting...                      |\n",
+                      "|                                  |\n",
+                      "+----------------------------------+\n")
+            return
+        
         # Extract the information about the next event so we can execute it.
         (actor_name, function_name, event_parameters) = event.get_elements()
         
@@ -146,6 +157,7 @@ def run_network():
 
         compute_and_print_progress_status()
 
+
 def compute_and_print_progress_status():
     '''
     '''
@@ -155,7 +167,8 @@ def compute_and_print_progress_status():
         if flow.flow_name != ct.ROUTING_FLOW:
             num_flow_pkts = int(cv.MB_to_bytes(flow.size) /ct.PACKET_DATA_SIZE) 
             total_pkts += num_flow_pkts
-            total_progress += num_flow_pkts - len(flow.packets_to_send)
+            if network_now() > flow.start_time:
+                total_progress += num_flow_pkts - len(flow.packets_to_send)
     
     # Dynamically update user of Simulation Progress
     progress_msg = "Simulation Progress: %.1f%%" \

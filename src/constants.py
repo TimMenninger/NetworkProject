@@ -25,11 +25,10 @@ FLOW_TCP_RENO        = 1
 #                                                                        #
 ##########################################################################
 
-DEFAULT_ALG             = FLOW_TCP_RENO # FLOW_TCP_RENO or FLOW_FAST_TCP
-ALPHA_VALUE             = 15 # The alpha value for FAST TCP window update
+DEFAULT_ALG             = FLOW_FAST_TCP # FLOW_TCP_RENO or FLOW_FAST_TCP
+ALPHA_VALUE             = 10 # The alpha value for FAST TCP window update
                              #   in pkts/sec
-FAST_TCP_TIMEOUT_FACTOR = 8  # Optimal values:
-                             # Case 0: 8, Case 1: 1.35, Case 2:
+FAST_TCP_TIMEOUT_FACTOR = 2  # Optimal values:
 
 
 
@@ -88,7 +87,7 @@ TIME_BIT             = 0        # Changed to zero because the heapqueue has
 RECORD_TIME          = 1
 
 # The number of network recordings used to produce rate metrics 
-RECORD_DELTA         = 75
+RECORD_DELTA         = 150
 
 # The number of seconds for each recording delta (in seconds)
 DELTA_SECS           = (RECORD_TIME * RECORD_DELTA) / 1000
@@ -126,8 +125,8 @@ LINK_ERROR           = 1            # Unknown error with link
 LINK_FULL            = 2            # Link was full
 
 
-MAX_SIMULATION_TIME  = 1e6          # Maximum number of milliseconds the 
-                                    #   network should run
+MAX_SIMULATION_TIME  = 1e5          # Maximum number of milliseconds the 
+                                    #   network should run (100 seconds)
                             
 # Initial values
 ACK_TIMEOUT_FACTOR   = 3     # Number of milliseconds to wait for acknowledgement

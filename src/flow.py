@@ -251,13 +251,17 @@ class Flow:
         
         Revision History:   2015/12/07: Created
         '''
+        # If this flow's window size is zero, then this flow is done running so
+        #   we can ignore this update.
+        if self.window_size == 0:
+            return
+        
         # Enqueue event for updating flow, this will cause window to be updated 
-        #   periodically. There must be more than one flow running for this 
-        #   event to be enqueued.
-        if len(sim.running_flows) > 1:
-            FAST_TCP_update = e.Event(self.flow_name, 'periodic_window_update', [])
-            update_time = sim.network_now() + ct.FAST_TCP_PERIOD
-            sim.enqueue_event(update_time, FAST_TCP_update)
+        #   periodically.
+        FAST_TCP_update = e.Event(self.flow_name, 'periodic_window_update', [])
+        update_time = sim.network_now() + ct.FAST_TCP_PERIOD
+        sim.enqueue_event(update_time, FAST_TCP_update)
+            
         
         # Unpack avg_RTT so we can compute the average_RTT
         (cum_RTT, num_RTTs) = self.avg_RTT
