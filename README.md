@@ -19,18 +19,18 @@ used to create new network configuration files) are in in/test_configs/*
 
 ### Running the simulation:
 
-$ python3 simulate.py ../in/test_configs/<network_config_file>
+$ python3 src/simulate.py ../in/test_configs/<network_config_file>
 
 [or]
 
 $ python3 in/simulate.py in/test_configs/<network_config_file>
 
 Test Case 0
-$ python3 simulate.py ../in/test_configs/case_0.txt
+$ python3 src/simulate.py in/test_configs/case_0.txt
 
 Test Case 1
-$ python3 simulate.py ../in/test_configs/case_1.txt
+$ python3 src/simulate.py in/test_configs/case_0.txt
 
 Test Case 2
-$ python3 simulate.py misc/test_configs/case_2.txt
+$ python3 src/simulate.py in/test_configs/case_0.txt
 
