@@ -11,6 +11,32 @@
 #
 ##########################################################################
 
+
+
+
+
+##########################################################################
+#                                                                        #
+#                           INPUT PARAMETERS                             #
+#                                                                        #
+##########################################################################
+
+DEFAULT_ALG             = FLOW_TCP_RENO # FLOW_TCP_RENO or FLOW_FAST_TCP
+ALPHA_VALUE             = 15 # The alpha value for FAST TCP window update
+                             #   in pkts/sec
+FAST_TCP_TIMEOUT_FACTOR = 8  # Optimal values:
+                             # Case 0: 8, Case 1: 1.35, Case 2:
+
+
+
+
+
+##########################################################################
+#                                                                        #
+#                            OTHER CONSTANTS                             #
+#                                                                        #
+##########################################################################
+
 # Output figure dimensions
 FIG_WID              = 12
 FIG_LEN              = 7
@@ -80,7 +106,6 @@ TYPE_PACKET          = 4
 # Congestion Control algorithm
 FLOW_FAST_TCP        = 0
 FLOW_TCP_RENO        = 1
-DEFAULT_ALG          = FLOW_TCP_RENO
 
 # Packet types
 PACKET_DATA          = 0
@@ -111,13 +136,9 @@ INITIAL_ASSUMED_RTT  = 500.0 # Before we know the round trip time, we need to
                              #   define an initial one that we assume (in ms)
 INITIAL_WINDOW_SIZE  = 1.0   # The initial window size for each flow.
 
-ALPHA_VALUE          = 15    # The alpha value for FAST TCP window update in 
-                             #   pkts/sec
 
 # How often FAST TCP window update should be called (in milliseconds)
 FAST_TCP_PERIOD      = 100
-                             # Optimal values:
-FAST_TCP_TIMEOUT_FACTOR = 8  # Case 0: 8, Case 1: 1.35, Case 2:
 
 # Minimum frequency at which TCP Reno updates the window (in milliseconds)
 RENO_TIMEOUT_TIME    = 500
