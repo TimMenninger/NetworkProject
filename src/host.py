@@ -230,15 +230,6 @@ class Host:
         #   disregard, we are done here.
         if packet.data < flow.to_complete:
             return
-        
-        # Get the actor and function for updating window size as a result of
-        #   this timed-out packet.
-        # actor, function = u.get_actor_and_function(self.host_name, \
-        #       ct.CONG_UPDATE[ct.CONG_TIMEOUT][flow.congestion_alg])
-        #
-        # Call the function on the actor which will update the flow's window
-        #   size according to the congestion control algorithm parameter.
-        # actor.function(/* Any parameters required */)
 
         # If not, we want to first resend all packets in flight,
         #   but only do this if this is one of the packets in flight.
@@ -361,10 +352,8 @@ class Host:
 
             # If this is acknowledgement, see if any packets were lost.
             if packet.data > flow.to_complete:
-                # The dest has received packets <to_complete> through
-                #   <packet.data> - 1, so we want to pop as many packets as
-                #   there is separation between these two parameters.
-
+                # Received proper acknowledgement, so for TCP Reno, we want to
+                #	reset the number of duplicate acks for this ID.
                 flow.num_dup_acks = (packet.ID, 0)
 
                 # If the flow is in slow-start phase, increment window size by 1
@@ -384,7 +373,8 @@ class Host:
                     if flow.state == 1:
                         flow.window_size += 1/flow.window_size
 
-
+				# Want to update for each packet of separation (this could be
+				#	more than 1 if we received a few acks ahead)
                 for i in range(packet.data - flow.to_complete):
                     flow.to_complete += 1
                     flow.acked_packets += 1
@@ -421,10 +411,10 @@ class Host:
                     flow.num_dup_acks = (packet.ID, num_dups)
 
                 # Resend all packets in flight.  We only do this when the ID of
-                #	the packet corresponds to an inflight packet.  Otherwise,
-                #	if all packets in a window size are lost, we would end up
-                #	sending window_size^2 packets when we really only need to
-                #	resend window_size packets.
+                #   the packet corresponds to an inflight packet.  Otherwise,
+                #   if all packets in a window size are lost, we would end up
+                #   sending window_size^2 packets when we really only need to
+                #   resend window_size packets.
                 if len(flow.packets_in_flight) > 0 and \
                    abs(packet.ID) > (flow.packets_in_flight[0][1].ID):
                     flow.resend_inflight_packets()
