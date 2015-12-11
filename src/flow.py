@@ -480,6 +480,9 @@ class Flow:
                 try:
                     sim.running_flows.remove(self.flow_name)
                     self.window_size = 0
+                    self.last_RTT = 0
+                    self.avg_RTT = (0, 0)
+                    self.min_RTT = 0
                 except ValueError:
                     pass
                 return

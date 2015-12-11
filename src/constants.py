@@ -25,10 +25,13 @@ FLOW_TCP_RENO        = 1
 #                                                                        #
 ##########################################################################
 
-DEFAULT_ALG             = FLOW_FAST_TCP # FLOW_TCP_RENO or FLOW_FAST_TCP
+DEFAULT_ALG             = FLOW_TCP_RENO # FLOW_TCP_RENO or FLOW_FAST_TCP
 ALPHA_VALUE             = 10 # The alpha value for FAST TCP window update
                              #   in pkts/sec
-FAST_TCP_TIMEOUT_FACTOR = 2  # Optimal values:
+FAST_TCP_TIMEOUT_FACTOR = 3  # Optimal values:
+
+# The number of network recordings used to produce rate metrics 
+RECORD_DELTA         = 150
 
 
 
@@ -85,9 +88,6 @@ TIME_BIT             = 0        # Changed to zero because the heapqueue has
 
 # How often to record the network status in milliseconds
 RECORD_TIME          = 1
-
-# The number of network recordings used to produce rate metrics 
-RECORD_DELTA         = 150
 
 # The number of seconds for each recording delta (in seconds)
 DELTA_SECS           = (RECORD_TIME * RECORD_DELTA) / 1000
